@@ -1,0 +1,189 @@
+/**
+ * user-manager.js — Gestion des utilisateurs (admin only)
+ */
+
+import { getUsers, updateUserRole, updateUserPlan } from './firestore.js?v=20260521a';
+import { requireRole } from './auth.js?v=20260420a';
+import { supabase } from '../supabase-config.js?v=20260420a';
+import { escapeHtml } from '../../shared/escape.js?v=20260513a';
+
+const SUPABASE_URL = 'https://lwgrjdpuagnvvzmdbyzb.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_xxnL12zd9o5N30y1-Oi-0Q_YGYKMjh2';
+
+export async function renderUserList(container) {
+  if (!requireRole('admin')) {
+    container.innerHTML = '<div class="log-empty">Acces reserve aux administrateurs</div>';
+    return;
+  }
+
+  container.innerHTML = '<div class="log-loading">Chargement...</div>';
+  try {
+    const users = await getUsers();
+    container.innerHTML = '';
+
+    const header = document.createElement('div');
+    header.className = 'users-header';
+    header.innerHTML = `
+      <span class="users-title">Utilisateurs</span>
+      <button id="btn-add-user" class="admin-btn admin-btn-sm">+ Ajouter</button>
+    `;
+    container.appendChild(header);
+
+    header.querySelector('#btn-add-user').addEventListener('click', () => showAddUserForm(container));
+
+    const list = document.createElement('div');
+    list.id = 'users-list';
+    container.appendChild(list);
+
+    users.forEach(u => {
+      const row = document.createElement('div');
+      row.className = 'user-row';
+
+      const lastLogin = u.lastLogin?.toDate?.()
+        ? u.lastLogin.toDate().toLocaleDateString('fr-FR')
+        : 'Jamais';
+
+      const isPremium = u.plan === 'premium';
+      row.innerHTML = `
+        <div class="user-info">
+          <span class="user-email">${escapeHtml(u.email)}</span>
+          <span class="user-name">${escapeHtml(u.displayName || '')}</span>
+          <span class="user-last-login">Dernier login: ${escapeHtml(lastLogin)}</span>
+        </div>
+        <div class="user-actions">
+          <select class="user-plan-select ${isPremium ? 'plan-premium' : 'plan-free'}" data-uid="${escapeHtml(u.id)}">
+            <option value="free" ${!isPremium ? 'selected' : ''}>Gratuit</option>
+            <option value="premium" ${isPremium ? 'selected' : ''}>Premium</option>
+          </select>
+          <select class="user-role-select" data-uid="${escapeHtml(u.id)}">
+            <option value="viewer" ${u.role === 'viewer' ? 'selected' : ''}>Viewer</option>
+            <option value="editor" ${u.role === 'editor' ? 'selected' : ''}>Editor</option>
+            <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+          </select>
+        </div>
+      `;
+
+      const select = row.querySelector('.user-role-select');
+      select.addEventListener('change', async (e) => {
+        try {
+          await updateUserRole(u.id, e.target.value);
+        } catch (err) {
+          alert('Erreur: ' + err.message);
+          e.target.value = u.role;
+        }
+      });
+
+      const planSelect = row.querySelector('.user-plan-select');
+      planSelect.addEventListener('change', async (e) => {
+        const newPlan = e.target.value;
+        try {
+          await updateUserPlan(u.id, newPlan);
+          u.plan = newPlan;
+          planSelect.classList.toggle('plan-premium', newPlan === 'premium');
+          planSelect.classList.toggle('plan-free', newPlan !== 'premium');
+        } catch (err) {
+          alert('Erreur: ' + err.message);
+          e.target.value = u.plan;
+        }
+      });
+
+      list.appendChild(row);
+    });
+  } catch (e) {
+    container.innerHTML = `<div class="log-error">Erreur: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function showAddUserForm(container) {
+  if (document.getElementById('add-user-form')) return;
+
+  const form = document.createElement('div');
+  form.id = 'add-user-form';
+  form.className = 'add-user-form';
+  form.innerHTML = `
+    <input type="email" id="new-user-email" placeholder="Email" class="admin-input">
+    <input type="text" id="new-user-name" placeholder="Nom (optionnel)" class="admin-input">
+    <input type="password" id="new-user-password" placeholder="Mot de passe (min 6 car.)" class="admin-input">
+    <select id="new-user-role" class="admin-input">
+      <option value="viewer">Viewer</option>
+      <option value="editor">Editor</option>
+      <option value="admin">Admin</option>
+    </select>
+    <div class="form-actions-inline">
+      <button id="btn-create-user" class="admin-btn">Creer</button>
+      <button id="btn-cancel-user" class="admin-btn admin-btn-ghost">Annuler</button>
+    </div>
+    <div id="add-user-error" class="form-error" style="display:none"></div>
+    <div class="add-user-note" style="font:300 8px/1.3 var(--b);color:var(--tx2);margin-top:4px">
+      Note : les utilisateurs sont crees via Supabase Auth.<br>
+      Pour ajouter des utilisateurs en masse, utilisez le dashboard Supabase.
+    </div>
+  `;
+
+  const listEl = document.getElementById('users-list');
+  container.insertBefore(form, listEl);
+
+  form.querySelector('#btn-cancel-user').addEventListener('click', () => form.remove());
+  form.querySelector('#btn-create-user').addEventListener('click', async () => {
+    const email = document.getElementById('new-user-email').value.trim();
+    const name = document.getElementById('new-user-name').value.trim();
+    const password = document.getElementById('new-user-password').value;
+    const role = document.getElementById('new-user-role').value;
+    const errEl = document.getElementById('add-user-error');
+
+    if (!email || !password) {
+      errEl.textContent = 'Email et mot de passe requis';
+      errEl.style.display = 'block';
+      return;
+    }
+    if (password.length < 6) {
+      errEl.textContent = 'Le mot de passe doit faire au moins 6 caracteres';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    try {
+      // Sauvegarder la session admin
+      const { data: { session: adminSession } } = await supabase.auth.getSession();
+      const adminToken = adminSession.access_token;
+
+      // 1. Creer le user via signUp (fetch direct pour eviter le switch de session)
+      const signUpRes = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password, data: { display_name: name, role } })
+      });
+
+      const signUpData = await signUpRes.json();
+      if (!signUpRes.ok) throw new Error(signUpData.msg || 'Erreur creation utilisateur');
+
+      const newUserId = signUpData.id || signUpData.user?.id;
+      if (!newUserId) throw new Error('Utilisateur cree mais ID manquant');
+
+      // 2. Creer le profil (avec le token admin)
+      const profileRes = await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${adminToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id: newUserId, email, display_name: name, role })
+      });
+
+      if (!profileRes.ok) {
+        const profileErr = await profileRes.json();
+        throw new Error(profileErr.message || 'Erreur creation profil');
+      }
+
+      form.remove();
+      renderUserList(container);
+    } catch (e) {
+      errEl.textContent = e.message;
+      errEl.style.display = 'block';
+    }
+  });
+}

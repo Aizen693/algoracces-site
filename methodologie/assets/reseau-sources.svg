@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-label="Reseau de sources : collecte, croisement et cotation relies par des liens courbes, en blanc sur le degrade Algor Int violet vers bleu">
+  <!-- Illustration Algor Acces — reseau de sources abstrait sur degrade maison.
+       Aucune geographie reelle. DA : degrade signature #6B3FA0 -> #5650C6 -> #1E6FBE,
+       reseau en blanc. Animations coupees si prefers-reduced-motion. Zero or, zero sombre. -->
+  <defs>
+    <style>
+      @media (prefers-reduced-motion: no-preference){
+        .flow{stroke-dasharray:3 10;animation:dash 6s linear infinite;}
+        .flow2{stroke-dasharray:3 10;animation:dash 7.5s linear infinite;}
+        .pulse{animation:pulse 5s ease-in-out infinite;}
+        .pulse2{animation:pulse 5s ease-in-out infinite;animation-delay:1.6s;}
+        .pulse3{animation:pulse 5s ease-in-out infinite;animation-delay:3.2s;}
+        .twinkle{animation:tw 6s ease-in-out infinite;}
+      }
+      @keyframes dash{to{stroke-dashoffset:-130;}}
+      @keyframes pulse{0%,100%{opacity:.30;transform:scale(.9);}50%{opacity:.70;transform:scale(1.2);}}
+      @keyframes tw{0%,100%{opacity:.45;}50%{opacity:.95;}}
+    </style>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="92%">
+      <stop offset="0%" stop-color="#6B3FA0"/>
+      <stop offset="48%" stop-color="#5650C6"/>
+      <stop offset="100%" stop-color="#1E6FBE"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.42"/>
+      <stop offset="45%" stop-color="#FFFFFF" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="core" cx="38%" cy="32%" r="74%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#D8CCF2"/>
+    </radialGradient>
+  </defs>
+
+  <rect x="0" y="0" width="800" height="600" fill="url(#bg)"/>
+
+  <!-- graticule -->
+  <g stroke="#FFFFFF" stroke-width="1" opacity="0.07">
+    <line x1="0" y1="120" x2="800" y2="120"/><line x1="0" y1="240" x2="800" y2="240"/><line x1="0" y1="360" x2="800" y2="360"/><line x1="0" y1="480" x2="800" y2="480"/>
+    <line x1="160" y1="0" x2="160" y2="600"/><line x1="320" y1="0" x2="320" y2="600"/><line x1="480" y1="0" x2="480" y2="600"/><line x1="640" y1="0" x2="640" y2="600"/>
+  </g>
+
+  <!-- territoire invente : littoral + courbes douces, en blanc tres discret -->
+  <g fill="none" stroke="#FFFFFF" stroke-linecap="round">
+    <path d="M70 470 C 150 430, 240 452, 300 408 C 372 356, 408 392, 488 350 C 560 312, 632 336, 730 296" stroke-width="1.4" opacity="0.20"/>
+    <path d="M96 512 C 188 478, 276 496, 344 452 C 418 404, 452 438, 528 398 C 600 360, 668 380, 752 344" stroke-width="1.1" opacity="0.13"/>
+    <path d="M130 168 C 214 150, 286 188, 360 172 C 452 152, 520 196, 612 176 C 668 164, 706 178, 742 168" stroke-width="1.2" opacity="0.16"/>
+  </g>
+
+  <!-- anneaux de portee autour des hubs -->
+  <g stroke="#FFFFFF" stroke-width="1" opacity="0.12">
+    <circle cx="212" cy="262" r="74" fill="none"/><circle cx="212" cy="262" r="120" fill="none"/>
+    <circle cx="518" cy="332" r="70" fill="none"/>
+    <circle cx="642" cy="168" r="64" fill="none"/><circle cx="642" cy="168" r="104" fill="none"/>
+  </g>
+
+  <!-- liens de collecte -->
+  <g stroke="#FFFFFF" fill="none" stroke-linecap="round">
+    <path d="M212 262 C 320 232, 430 268, 518 332" stroke-width="2" opacity="0.55"/>
+    <path d="M518 332 C 600 290, 614 222, 642 168" stroke-width="2" opacity="0.55"/>
+    <path d="M212 262 C 380 160, 520 150, 642 168" stroke-width="1.6" opacity="0.38"/>
+    <path d="M212 262 L 118 168" stroke-width="1.3" opacity="0.45"/><path d="M212 262 L 128 318" stroke-width="1.3" opacity="0.45"/><path d="M212 262 L 174 372" stroke-width="1.3" opacity="0.45"/><path d="M212 262 L 286 350" stroke-width="1.3" opacity="0.45"/><path d="M212 262 L 300 196" stroke-width="1.3" opacity="0.45"/><path d="M212 262 L 232 150" stroke-width="1.3" opacity="0.45"/>
+    <path d="M518 332 L 458 428" stroke-width="1.3" opacity="0.45"/><path d="M518 332 L 560 418" stroke-width="1.3" opacity="0.45"/><path d="M518 332 L 614 392" stroke-width="1.3" opacity="0.45"/><path d="M518 332 L 436 268" stroke-width="1.3" opacity="0.45"/><path d="M518 332 L 600 290" stroke-width="1.3" opacity="0.45"/>
+    <path d="M642 168 L 716 110" stroke-width="1.3" opacity="0.45"/><path d="M642 168 L 730 198" stroke-width="1.3" opacity="0.45"/><path d="M642 168 L 572 102" stroke-width="1.3" opacity="0.45"/>
+  </g>
+
+  <!-- flux animes entre hubs -->
+  <g fill="none" stroke="#FFFFFF" stroke-width="1.7" stroke-linecap="round" opacity="0.92">
+    <path class="flow" d="M212 262 C 320 232, 430 268, 518 332"/>
+    <path class="flow2" d="M518 332 C 600 290, 614 222, 642 168"/>
+  </g>
+
+  <!-- sources satellites -->
+  <g fill="#FFFFFF">
+    <circle class="twinkle" cx="118" cy="168" r="4.5"/><circle class="twinkle" cx="128" cy="318" r="4" style="animation-delay:.8s"/><circle class="twinkle" cx="174" cy="372" r="4" style="animation-delay:1.5s"/><circle class="twinkle" cx="286" cy="350" r="4.5" style="animation-delay:2.2s"/><circle class="twinkle" cx="300" cy="196" r="4" style="animation-delay:.4s"/><circle class="twinkle" cx="232" cy="150" r="4" style="animation-delay:3s"/><circle class="twinkle" cx="458" cy="428" r="4" style="animation-delay:1.1s"/><circle class="twinkle" cx="560" cy="418" r="4.5" style="animation-delay:2.6s"/><circle class="twinkle" cx="614" cy="392" r="4" style="animation-delay:.6s"/><circle class="twinkle" cx="436" cy="268" r="4" style="animation-delay:1.9s"/><circle class="twinkle" cx="716" cy="110" r="4.5" style="animation-delay:3.4s"/><circle class="twinkle" cx="730" cy="198" r="4" style="animation-delay:.9s"/><circle class="twinkle" cx="572" cy="102" r="4" style="animation-delay:2.4s"/><circle class="twinkle" cx="600" cy="290" r="3.5" style="animation-delay:1.3s"/>
+  </g>
+  <g fill="none" stroke="#FFFFFF" stroke-width="1.4" opacity="0.5">
+    <circle cx="118" cy="168" r="8"/><circle cx="286" cy="350" r="8"/><circle cx="300" cy="196" r="8"/><circle cx="560" cy="418" r="8"/><circle cx="716" cy="110" r="8"/><circle cx="572" cy="102" r="8"/>
+  </g>
+
+  <!-- halos des hubs -->
+  <g>
+    <circle class="pulse" cx="212" cy="262" r="62" fill="url(#halo)" style="transform-origin:212px 262px"/>
+    <circle class="pulse2" cx="518" cy="332" r="58" fill="url(#halo)" style="transform-origin:518px 332px"/>
+    <circle class="pulse3" cx="642" cy="168" r="56" fill="url(#halo)" style="transform-origin:642px 168px"/>
+  </g>
+
+  <!-- hubs : noyaux blancs -->
+  <g>
+    <circle cx="212" cy="262" r="22" fill="#FFFFFF" opacity="0.30"/><circle cx="212" cy="262" r="16" fill="url(#core)"/><circle cx="212" cy="262" r="6" fill="#6B3FA0" opacity="0.55"/>
+    <circle cx="518" cy="332" r="20" fill="#FFFFFF" opacity="0.30"/><circle cx="518" cy="332" r="14" fill="url(#core)"/><circle cx="518" cy="332" r="5" fill="#1E6FBE" opacity="0.6"/>
+    <circle cx="642" cy="168" r="22" fill="#FFFFFF" opacity="0.30"/><circle cx="642" cy="168" r="16" fill="url(#core)"/>
+    <g transform="translate(642 168) rotate(45)"><rect x="-6.5" y="-6.5" width="13" height="13" rx="2.5" fill="#FFFFFF"/></g>
+    <g transform="translate(642 168) rotate(45)"><rect x="-3" y="-3" width="6" height="6" rx="1.4" fill="#5650C6" opacity="0.85"/></g>
+  </g>
+
+  <!-- etiquettes Plus Jakarta -->
+  <g font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-weight="600" font-size="16" fill="#FFFFFF">
+    <text x="212" y="312" text-anchor="middle">Collecte</text>
+    <text x="518" y="380" text-anchor="middle">Croisement</text>
+    <text x="642" y="216" text-anchor="middle">Cotation</text>
+  </g>
+</svg>

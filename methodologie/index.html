@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<script src="/shared/i18n.js?v=20261020c"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Méthodologie : Algor Acces</title>
+<meta name="description" content="La méthodologie d'Algor Acces : comment le renseignement de sources ouvertes est collecté, daté, croisé, coté et restitué. Une chaîne de traitement en six temps, appliquée à chaque théâtre." />
+<meta property="og:title" content="Méthodologie : Algor Acces" />
+<meta property="og:description" content="Comment Algor Acces transforme des sources ouvertes en renseignement fiable : collecte, datation, sourçage, croisement, cotation, restitution." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://algoracces.fr/methodologie/" />
+<meta name="theme-color" content="#0F1013" />
+<link rel="icon" type="image/jpeg" href="/favicon.jpg" />
+<link rel="stylesheet" href="/shared/home/fonts-display.css?v=20260914c" />
+<link rel="stylesheet" href="/shared/v5/v5.css?v=20261001a" />
+<style>
+  .cas-map img { aspect-ratio: 4 / 3.2; }
+  .fiche__sub { margin: 0 0 28px; font-size: 16px; line-height: 1.5; color: var(--muted); }
+  .fiche__sub b, .v5-dl dd b { font-weight: 500; color: var(--ink); }
+  .fiche__foot { margin: 16px 0 0; }
+
+  .m-prose { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 clamp(28px, 4vw, 64px); margin-bottom: clamp(48px, 6vw, 80px); }
+  .m-prose .v5-prose strong { font-weight: 500; color: var(--ink); }
+
+  .chaine > div { grid-template-columns: minmax(140px, 300px) minmax(0, 1fr); padding: 26px 0 30px; }
+  .chaine dt { font-size: clamp(26px, 2.6vw, 38px); line-height: 1.1; letter-spacing: -0.025em; color: var(--ink); }
+  .chaine dd small { margin-top: 14px; font-size: 15px; }
+
+  .cotes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 4vw, 64px); }
+  .cotes h3 { margin: 0 0 18px; font-weight: 400; font-size: clamp(22px, 2vw, 28px); line-height: 1.2; letter-spacing: -0.015em; }
+  .cotes .v5-dl > div { grid-template-columns: 56px minmax(0, 1fr); padding: 14px 0 16px; }
+  .cotes dt { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  .m-fin .sec-head { margin-bottom: 36px; }
+  @media (max-width: 900px) {
+    .m-prose, .cotes { grid-template-columns: 1fr; }
+    .chaine > div { grid-template-columns: 1fr; gap: 10px; }
+    .cotes .v5-dl > div { grid-template-columns: 56px minmax(0, 1fr); gap: 12px; }
+  }
+</style>
+</head>
+<body data-rubrique="methodologie">
+
+<!-- v5:nav -->
+<div class="annonce" id="annonce" hidden>
+  <div class="annonce__in">
+    <p>Dernière note de veille : <a id="annonce-lien" href="/veille/"></a></p>
+    <button class="annonce__x" id="annonce-x" aria-label="Fermer le bandeau"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+  </div>
+</div>
+<header class="nav" id="nav">
+  <div class="nav__bar">
+    <a class="brand" href="/" aria-label="Algor Acces, accueil"><svg class="marque" viewBox="0 0 100 100" width="28" height="28" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16 90 L28 90 L46.4 40 L34.4 40 Z M74 90 L86 90 L75 62 L63 62 Z M50 5 L59 14 L50 23 L41 14 Z"/></svg><span>Algor Acces</span></a>
+    <nav class="nav__links" aria-label="Rubriques"><a href="/theatres/">Théâtres</a><a href="/veille/">Veille</a><a href="/methodologie/" aria-current="page">Méthodologie</a><a href="/offres/">Offres</a><a href="/a-propos/">À propos</a><a href="/contact/">Contact</a></nav>
+    <div class="nav__right">
+      <span class="lang-slot"></span>
+      <button class="btn-login site-login" type="button">Connexion</button>
+      <a class="btn-rect" href="/offres/">Demander un accès</a>
+      <div class="sq">
+        <button type="button" class="sq__compte site-login" data-auth-icone aria-label="Connexion"><svg class="ico-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20.5c1.2-3.8 4-5.6 7.5-5.6s6.3 1.8 7.5 5.6"/></svg><svg class="ico-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="8.5" r="3.8" fill="currentColor"/><path d="M3 20.5c1.2-3.8 3.8-5.6 7-5.6 1.3 0 2.5.3 3.5.9" fill="none"/><path d="M15.5 18l2.2 2.2 4-4.4"/></svg></button>
+        <button type="button" id="ouvrir-recherche" aria-label="Rechercher une zone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
+        <button type="button" id="ouvrir-menu" aria-label="Ouvrir le menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"/></svg></button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="veil" id="menu" role="dialog" aria-modal="true" aria-label="Menu">
+  <div class="veil__top">
+    <a class="brand" href="/" aria-label="Algor Acces, accueil"><svg class="marque" viewBox="0 0 100 100" width="28" height="28" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16 90 L28 90 L46.4 40 L34.4 40 Z M74 90 L86 90 L75 62 L63 62 Z M50 5 L59 14 L50 23 L41 14 Z"/></svg><span>Algor Acces</span></a>
+    <button class="veil__x" data-fermer aria-label="Fermer le menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+  </div>
+  <nav class="veil__body">
+    <div class="veil__main"><a href="/">Plateforme</a><a href="/theatres/">Théâtres</a><a href="/veille/">Veille</a><a href="/methodologie/" aria-current="page">Méthodologie</a></div>
+    <div class="veil__col"><h3>Théâtres</h3><a href="/moyen-orient/">Moyen-Orient</a><a href="/sahel/">Sahel</a><a href="/rdc/">RDC, Grands Lacs</a><a href="/madagascar/">Madagascar</a><a href="/afrique/">Afrique maritime</a><a href="/asie-sud/">Asie du Sud</a></div>
+    <div class="veil__col"><h3>Algor Acces</h3><button class="veil__compte site-login" type="button">Connexion</button><a href="/offres/">Offres</a><a href="/a-propos/">À propos</a><a href="/contact/">Contact</a><a href="/demo/">Démo sur une zone</a></div>
+  </nav>
+</div>
+
+<div class="veil veil--search" id="recherche" role="dialog" aria-modal="true" aria-label="Recherche">
+  <div class="veil__top">
+    <a class="brand" href="/" aria-label="Algor Acces, accueil"><svg class="marque" viewBox="0 0 100 100" width="28" height="28" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16 90 L28 90 L46.4 40 L34.4 40 Z M74 90 L86 90 L75 62 L63 62 Z M50 5 L59 14 L50 23 L41 14 Z"/></svg><span>Algor Acces</span></a>
+    <button class="veil__x" data-fermer aria-label="Fermer la recherche"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+  </div>
+  <div class="veil__body">
+    <form class="search-form" action="/demo/">
+      <label for="q">Essayez la démo sur n'importe quelle zone du monde</label>
+      <input id="q" name="q" type="search" placeholder="Bogotá" autocomplete="off" required>
+      <p>Indiquez une ville, une région ou un pays : vous verrez le rendu de nos cartes sur des données fictives.</p>
+    </form>
+  </div>
+</div>
+<!-- /v5:nav -->
+
+<main>
+  <section class="v5-phero v5-phero--plein" data-nav="dark" data-v5-trame data-trame-anim="recoupement" data-hachures="5,1;6,0">
+    <h1>La rigueur du renseignement, appliquée aux <span>sources ouvertes</span></h1>
+    <p class="v5-phero__lede">Algor Acces collecte, date et croise chaque information selon une chaîne de traitement stricte, et cote chaque note de veille. Cette page la décrit étape par étape, sur un cas réel.</p>
+    <div class="v5-actions">
+      <a class="btn-rect" href="/offres/">Voir les offres</a>
+      <a class="btn-outline" href="/">Découvrir la plateforme</a>
+    </div>
+    <a class="v5-defiler" href="#suite" aria-label="Défiler vers la suite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 4v16M6 14l6 6 6-6"/></svg></a>
+  </section>
+
+  <section class="v5-sec" data-nav="light" aria-labelledby="fiche-t">
+    <div class="sec-head">
+      <h2 id="fiche-t">Un incident réel, traversant les six temps de la chaîne</h2>
+    </div>
+    <div class="v5-split" role="group" aria-label="Fiche événement : un incident réel traversant les six temps de la chaîne">
+      <figure class="v5-split__media cas-map">
+        <img src="./assets/carte-yatakala.png?v=20260910b" alt="Extrait de carte : Yatakala, commune du Goroual, région de Tillabéri, Niger">
+        <figcaption>Yatakala-Bosiye · 14,79 N · 0,38 E · 18 janv. 2026</figcaption>
+      </figure>
+      <div>
+        <p class="fiche__sub">Fiche événement · <b>Sahel</b> · Niger, Tillabéri · <b>Cote B1</b></p>
+        <dl class="v5-dl">
+          <div><dt>Collecte</dt><dd>Presse nigérienne le 20 janv., puis rapport d'enquête de Human Rights Watch le 12 févr.</dd></div>
+          <div><dt>Datation</dt><dd>Événement le <b>18 janvier 2026</b> · première collecte le 20 janvier. Les deux dates sont conservées.</dd></div>
+          <div><dt>Sourçage</dt><dd><a href="https://www.hrw.org/news/2026/02/12/niger-islamist-armed-group-massacres-villagers-in-west" target="_blank" rel="noopener">hrw.org</a> · <a href="https://www.actuniger.com/societe/21694-insecurite-une-trentaine-de-civils-encore-massacres-a-yatakala-bosiye-dans-le-goroual-tillaberi.html" target="_blank" rel="noopener">actuniger.com</a> · <a href="https://lesechosduniger.com/2026/01/20/tillaberi-31-civils-encore-massacres-dans-une-attaque-terroriste-a-yatakala-dans-le-goroual-zone-des-3-frontieres/" target="_blank" rel="noopener">lesechosduniger.com</a></dd></div>
+          <div><dt>Croisement</dt><dd><b>3 sources sur 3 concordantes</b> sur la date, le lieu, l'acteur (État islamique au Sahel) et le bilan (31 tués, 5 blessés).</dd></div>
+          <div><dt>Cotation</dt><dd>Source <b>B</b>, habituellement fiable · information <b>1</b>, confirmée par d'autres sources.</dd></div>
+          <div><dt>Restitution</dt><dd>Point intégré à la carte Sahel, quinzaine du 16 au 31 janvier, fiche reliée aux trois sources.</dd></div>
+        </dl>
+        <p class="v5-note fiche__foot">Exemple réel, sources publiques citées · fond de carte Mapbox</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="v5-sec v5-sec--band" data-nav="light" aria-labelledby="principe-t">
+    <div class="sec-head">
+      <h2 id="principe-t">Le renseignement ouvert mérite la même exigence que le renseignement classifié</h2>
+    </div>
+    <div class="m-prose">
+      <div class="v5-prose">
+        <p>Le renseignement de sources ouvertes souffre d'une réputation tenace : trop de bruit, pas assez de méthode. La plupart des outils se contentent d'agréger des flux (articles, alertes, publications) et laissent l'utilisateur trier seul le vrai du probable.</p>
+        <p>Une information n'a de valeur que si l'on sait <strong>d'où elle vient, quand elle a eu lieu et à quel point elle est sûre</strong>.</p>
+      </div>
+      <div class="v5-prose">
+        <p>C'est pourquoi chaque événement cartographié par Algor Acces passe par une chaîne de traitement stricte, identique d'un théâtre à l'autre. Cette discipline prend du temps. Elle fait d'un flux d'actualité un outil de décision.</p>
+      </div>
+    </div>
+    <dl class="v5-dl" aria-label="Règles de la chaîne de traitement">
+      <div><dt>Dernière note de veille</dt><dd><b data-veille-latest>…</b><small data-veille-count></small></dd></div>
+      <div><dt>Dates conservées</dt><dd>Date de l'événement <b>et</b> date de collecte, toujours distinctes.</dd></div>
+      <div><dt>Recoupement</dt><dd>Confirmation et contradiction recherchées avant publication ; une seule source reste une hypothèse.</dd></div>
+      <div><dt>Cotation</dt><dd>Fiabilité de la source A à F · crédibilité de l'information 1 à 6, notées séparément.</dd></div>
+      <div><dt>Traçabilité</dt><dd>Chaque point de carte ouvre une fiche reliée à ses sources ; les sources non nommables restent tracées en interne.</dd></div>
+    </dl>
+  </section>
+
+  <section class="v5-sec" data-nav="light" aria-labelledby="chaine-t">
+    <div class="sec-head">
+      <h2 id="chaine-t">Six temps, du signal brut à la carte</h2>
+      <p>Chaque information suit le même parcours, sans exception. C'est cette constance qui rend nos analyses comparables, d'un théâtre à l'autre et d'une période à la suivante.</p>
+    </div>
+    <dl class="v5-dl chaine">
+      <div><dt>Collecte</dt><dd>Imagerie satellite, bases d'événements spécialisées, agences de presse, presse régionale, publications de think tanks, canaux OSINT : nous mobilisons un large éventail de sources publiques, dans plusieurs langues, pour ne dépendre d'aucun point de vue unique.<small>Concrètement : plusieurs dizaines de sources par théâtre, surveillées en continu.</small></dd></div>
+      <div><dt>Datation</dt><dd>Aucun événement n'entre dans la plateforme sans une date vérifiée. La date permet de reconstituer une chronologie, de mesurer un rythme, de distinguer une escalade d'un fait isolé. Une information non datable est traitée comme telle : signalée, jamais déguisée en certitude.<small>Concrètement : date de l'événement et date de collecte, distinctes et conservées.</small></dd></div>
+      <div><dt>Sourçage</dt><dd>Chaque affirmation renvoie à sa source primaire. Nous remontons à l'origine de chaque information, même quand elle circule déjà partout. Lorsqu'une source ne peut être nommée (pour des raisons de sécurité), elle est référencée de façon non nominative, mais reste tracée.<small>Concrètement : chaque point de la carte ouvre une fiche reliée à ses sources.</small></dd></div>
+      <div><dt>Croisement</dt><dd>Une information confirmée par une seule source reste une hypothèse. Avant validation, chaque événement est recoupé : on cherche la confirmation, mais aussi la contradiction. Les versions divergentes ne sont pas écartées, elles sont conservées et présentées, car un désaccord entre sources est lui-même un renseignement.<small>Concrètement : recoupement multi-sources systématique avant publication.</small></dd></div>
+      <div><dt>Cotation</dt><dd>Chaque note de veille reçoit une double cote : la fiabilité de la source d'une part, la crédibilité de l'information de l'autre. Ces deux échelles, standard dans le renseignement, sont évaluées séparément, car une source habituellement fiable peut rapporter une information douteuse, et inversement.<small>Concrètement : chaque note de veille porte une cote du type « B2 » et son motif. La cotation des événements de la carte est en cours.</small></dd></div>
+      <div><dt>Restitution</dt><dd>L'information vérifiée est mise en carte, intégrée à une chronologie et, à la demande, synthétisée dans un brief de sécurité. À chaque étape, la donnée reste auditable : vous pouvez toujours remonter de la carte à la source.<small>Concrètement : carte interactive, chronologie rejouable et briefs sur demande.</small></dd></div>
+    </dl>
+  </section>
+
+  <section class="v5-sec v5-sec--band" data-nav="light" aria-labelledby="cote-t">
+    <div class="sec-head">
+      <h2 id="cote-t">Deux échelles, une lecture honnête de l'incertitude</h2>
+      <p>Plutôt que d'afficher une fausse certitude, nous cotons séparément la fiabilité de la source et la crédibilité de l'information : les deux échelles de référence du renseignement.</p>
+    </div>
+    <div class="cotes">
+      <div>
+        <h3>Fiabilité de la source</h3>
+        <dl class="v5-dl">
+          <div><dt>A</dt><dd>Totalement fiable</dd></div>
+          <div><dt>B</dt><dd>Habituellement fiable</dd></div>
+          <div><dt>C</dt><dd>Assez fiable</dd></div>
+          <div><dt>D</dt><dd>Habituellement non fiable</dd></div>
+          <div><dt>E</dt><dd>Non fiable</dd></div>
+          <div><dt>F</dt><dd>La fiabilité ne peut être évaluée</dd></div>
+        </dl>
+      </div>
+      <div>
+        <h3>Crédibilité de l'information</h3>
+        <dl class="v5-dl">
+          <div><dt>1</dt><dd>Confirmée par d'autres sources</dd></div>
+          <div><dt>2</dt><dd>Probablement vraie</dd></div>
+          <div><dt>3</dt><dd>Possiblement vraie</dd></div>
+          <div><dt>4</dt><dd>Douteuse</dd></div>
+          <div><dt>5</dt><dd>Improbable</dd></div>
+          <div><dt>6</dt><dd>La véracité ne peut être évaluée</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="v5-sec" data-nav="light" aria-labelledby="sources-t">
+    <div class="sec-head">
+      <h2 id="sources-t">Des sources ouvertes, variées et toujours citées</h2>
+      <p>Notre matière première est entièrement publique. La solidité de l'analyse vient de sa diversité et du croisement des sources.</p>
+    </div>
+    <dl class="v5-dl">
+      <div><dt>Imagerie satellite</dt><dd>Copernicus Sentinel-2, Planet Labs, Maxar : pour observer le terrain via l'imagerie satellite publique et commerciale.</dd></div>
+      <div><dt>Bases d'événements</dt><dd>ACLED, GDELT, UCDP, Kivu Security Tracker : des données structurées et reconnues sur les conflits armés.</dd></div>
+      <div><dt>Presse &amp; agences</dt><dd>AFP, Reuters, AP, presse d'État et presse régionale, en français, en anglais et en arabe.</dd></div>
+      <div><dt>SOCMINT</dt><dd>X, Telegram et forums spécialisés : canaux militaires, milices et journalistes de terrain.</dd></div>
+      <div><dt>Think tanks &amp; instituts</dt><dd>ISW, International Crisis Group, RUSI, IFRI, Carnegie : l'analyse de fond et la mise en perspective.</dd></div>
+      <div><dt>Investigations spécialisées</dt><dd>Bellingcat, Oryx et enquêtes en sources ouvertes : pour les cas qui exigent une vérification poussée.</dd></div>
+    </dl>
+  </section>
+
+  <section class="v5-sec v5-sec--band" data-nav="light" aria-labelledby="couv-t">
+    <div class="sec-head">
+      <h2 id="couv-t">Les signaux que nous traçons</h2>
+      <p>Sur chaque théâtre, la même grille de lecture : de l'affrontement ouvert au signal faible, en amont de la crise.</p>
+    </div>
+    <dl class="v5-dl">
+      <div><dt>Affrontements armés</dt><dd>Combats, offensives, prises et pertes de localités.</dd></div>
+      <div><dt>Attaques asymétriques</dt><dd>Engins explosifs, embuscades, attentats, raids de milices.</dd></div>
+      <div><dt>Mouvements de forces</dt><dd>Redéploiements, renforts, déplacements de lignes de front.</dd></div>
+      <div><dt>Flux &amp; trafics</dt><dd>Corridors d'armes, contrebande et routes migratoires.</dd></div>
+      <div><dt>Gouvernance &amp; ressources</dt><dd>Contrôle de zones minières et d'infrastructures critiques.</dd></div>
+      <div><dt>Signaux faibles</dt><dd>Tensions communautaires et ruptures d'approvisionnement, en amont de la crise.</dd></div>
+    </dl>
+  </section>
+
+  <section class="v5-sec" data-nav="light" aria-labelledby="garanties-t">
+    <div class="sec-head">
+      <h2 id="garanties-t">Ce sur quoi nous ne transigeons pas</h2>
+    </div>
+    <div class="v5-rows v5-rows--m">
+      <div class="v5-row"><span class="v5-row__name">Indépendance</span><span class="v5-row__d">Aucun lien d'allégeance avec un État, un acteur armé ou un parti. Notre lecture n'est au service d'aucun camp.</span></div>
+      <div class="v5-row"><span class="v5-row__name">Traçabilité</span><span class="v5-row__d">De la carte à la source primaire, chaque donnée reste vérifiable. Rien n'est affirmé sans pouvoir être remonté.</span></div>
+      <div class="v5-row"><span class="v5-row__name">Sources ouvertes uniquement</span><span class="v5-row__d">Aucune information classifiée. Toute notre matière première est publique et citée.</span></div>
+      <div class="v5-row"><span class="v5-row__name">Datation systématique</span><span class="v5-row__d">Pas d'événement sans date vérifiée. La chronologie est la colonne vertébrale de chaque théâtre.</span></div>
+    </div>
+  </section>
+
+  <section class="v5-sec v5-sec--band" data-nav="light" aria-labelledby="faq-t">
+    <div class="sec-head">
+      <h2 id="faq-t">Vos questions sur notre méthode</h2>
+    </div>
+    <div class="v5-faq">
+      <details><summary>Utilisez-vous des sources classifiées ?</summary><div class="v5-faq__a"><p>Non. Algor Acces ne traite que du renseignement de sources ouvertes : imagerie publique, bases d'événements, presse, SOCMINT. Aucune information classifiée n'entre dans la plateforme.</p></div></details>
+      <details><summary>À quelle fréquence les données sont-elles mises à jour ?</summary><div class="v5-faq__a"><p>Les six théâtres sont suivis en continu. Les événements majeurs sont intégrés au fil de leur vérification ; chaque théâtre fait l'objet d'une relecture régulière, période par période.</p></div></details>
+      <details><summary>Comment savoir si une information est fiable ?</summary><div class="v5-faq__a"><p>Chaque note de veille porte une double cotation : la fiabilité de la source et la crédibilité de l'information, évaluées séparément, avec le motif de la cote. Vous lisez ainsi le niveau de confiance, sans avoir à l'estimer vous-même. Les événements de la carte suivront la même grille.</p></div></details>
+      <details><summary>Que se passe-t-il quand les sources se contredisent ?</summary><div class="v5-faq__a"><p>La contradiction est elle-même une information. Nous la signalons plutôt que de la masquer : l'événement est conservé, accompagné des versions concurrentes et de leur cotation respective.</p></div></details>
+      <details><summary>Les sources sont-elles toujours citées ?</summary><div class="v5-faq__a"><p>Oui. Chaque affirmation renvoie à sa source primaire. Lorsqu'une source ne peut être nommée pour des raisons de sécurité, elle est référencée de manière non nominative, mais reste tracée.</p></div></details>
+    </div>
+  </section>
+
+  <section class="v5-sec m-fin" data-nav="light" aria-labelledby="fin-t">
+    <div class="sec-head">
+      <h2 id="fin-t">Une lecture du terrain que vous pouvez vérifier</h2>
+      <p>Les six théâtres sont sourcés selon cette méthode, et chaque note de veille est cotée. Les offres détaillent comment y accéder.</p>
+    </div>
+    <div class="v5-actions">
+      <a class="btn-rect btn-rect--ink" href="/offres/">Voir les offres</a>
+      <a class="btn-outline" href="/">Découvrir la plateforme</a>
+    </div>
+  </section>
+</main>
+
+<!-- v5:foot -->
+<footer class="foot" data-nav="light">
+  <div class="foot__id">
+    <p>© 2026 Algor Acces</p>
+    <p>Solution souveraine française, données hébergées en Europe.</p>
+    <hr>
+    <div class="foot__pills">
+      <button class="pill site-login" type="button">Connexion</button>
+      <a class="pill" href="/offres/">Les offres</a>
+      <a class="pill" href="/demo/">La démo</a>
+    </div>
+  </div>
+  <div class="foot__col"><h3>Théâtres</h3><a href="/moyen-orient/">Moyen-Orient</a><a href="/sahel/">Sahel</a><a href="/rdc/">RDC, Grands Lacs</a><a href="/madagascar/">Madagascar</a><a href="/afrique/">Afrique maritime</a><a href="/asie-sud/">Asie du Sud</a></div>
+  <div class="foot__col"><h3>Plateforme</h3><a href="/">Plateforme</a><a href="/veille/">Veille</a><a href="/methodologie/">Méthodologie</a></div>
+  <div class="foot__col"><h3>Société</h3><a href="/a-propos/">À propos</a><a href="/offres/">Offres</a><a href="/contact/">Contact</a></div>
+  <div class="foot__col"><h3>Informations</h3><a href="/mentions-legales/">Mentions légales</a><a href="/confidentialite/">Confidentialité</a></div>
+</footer>
+<!-- /v5:foot -->
+
+<script type="module" src="/shared/site-auth.js?v=20261020a"></script>
+<script src="/shared/v5/chrome.js?v=20261001a"></script>
+<script>
+  /* Dernière note de veille, lue dans le flux public (via le bandeau commun) */
+  (function () {
+    var el = document.querySelector('[data-veille-latest]'), n = document.querySelector('[data-veille-count]');
+    if (!el) return;
+    function poser(a) {
+      if (!a || !a.length) { el.textContent = 'indisponible pour le moment'; return; }
+      var latest = a.reduce(function (m, i) { return i.date > m ? i.date : m; }, ''), srcs = {};
+      a.forEach(function (i) { if (i.source) srcs[i.source] = 1; });
+      el.textContent = new Date(latest).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+      if (n) n.textContent = a.length + ' notes · ' + Object.keys(srcs).length + ' sources citées';
+    }
+    if (window.V5 && window.V5.veille) poser(window.V5.veille);
+    else document.addEventListener('v5:veille', function (e) { poser(e.detail); });
+  })();
+</script>
+</body>
+</html>

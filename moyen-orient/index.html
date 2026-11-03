@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<script>(function(){/* PIVOT 2026-06 : carte theatre desactivee, remplacee par /carte/ (carte standard par pays : pays, periode, typologie, acteur). Reversible : supprimer ce bloc. */var b=location.search.indexOf("legacy=1")!==-1||localStorage.getItem("carto-legacy")==="1";if(!b)location.replace("/carte/?pays=Liban");})();</script>
+<meta charset="UTF-8">
+<script src="/shared/i18n.js?v=20261020c"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Algor Int — Attaques Moyen-Orient 2005–2026</title>
+<script type="module" src="../shared/site-auth.js?v=20261020a"></script>
+<script>/* V1 : promesse d'acces premium, posee AVANT le corps (script classique) pour
+   que les chargements de donnees (engine.js) n'accedent pas a window.algorAuth au
+   parse — il est defini par le module differe site-auth.js. Resolue par algorAuthReady. */
+window.algorReady = new Promise(function (res) {
+  window.addEventListener('algorAuthReady', function () { res(); }, { once: true });
+});</script>
+<link rel="icon" type="image/jpeg" href="../favicon.jpg">
+<meta property="og:title" content="Algor Int — Carte Moyen-Orient">
+<meta property="og:description" content="Cartographie interactive des attaques chiites/sunnites au Moyen-Orient. 173 evenements, 22 acteurs, 10 periodes. Cotation OTAN.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://algoracces.fr/moyen-orient/">
+<meta name="description" content="Algor Int — Carte interactive Moyen-Orient. Attaques chiites/sunnites 2005-2026, cotation OTAN, heatmap, comparaison.">
+<meta name="theme-color" content="#111214">
+
+
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.24.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.24.0/mapbox-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tmcw/togeojson@5/dist/togeojson.umd.js"></script>
+<link rel="stylesheet" href="../shared/styles.css?v=20260615ui13">
+</head>
+<body>
+
+<div id="header">
+  <div id="header-left">
+    <button id="btn-sidebar" onclick="toggleSidebar()"><span class="hamburger">&#9776;</span> Menu</button>
+    <a href="/" title="Retour à l'accueil" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
+      <img src="algor_int_logo.jpg" alt="Algor Int" style="height:28px;opacity:0.7;">
+      <div>
+        <h1>Attaques chiites / sunnites — Moyen-Orient</h1>
+        <p>Cartographie d'acteurs · 2005–2026</p>
+      </div>
+    </a>
+  </div>
+  <div class="hdr-cell">
+    <span class="hdr-cell-label">Periode</span>
+    <span id="period-badge">Aucune periode</span>
+  </div>
+  <div class="hdr-cell">
+    <span id="event-counter"></span>
+  </div>
+  <div class="hdr-controls">
+    <button class="hbtn" id="btn-export-html" onclick="exportLivrable()" title="Exporter les calques visibles dans un fichier HTML autonome (Leaflet, sans token)">
+      <span style="font-size:10px;line-height:1">⬇</span> Exporter HTML
+    </button>
+  </div>
+</div>
+
+<div id="progress-bar"><div id="progress-fill"></div></div>
+
+<div id="map-container">
+  <div id="map"><div id="loader" style="display:none">Chargement...</div></div>
+  <div id="map2"></div>
+  <div id="split-label-1"></div>
+  <div id="split-label-2"></div>
+</div>
+
+<div id="search-box">
+  <span id="search-icon">&#x2315;</span>
+  <input type="text" id="search-input" placeholder="Rechercher un acteur, evenement, ville...">
+  <div id="search-results"></div>
+</div>
+
+<div id="hover-tooltip"></div>
+
+<style>
+/* Bouton recentrer : hover/clavier alignes DA violet (ex-dore, ex-inline). */
+.btn-recenter:hover { color:#B596E0 !important; background:rgba(107,63,160,0.16) !important; }
+.btn-recenter:focus-visible { outline:2px solid #6B3FA0; outline-offset:2px; color:#B596E0 !important; }
+</style>
+<div id="btn-center-mo" class="btn-recenter" onclick="centerMap()" title="Recentrer sur le Moyen-Orient" role="button" tabindex="0" onkeydown="if(event.key==='Enter')this.click()" style="
+  position: absolute; bottom: 60px; left: 12px; z-index: 6;
+  background: rgba(17,18,20,0.97); border: 1px solid rgba(255,255,255,0.07);
+  border-top: 1px solid #6B3FA0; padding: 6px 11px; cursor: pointer;
+  font: 500 8px/1 'JetBrains Mono', monospace; color: #727a87;
+  letter-spacing: 0.14em; text-transform: uppercase; user-select: none;
+  transition: color .1s, background .1s; white-space: nowrap;
+">
+  Recentrer MO
+</div>
+
+<div id="sidebar-overlay" onclick="toggleSidebar()"></div>
+<div id="sidebar">
+  <button id="sidebar-close" onclick="toggleSidebar()">&times;</button>
+  <div class="sb-sections">
+    <div class="sb-section-header" onclick="toggleSbSection(this)">
+      <span class="sb-section-title">Legende</span>
+      <span class="sb-section-arrow open">&#x25B2;</span>
+    </div>
+    <div class="sb-section-body" id="sidebar-legend-body">
+      <div id="legend-items"><div style="font-size:11px;color:#6b7280;padding:4px 14px">Selectionne une periode</div></div>
+    </div>
+
+    <div class="sb-section-header" onclick="toggleSbSection(this)">
+      <span class="sb-section-title">Calques</span>
+      <span class="sb-section-arrow open">&#x25B2;</span>
+    </div>
+    <div class="sb-section-body">
+      <div class="sb-layer-row">
+        <span>Zones Daesh</span>
+        <div class="sb-toggle" id="sb-toggle-daesh" onclick="toggleDaeshZones && toggleDaeshZones()"></div>
+      </div>
+      <div style="padding:6px 12px 2px"><div style="font:600 7px/1 var(--bc);letter-spacing:0.12em;text-transform:uppercase;color:var(--tx2);margin-bottom:6px">Style carte</div></div>
+      <div class="sb-style-row">
+        <button class="sb-style-btn active" onclick="setStyle('standard')" id="sb-standard">Standard</button>
+        <button class="sb-style-btn" onclick="setStyle('satellite')" id="sb-satellite">Satellite</button>
+        <button class="sb-style-btn" onclick="setStyle('dark')" id="sb-dark">Sombre</button>
+        <button class="sb-style-btn" onclick="setStyle('fleuve')" id="sb-fleuve">Fleuve</button>
+      </div>
+    </div>
+
+    <div class="sb-section-header" onclick="toggleSbSection(this)">
+      <span class="sb-section-title">Outils</span>
+      <span class="sb-section-arrow open">&#x25B2;</span>
+    </div>
+    <div class="sb-section-body">
+      <div class="sb-tool-row" onclick="toggleHeatmap();toggleSidebar()"><span class="sb-tool-icon">&#x25D1;</span> Heatmap</div>
+      <div class="sb-tool-row" onclick="toggleComparePanel();toggleSidebar()"><span class="sb-tool-icon">&#x25EB;</span> Comparer</div>
+    </div>
+
+    <div class="sb-section-header" onclick="toggleSbSection(this)">
+      <span class="sb-section-title">Evenements <span id="sb-chart-count" style="color:var(--ac);margin-left:4px">—</span></span>
+      <span class="sb-section-arrow">&#x25B2;</span>
+    </div>
+    <div class="sb-section-body collapsed" id="sb-chart-body"></div>
+  </div>
+</div>
+
+
+<div id="compare-panel">
+  <h4>Comparer deux periodes</h4>
+  <p style="font-size:10px;color:#6b7280;margin-bottom:8px">Selectionne la 2e periode</p>
+  <div class="compare-select" id="compare-select"></div>
+  <button id="compare-close" onclick="closeCompare()">Fermer</button>
+</div>
+
+<div id="controls">
+  <div id="period-buttons"></div>
+  <div id="btn-row">
+    <button id="btn-play" onclick="togglePlay()">Play</button>
+    <div id="slider-wrap">
+      <span class="yr">2005</span>
+      <div id="slider-inner">
+        <div id="slider-label">2005-2006</div>
+        <input type="range" id="timeline-slider" min="0" max="9" value="0" step="1">
+      </div>
+      <span class="yr">2026</span>
+    </div>
+    <button id="btn-all" onclick="toggleAll()">Tout</button>
+  </div>
+</div>
+
+<!-- ZONE CONFIG -->
+<script>
+const ZONE_CONFIG = {
+  ZONE_ID: 'moyen-orient',
+  OTAN_DATA: {},
+  ACTOR_GROUPS: {
+    'Milices chiites': ['Hezbollah','Asaib Ahl al-Haq','IRGC-Qods Force','IRGC-Qods Force+Basij','Kataib Hezbollah','Basij','Kataib Sayyid al-Shuhada','Harakat Hezbollah al-Nujaba','Fatemiyoun Brigade','Zainebiyoun Brigade','PMF / Hashd al-Shaabi','PMF / Hashd al-Shaabi+Kataib Hezbollah','IRGC Ground Forces','Houthis'],
+    'Djihadistes sunnites': ['Daesh','Daesh + Armées Irakiennes'],
+    'Coalitions & États': ['Coalition Internationale','USA','USA, Force Delta','Israel / IDF','Armées Irakiennes','Armées Irakiennes + Peshmergas vs. Daesh'],
+    'Kurdes & FDS': ['Peshmergas','Forces Démocratiques Syriennes']
+  },
+  ACTOR_COLORS: {
+    'Hezbollah':'#e63946','Asaib Ahl al-Haq':'#ff6b35','IRGC-Qods Force':'#c1121f',
+    'IRGC-Qods Force+Basij':'#9d0208','Kataib Hezbollah':'#ff4d6d','Basij':'#dc2f02',
+    'Kataib Sayyid al-Shuhada':'#f48c06','Harakat Hezbollah al-Nujaba':'#e85d04',
+    'Fatemiyoun Brigade':'#faa307','PMF / Hashd al-Shaabi':'#ffba08',
+    'PMF / Hashd al-Shaabi+Kataib Hezbollah':'#e76f51','IRGC Ground Forces':'#ae2012',
+    'Zainebiyoun Brigade':'#bb3e03','Houthis':'#7b2d8b','Daesh':'#555555',
+    'Daesh + Armées Irakiennes':'#777777','Coalition Internationale':'#1d7ed8',
+    'USA':'#0077b6','USA, Force Delta':'#023e8a','Israel / IDF':'#1a5f7a','Peshmergas':'#ccaa00','Armées Irakiennes':'#2d6a4f',
+    'Armées Irakiennes + Peshmergas vs. Daesh':'#40916c','Forces Démocratiques Syriennes':'#48cae4'
+  },
+  normalizeName: function(raw) {
+    if (!raw) return null;
+    const n = raw.trim();
+    if (!n || /^\d{4}-\d{4}$/.test(n)) return null;
+    const M = {
+      'Asaib Ahl al-Haq ':'Asaib Ahl al-Haq','Basij ':'Basij',
+      'Coalition':'Coalition Internationale','Coalition Int.':'Coalition Internationale',
+      'Daesh-Armées Irakiennes':'Daesh + Armées Irakiennes',
+      'Force Démocratiques Syriennes':'Forces Démocratiques Syriennes',
+      'Hezbollah ':'Hezbollah','IRGC-Qods':'IRGC-Qods Force',
+      'IRGC-Qods Force ':'IRGC-Qods Force','IRGC-Qods Force+Basij ':'IRGC-Qods Force+Basij',
+      'Kataib Hezbollah ':'Kataib Hezbollah',
+      'PMF / Hashd al-Shaabi ':'PMF / Hashd al-Shaabi',
+      ' PMF / Hashd al-Shaabi':'PMF / Hashd al-Shaabi'
+    };
+    return M[n] !== undefined ? M[n] : n;
+  },
+  PERIODS: [
+    {label:'2005-2006',file:'2005-2006.geojson',kml:'2005-2006.kml'},
+    {label:'2007-2008',file:'2007-2008.geojson',kml:'2007-2008.kml'},
+    {label:'2009-2010',file:'2009-2010.geojson',kml:'2009-2010.kml'},
+    {label:'2011-2012',file:'2011-2012.geojson',kml:'2011-2012.kml'},
+    {label:'2013-2014',file:'2013-2014.geojson',kml:'2013-2014.kml'},
+    {label:'2015-2016',file:'2015-2016.geojson',kml:'2015-2016.kml'},
+    {label:'2017-2018',file:'2017-2018.geojson',kml:'2017-2018.kml'},
+    {label:'2019-2020',file:'2019-2020.geojson',kml:'2019-2020.kml'},
+    {label:'2021-2022',file:'2021-2022.geojson',kml:'2021-2022.kml'},
+    {label:'2023-2026',file:'2023-2026.geojson',kml:'2023-2026.kml'}
+  ],
+  STYLES: {
+    standard:  'mapbox://styles/mapbox/standard',
+    satellite: 'mapbox://styles/mapbox/satellite-streets-v12',
+    dark:      'mapbox://styles/mapbox/dark-v11',
+    fleuve:    'mapbox://styles/mapbox/outdoors-v12'
+  },
+  MAP_CENTER: [43, 30],
+  MAP_ZOOM: 4.5,
+  MAP_BEARING: -20,
+  MAP_ZONES: null,
+  BADGE_ALL_TEXT: 'Toutes \u00b7 2005\u20132026',
+  TUTORIAL_KEY: 'algor-tutorial-mo-seen',
+  // Donnees archivees : carte videe, donnees accessibles via /dashboard/
+  DISABLE_LAYERS_AND_POINTS: false
+};
+
+/* Chargement asynchrone OTAN + MAP_ZONES — depuis le Storage privé (premium).
+   Différé à l'événement algorAuthReady : ce script classique s'exécute avant le
+   module site-auth.js, donc window.algorAuth n'existe pas encore au parse. */
+window.addEventListener('algorAuthReady', function () {
+  window.algorAuth.loadZoneFile("moyen-orient/otan-data.json").then(d => { ZONE_CONFIG.OTAN_DATA = d; Object.assign(OTAN_DATA, d); }).catch(() => console.warn("OTAN data not loaded"));
+  window.algorAuth.loadZoneFile("moyen-orient/map-zones.json").then(d => { ZONE_CONFIG.MAP_ZONES = d; }).catch(() => console.warn("MAP_ZONES data not loaded"));
+});
+</script>
+<script type="module" src="../shared/firebase-loader.js?v=20260608d"></script>
+<script type="module" src="../shared/brief-ia.js?v=20260621n"></script>
+<script src="../shared/engine.js?v=20260615c"></script>
+
+<!-- MO-SPECIFIC: Daesh territory zones + auto-toggle -->
+<script>
+(function() {
+  const DAESH_PERIODS = [4, 5]; // index 4=2013-2014, 5=2015-2016
+  let daeshZonesVisible = false;
+
+  function checkDaeshAutoToggle() {
+    const hasDaesh = [...activePeriods].some(i => DAESH_PERIODS.includes(i));
+    if (map.getLayer('map-zones-fill')) {
+      map.setLayoutProperty('map-zones-fill', 'visibility', hasDaesh ? 'visible' : 'none');
+      map.setLayoutProperty('map-zones-outline', 'visibility', hasDaesh ? 'visible' : 'none');
+    }
+    daeshZonesVisible = hasDaesh;
+    const sbToggle = document.getElementById('sb-toggle-daesh');
+    if (sbToggle) sbToggle.classList.toggle('on', hasDaesh);
+    const btn = document.getElementById('btn-daesh-zones');
+    if (btn) {
+      btn.style.background = hasDaesh ? 'rgba(85,85,85,0.3)' : 'rgba(85,85,85,0.05)';
+      btn.style.borderColor = hasDaesh ? '#888888' : 'rgba(85,85,85,0.2)';
+      btn.style.color = hasDaesh ? '#cccccc' : '#555555';
+    }
+  }
+
+  window.toggleDaeshZones = function() {
+    daeshZonesVisible = !daeshZonesVisible;
+    const sbToggle = document.getElementById('sb-toggle-daesh');
+    if (sbToggle) sbToggle.classList.toggle('on', daeshZonesVisible);
+    const btn = document.getElementById('btn-daesh-zones');
+    const vis = daeshZonesVisible ? 'visible' : 'none';
+    ['map-zones-fill', 'map-zones-outline'].forEach(id => {
+      if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis);
+    });
+    if (btn) {
+      btn.style.background = daeshZonesVisible ? 'rgba(85,85,85,0.3)' : 'rgba(85,85,85,0.05)';
+      btn.style.borderColor = daeshZonesVisible ? '#888888' : 'rgba(85,85,85,0.2)';
+      btn.style.color = daeshZonesVisible ? '#cccccc' : '#555555';
+    }
+  };
+
+  /* Monkey-patch togglePeriod / toggleAll to call checkDaeshAutoToggle */
+  const _origTogglePeriod = togglePeriod;
+  togglePeriod = function(index) {
+    _origTogglePeriod(index);
+    setTimeout(checkDaeshAutoToggle, 300);
+  };
+  const _origToggleAll = toggleAll;
+  toggleAll = function() {
+    _origToggleAll();
+    setTimeout(checkDaeshAutoToggle, 300);
+  };
+
+  /* Add MAP_ZONES layers once map and data are ready */
+  map.on('load', function() {
+    function tryAddZones() {
+      const data = ZONE_CONFIG.MAP_ZONES;
+      if (!data) { setTimeout(tryAddZones, 200); return; }
+      if (map.getSource('map-zones')) return;
+      map.addSource('map-zones', { type: 'geojson', data: data });
+      map.addLayer({
+        id: 'map-zones-fill', type: 'fill', source: 'map-zones',
+        paint: { 'fill-color': '#555555', 'fill-opacity': 0.30 }
+      }, map.getLayer('kml-dots-glow') ? 'kml-dots-glow' : undefined);
+      map.addLayer({
+        id: 'map-zones-outline', type: 'line', source: 'map-zones',
+        paint: { 'line-color': '#777777', 'line-width': 1.8, 'line-opacity': 0.9, 'line-dasharray': [4, 2] }
+      }, map.getLayer('kml-dots-glow') ? 'kml-dots-glow' : undefined);
+      checkDaeshAutoToggle();
+    }
+    tryAddZones();
+  });
+
+  /* Also re-add zones on style change */
+  const _origSetStyle = setStyle;
+  setStyle = function(s) {
+    _origSetStyle(s);
+    map.once('style.load', function() {
+      const data = ZONE_CONFIG.MAP_ZONES;
+      if (!data) return;
+      if (!map.getSource('map-zones')) {
+        map.addSource('map-zones', { type: 'geojson', data: data });
+        map.addLayer({
+          id: 'map-zones-fill', type: 'fill', source: 'map-zones',
+          paint: { 'fill-color': '#555555', 'fill-opacity': 0.30 }
+        }, map.getLayer('kml-dots-glow') ? 'kml-dots-glow' : undefined);
+        map.addLayer({
+          id: 'map-zones-outline', type: 'line', source: 'map-zones',
+          paint: { 'line-color': '#777777', 'line-width': 1.8, 'line-opacity': 0.9, 'line-dasharray': [4, 2] }
+        }, map.getLayer('kml-dots-glow') ? 'kml-dots-glow' : undefined);
+      }
+      checkDaeshAutoToggle();
+    });
+  };
+})();
+</script>
+
+<!-- TUTORIEL -->
+<div id="tutorial-overlay">
+  <div id="tutorial-box">
+    <button id="tutorial-skip" onclick="closeTutorial()">Passer</button>
+    <h2 class="tuto-main-title">Attaques chiites / sunnites<br>au Moyen-Orient depuis 2005 a aujourd'hui</h2>
+    <p class="subtitle">Cartographie d'acteurs dans une zone definie</p>
+    <div class="tuto-step">
+      <div class="tuto-icon">&#x22A1;</div>
+      <div><div class="tuto-title">Selectionner une periode</div>
+      <div class="tuto-desc">Selectionnez une periode en bas (2005-2006, 2007-2008...) ou utilisez le slider. Le bouton Play anime toutes les periodes automatiquement.</div></div>
+    </div>
+    <div class="tuto-step">
+      <div class="tuto-icon">&#x25C9;</div>
+      <div><div class="tuto-title">Les points</div>
+      <div class="tuto-desc">Chaque point represente un evenement. La couleur indique l'acteur, la taille indique le nombre de victimes. Cliquez pour voir le detail complet.</div></div>
+    </div>
+    <div class="tuto-step">
+      <div class="tuto-icon">&#x25C7;</div>
+      <div><div class="tuto-title">Cotation du renseignement</div>
+      <div class="tuto-desc">Chaque evenement est evalue selon la doctrine OTAN. La lettre indique la <strong>fiabilite de la source</strong> (A = totalement fiable &#x2192; F = fiabilite non estimable). Le chiffre indique la <strong>veracite du contenu</strong> (1 = corroboree par d'autres sources &#x2192; 6 = veracite non estimable).<span class="otan-grades">A1 = totalement fiable / corrobore · B2 = habituellement fiable / probablement vrai · C3 = assez fiable / peut-etre vrai · F6 = non estimable</span></div></div>
+    </div>
+    <div class="tuto-step">
+      <div class="tuto-icon">&#x25C8;</div>
+      <div><div class="tuto-title">Outils avances</div>
+      <div class="tuto-desc">HEATMAP — zones les plus actives · COMPARER — deux periodes cote a cote · PNG — exporter la carte</div></div>
+    </div>
+    <div class="tuto-step">
+      <div class="tuto-icon">&#x2197;</div>
+      <div><div class="tuto-title">Vue 3D</div>
+      <div class="tuto-desc">Inclinez la carte avec le clic droit + glisser pour passer en vue 3D. Les points deviennent des cylindres qui depassent les batiments.</div></div>
+    </div>
+    <button id="tutorial-close" onclick="closeTutorial()">OK</button>
+  </div>
+</div>
+
+<!-- Exporter HTML standalone (Leaflet) -->
+<script type="module">
+import { exportZoneAsHTML } from '../shared/exporter.js?v=20260511a';
+window.exportLivrable = async function() {
+  const btn = document.getElementById('btn-export-html');
+  const old = btn?.innerHTML;
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span style="font-size:10px">⏳</span> Export…'; }
+  try {
+    const period = document.getElementById('period-badge')?.textContent?.trim();
+    const subtitle = period && period !== 'Aucune période' ? ('Période ' + period) : '';
+    await exportZoneAsHTML({ zoneName: 'Moyen-Orient', subtitle, map: window.algorMap || window.map });
+  } catch (e) {
+    console.error('[export]', e);
+    alert("Echec de l'export : " + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = old; }
+  }
+};
+</script>
+
+</body>
+
+</html>

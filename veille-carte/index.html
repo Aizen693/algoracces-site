@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<script src="/shared/i18n.js?v=20261020c"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carte de veille — Algor Acces</title>
+<!-- Gate premium : overlay bloquant tant que session + plan premium absents. -->
+<script>window.addEventListener('algorAuthReady', function () { window.__algorAuthGranted = true; });</script>
+<script type="module" src="../shared/site-auth.js?v=20261020a"></script>
+
+
+<link rel="stylesheet" href="/shared/home/fonts-display.css?v=20260914c">
+<link rel="stylesheet" href="/shared/v5/v5.css?v=20261001a">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.24.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.24.0/mapbox-gl.js"></script>
+<style>
+  /* Carte de veille · v5 : monochrome, Host Grotesk, filets fins.
+     Seule la sévérité garde une teinte (donnée) ; le signal simple est à l'encre. */
+  :root { --shadow: 0 20px 50px -30px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.06); }
+  html, body { height: 100%; overflow: hidden; background: var(--band); }
+  #map { position: absolute; inset: 0; }
+  body *:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .vk-bar *:focus-visible { outline-color: var(--on-night); }
+
+  /* Barre du haut flottante (nuit) */
+  .vk-bar {
+    position: fixed; top: 10px; left: 10px; right: 10px; z-index: 5; height: 56px;
+    display: flex; align-items: center; gap: 16px; padding: 0 8px 0 18px;
+    background: rgba(27, 28, 33, 0.86); color: var(--on-night); border-radius: 6px;
+    backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  }
+  .vk-brand { display: flex; align-items: center; gap: 10px; font-size: 17px; letter-spacing: -0.02em; white-space: nowrap; flex: none; }
+  .vk-brand img { width: 26px; height: 26px; border-radius: 6px; }
+  .vk-sep { width: 1px; height: 26px; background: var(--line-night); flex: none; }
+  .vk-head { display: flex; align-items: baseline; gap: 14px; min-width: 0; margin-right: auto; }
+  .vk-title { font-size: 16px; letter-spacing: -0.01em; white-space: nowrap; }
+  .vk-eyebrow { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--on-night-2); white-space: nowrap; }
+  .vk-eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: #34B27B; flex: none; }
+  .vk-back {
+    flex: none; display: inline-flex; align-items: center; height: 40px; padding: 0 20px;
+    background: var(--paper); color: var(--ink); border: 1px solid var(--paper); border-radius: 2px;
+    font-size: 15px; white-space: nowrap; transition: background .2s ease, color .2s ease, border-color .2s ease;
+  }
+  .vk-back:hover { background: transparent; color: var(--on-night); border-color: var(--on-night); }
+
+  /* Panneau d'état + légende (papier, sous la barre) */
+  .vk-panel {
+    position: fixed; top: 76px; left: 10px; z-index: 5; max-width: 340px; padding: 14px 16px;
+    background: var(--paper); border: 1px solid var(--line); border-radius: 4px; box-shadow: var(--shadow);
+  }
+  .vk-sub { margin: 0; font-size: 14px; line-height: 1.45; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .vk-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .vk-leg { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink-2); }
+  .vk-leg i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; box-shadow: 0 0 0 1.5px var(--paper), 0 0 0 2.5px var(--line); }
+
+  /* Marqueurs */
+  /* Mapbox positionne .vk-pin via transform : ne jamais y mettre de transition
+     (sinon les pastilles « glissent » au zoom). L'effet visuel va sur la pastille interne. */
+  .vk-pin { cursor: pointer; line-height: 0; }
+  .vk-pin__dot { width: 16px; height: 16px; border-radius: 50%; border: 2.5px solid #FFF; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3); transition: transform .12s ease; }
+  .vk-pin:hover .vk-pin__dot { transform: scale(1.25); }
+  .vk-pin__dot.is-critique { width: 20px; height: 20px; animation: vkpulse 1.8s ease-out infinite; }
+  /* Point sélectionné : halo blanc + anneau encre, agrandi, bien visible. */
+  .vk-pin__dot.is-selected,
+  .vk-pin:hover .vk-pin__dot.is-selected { transform: scale(1.45); animation: none; box-shadow: 0 0 0 2px #FFF, 0 0 0 3.5px var(--ink), 0 6px 16px rgba(0, 0, 0, 0.35); }
+  @keyframes vkpulse { 0% { box-shadow: 0 1px 4px rgba(0, 0, 0, .3), 0 0 0 0 rgba(184, 58, 74, .45); } 70% { box-shadow: 0 1px 4px rgba(0, 0, 0, .3), 0 0 0 10px rgba(184, 58, 74, 0); } 100% { box-shadow: 0 1px 4px rgba(0, 0, 0, .3), 0 0 0 0 rgba(184, 58, 74, 0); } }
+
+  /* Panneau note (droite) */
+  .vk-note {
+    position: fixed; top: 0; right: 0; height: 100%; width: 440px; max-width: 100vw; z-index: 6;
+    background: var(--paper); border-left: 1px solid var(--line); box-shadow: -30px 0 60px -40px rgba(0, 0, 0, 0.45);
+    transform: translateX(102%); transition: transform .32s cubic-bezier(.4, 0, .2, 1); overflow-y: auto;
+  }
+  .vk-note.is-open { transform: none; }
+  .vk-note__media { position: relative; height: 200px; background: var(--night-2); overflow: hidden; }
+  .vk-note__media img { width: 100%; height: 100%; object-fit: cover; opacity: .9; }
+  .vk-note__sev {
+    position: absolute; top: 14px; left: 14px; display: inline-flex; align-items: center; gap: 7px;
+    height: 28px; padding: 0 10px; background: var(--paper); color: var(--ink); border-radius: 2px; font-size: 13px;
+  }
+  .vk-note__sev i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .vk-note__src { position: absolute; left: 18px; right: 18px; bottom: 14px; color: #FFF; font-size: 18px; letter-spacing: -0.01em; text-shadow: 0 1px 14px rgba(0, 0, 0, 0.6); }
+  .vk-note__x { position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; display: grid; place-items: center; background: var(--paper); color: var(--ink); border-radius: 2px; }
+  .vk-note__x:hover { background: var(--band); }
+  .vk-note__x svg { width: 16px; height: 16px; }
+  .vk-note__body { padding: 22px 24px 32px; }
+  .vk-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 14px; color: var(--muted); }
+  .vk-meta .z { color: var(--ink); }
+  .vk-meta span:last-child { font: 400 13px/1 var(--mono); }
+  .vk-note__t { margin: 12px 0 10px; font-weight: 400; font-size: 26px; line-height: 1.16; letter-spacing: -0.02em; color: var(--ink); }
+  .vk-note__resume { margin: 0 0 4px; font-size: 16px; line-height: 1.55; color: var(--ink-2); }
+  .vk-class { display: inline-block; margin: 22px 0 8px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 2px; font-size: 13px; color: var(--muted); }
+  .vk-sec { margin: 0; padding: 16px 0; border-top: 1px solid var(--line); }
+  .vk-class + .vk-sec { border-top: 0; }
+  .vk-sec__lbl { margin-bottom: 8px; font-size: 14px; font-weight: 500; color: var(--ink); }
+  .vk-sec p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--ink-2); }
+  .vk-sec ul { margin: 0; padding-left: 18px; }
+  .vk-sec li { margin-bottom: 6px; font-size: 15px; line-height: 1.55; color: var(--ink-2); }
+  .vk-sec li::marker { color: var(--faint); }
+  .vk-reco { margin: 4px 0; padding: 16px; background: var(--band); border-top: 0; border-radius: 2px; }
+  .vk-reco + .vk-sec { border-top: 0; }
+  .vk-srcrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: space-between; font-size: 15px; }
+  .vk-srclink { color: var(--ink); text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 4px; text-decoration-thickness: 1px; }
+  .vk-srclink:hover { text-decoration-color: currentColor; }
+  .vk-rel { font: 400 12px/1 var(--mono); color: var(--muted); }
+  .vk-cta {
+    margin-top: 20px; display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 12px 16px;
+    background: var(--ink); color: var(--paper); border: 1px solid var(--ink); border-radius: 2px;
+    font-size: 15px; text-align: center; transition: background .2s ease, color .2s ease;
+  }
+  .vk-cta:hover { background: var(--paper); color: var(--ink); }
+  .vk-loading { position: fixed; inset: 0; z-index: 4; display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--muted); pointer-events: none; }
+
+  /* Contrôles Mapbox */
+  .mapboxgl-ctrl-group { border-radius: 2px !important; border: 1px solid var(--line); box-shadow: var(--shadow) !important; }
+  .mapboxgl-ctrl-group button + button { border-top-color: var(--line) !important; }
+  .mapboxgl-ctrl-group button:hover { background: var(--band) !important; }
+
+  @media (max-width: 900px) { .vk-eyebrow { display: none; } }
+  @media (max-width: 640px) {
+    .vk-bar { gap: 12px; padding-left: 14px; }
+    .vk-brand span, .vk-sep { display: none; }
+    .vk-back { height: 36px; padding: 0 12px; font-size: 14px; }
+    .vk-panel { right: 10px; max-width: none; }
+  }
+  @media (max-width: 420px) {
+    .vk-brand { display: none; }
+    .vk-title { font-size: 15px; }
+    .vk-back { font-size: 13px; padding: 0 10px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .vk-pin__dot.is-critique { animation: none; } }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="vk-loading" id="loading">Chargement des signaux…</div>
+
+<header class="vk-bar">
+  <a class="vk-brand" href="/" title="Algor Acces"><svg class="marque" viewBox="0 0 100 100" width="26" height="26" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16 90 L28 90 L46.4 40 L34.4 40 Z M74 90 L86 90 L75 62 L63 62 Z M50 5 L59 14 L50 23 L41 14 Z"/></svg><span>Algor Acces</span></a>
+  <span class="vk-sep" aria-hidden="true"></span>
+  <div class="vk-head">
+    <div class="vk-title">Carte de veille</div>
+    <div class="vk-eyebrow"><span class="dot"></span>Veille active</div>
+  </div>
+  <a class="vk-back" href="/plateforme/">← Retour à la plateforme</a>
+</header>
+
+<div class="vk-panel">
+  <p class="vk-sub" id="vk-sub">Signaux OSINT géolocalisés · mise à jour quotidienne</p>
+  <div class="vk-legend">
+    <span class="vk-leg"><i style="background:#1C1D21"></i>Signal</span>
+    <span class="vk-leg"><i style="background:#C77A12"></i>Alerte</span>
+    <span class="vk-leg"><i style="background:#B83A4A"></i>Critique</span>
+  </div>
+</div>
+
+<aside class="vk-note" id="note" aria-hidden="true"></aside>
+
+<script>
+(function () {
+  mapboxgl.accessToken = 'pk.eyJ1IjoiYXo2OTMiLCJhIjoiY21uMGlhY2ZyMGx6bDJycjAxYWZjbWt5eiJ9.SQqOLLgLwWKnUGMztrSArg';
+
+  // Fil complet (analyse) : réservé aux abonnés premium, contrôlé côté serveur par veille-feed.
+  // Rien n'est téléchargé avant que site-auth ait confirmé l'accès (événement algorAuthReady).
+  var REMOTE = 'https://lwgrjdpuagnvvzmdbyzb.supabase.co/functions/v1/veille-feed/notifications-complet.json';
+  var SEV = {
+    info:     { lbl: 'Signal',   c: '#1C1D21' },
+    alerte:   { lbl: 'Alerte',   c: '#C77A12' },
+    critique: { lbl: 'Critique', c: '#B83A4A' }
+  };
+  var ZONE_LABELS = {
+    'moyen-orient': 'Moyen-Orient', 'sahel': 'Sahel', 'rdc': 'RDC',
+    'madagascar': 'Madagascar', 'afrique': 'Afrique Maritime', 'asie-sud': 'Asie du Sud'
+  };
+  // Centres par pays (lon, lat) : repli quand l'item n'a pas encore de coordonnées
+  // précises mais qu'on connaît son pays via `lieu`. Un signal malien retombe
+  // au centre du Mali, pas au milieu du théâtre (qui mélange plusieurs pays).
+  var COUNTRY = {
+    'mali':[-3.5,17.5],'niger':[9,17.5],'burkina faso':[-1.7,12.3],'burkina':[-1.7,12.3],'nigeria':[8.5,9.5],
+    'tchad':[18.7,15],'mauritanie':[-10.5,20.5],'senegal':[-14.5,14.5],'benin':[2.3,9.6],'togo':[0.9,8.6],
+    'cote d ivoire':[-5.5,7.6],'guinee':[-11,10.5],'ghana':[-1.2,7.9],
+    'rdc':[23.6,-2.9],'republique democratique du congo':[23.6,-2.9],'congo':[15.8,-0.7],
+    'soudan':[30,15.5],'soudan du sud':[31,7],'somalie':[46,5.5],'ethiopie':[39.5,9],'kenya':[37.9,0.2],
+    'iran':[53.7,32.4],'irak':[43.7,33],'iraq':[43.7,33],'syrie':[38,35],'yemen':[47.6,15.5],'liban':[35.9,33.9],
+    'israel':[34.9,31.4],'palestine':[35.2,31.9],'jordanie':[36.5,31.3],'arabie saoudite':[45,24],'turquie':[35,39],'egypte':[30,27],
+    'madagascar':[46.7,-19],'mozambique':[35.5,-18],
+    'inde':[79,22],'pakistan':[69,30],'afghanistan':[66,33],'bangladesh':[90,24]
+  };
+  function norm(s){ return String(s == null ? '' : s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z ]/g,' ').replace(/\s+/g,' ').trim(); }
+  function countryCenter(lieu){
+    if (!lieu) return null;
+    var parts = String(lieu).split(',');
+    var tries = [norm(parts[parts.length - 1])];
+    if (parts.length > 1) tries.push(norm(lieu));
+    for (var i = 0; i < tries.length; i++){ if (COUNTRY[tries[i]]) return COUNTRY[tries[i]]; }
+    return null;
+  }
+
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function (c){ return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]; }); }
+  // Securite : n'autorise que les URL http(s) (bloque javascript:, data:, etc. venant du flux distant)
+  function safeHttpUrl(u){ u = String(u == null ? '' : u).trim(); return /^https?:\/\//i.test(u) ? u : ''; }
+  function zoneLabel(k){ return ZONE_LABELS[k] || k || ''; }
+  function dateFR(d){ try { return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }); } catch (e) { return d; } }
+  function reliabilityOf(s){ s = (s || '').toLowerCase();
+    if (/acled|isw|bellingcat|kivu|reuters|afp|crisis|hrw|amnesty|\bonu\b|\bun\b|imb|janes/.test(s)) return 'Élevée';
+    if (/rfi|guardian|\bbbc\b|france 24|le monde|trt|jazeera|figaro|ap\b/.test(s)) return 'Établie';
+    return 'À recouper'; }
+  function asList(v){ return Array.isArray(v) ? v.filter(Boolean) : (v ? [v] : []); }
+  function block(v){ var a = asList(v); if (!a.length) return ''; return '<ul>' + a.map(function (x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>'; }
+
+  // Coordonnées : précises (item.lat/lon de n8n) ; sinon repli au centre du PAYS
+  // (lu dans `lieu`) + petit décalage en spirale anti-superposition. Si on ne
+  // connaît ni coords ni pays, on retourne null → le signal n'est PAS placé
+  // (mieux vaut l'omettre que le mettre au mauvais endroit).
+  function coordsFor(it, fbIdx){
+    var lat = parseFloat(it.lat != null ? it.lat : it.latitude);
+    var lon = parseFloat(it.lon != null ? it.lon : (it.lng != null ? it.lng : it.longitude));
+    var precise = isFinite(lat) && isFinite(lon);
+    var base = precise ? [lon, lat] : countryCenter(it.lieu);
+    if (!base) return null;
+    // Anti-superposition : les signaux au même point sont écartés en spirale,
+    // pour rester tous visibles et cliquables. Écart serré si point précis.
+    var key = base[0].toFixed(2) + ',' + base[1].toFixed(2);
+    var n = (fbIdx[key] = (fbIdx[key] || 0), fbIdx[key]++);
+    if (!n) return { c: [base[0], base[1]], precise: precise };
+    var r0 = precise ? 0.07 : 0.28, step = precise ? 0.05 : 0.16;
+    var a = n * 2.399963, r = r0 + n * step;
+    return { c: [base[0] + Math.cos(a) * r, base[1] + Math.sin(a) * r], precise: precise };
+  }
+
+  function noteHTML(it){
+    var sev = SEV[it.severite] || SEV.info;
+    var img = it.image ? '<img src="' + esc(it.image) + '" alt="" onerror="this.style.display=\'none\'">' : '';
+    var impl = block(it.implications);
+    var reco = block(it.recommandations);
+    return ''
+      + '<div class="vk-note__media">' + img
+      +   '<span class="vk-note__sev"><i style="background:' + sev.c + '"></i>' + sev.lbl + '</span>'
+      +   '<span class="vk-note__src">' + esc(it.source || '') + '</span>'
+      +   '<button class="vk-note__x" id="note-x" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>'
+      + '</div>'
+      + '<div class="vk-note__body">'
+      +   '<div class="vk-meta"><span class="z">' + esc(zoneLabel(it.theatre)) + '</span><span>·</span><span>' + esc(dateFR(it.date)) + '</span></div>'
+      +   '<h2 class="vk-note__t">' + esc(it.titre || '') + '</h2>'
+      +   '<p class="vk-note__resume">' + esc(it.resume || '') + '</p>'
+      +   '<div class="vk-class">Note d\'analyse · Accès abonné</div>'
+      +   (it.detail || it.resume ? '<div class="vk-sec"><div class="vk-sec__lbl">Analyse</div><p>' + esc(it.detail || it.resume) + '</p></div>' : '')
+      +   (impl ? '<div class="vk-sec"><div class="vk-sec__lbl">Implications opérationnelles</div>' + impl + '</div>' : '')
+      +   '<div class="vk-sec vk-reco"><div class="vk-sec__lbl">Recommandations · que faire de cette information</div>'
+      +     (reco || '<p>À partir de ce signal, nos analystes produisent sur demande une note d\'impact dédiée à votre organisation : exposition, scénarios probables et mesures à prendre.</p>') + '</div>'
+      +   '<div class="vk-sec"><div class="vk-sec__lbl">Sources et fiabilité</div><div class="vk-srcrow">'
+      +     (safeHttpUrl(it.source_url) ? '<a class="vk-srclink" href="' + esc(safeHttpUrl(it.source_url)) + '" target="_blank" rel="noopener">' + esc(it.source) + ' ↗</a>' : '<span>' + esc(it.source || '') + '</span>')
+      +     '<span class="vk-rel">Fiabilité · ' + reliabilityOf(it.source) + '</span>'
+      +   '</div></div>'
+      +   '<a class="vk-cta" href="/contact/">Demander un brief approfondi sur ce sujet →</a>'
+      + '</div>';
+  }
+
+  var noteEl = document.getElementById('note');
+  // Marqueur actuellement sélectionné : mis en avant pour qu'on voie quel point
+  // correspond à la note ouverte.
+  var selectedDot = null;
+  function selectDot(dot){
+    if (selectedDot) { selectedDot.classList.remove('is-selected'); if (selectedDot.parentElement) selectedDot.parentElement.style.zIndex = ''; }
+    selectedDot = dot || null;
+    if (selectedDot) { selectedDot.classList.add('is-selected'); if (selectedDot.parentElement) selectedDot.parentElement.style.zIndex = '10'; }
+  }
+  function openNote(it){
+    noteEl.innerHTML = noteHTML(it);
+    noteEl.classList.add('is-open');
+    noteEl.setAttribute('aria-hidden', 'false');
+    var x = document.getElementById('note-x');
+    if (x) x.onclick = closeNote;
+  }
+  function closeNote(){ noteEl.classList.remove('is-open'); noteEl.setAttribute('aria-hidden', 'true'); selectDot(null); }
+  document.addEventListener('keydown', function (e){ if (e.key === 'Escape') closeNote(); });
+
+  var map = new mapboxgl.Map({
+    container: 'map', style: 'mapbox://styles/mapbox/light-v11',
+    center: [22, 12], zoom: 2.1, projection: 'mercator', attributionControl: false, language: 'fr'
+  });
+  map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'bottom-right');
+
+  function plot(items){
+    var loading = document.getElementById('loading'); if (loading) loading.remove();
+    if (!items.length) { document.getElementById('vk-sub').textContent = 'Aucun signal pour le moment.'; return; }
+    var fbIdx = {}, bounds = new mapboxgl.LngLatBounds(), nPrecise = 0, nPlaced = 0, byId = {};
+    items.forEach(function (it){
+      var pos = coordsFor(it, fbIdx);
+      if (!pos) return; // ni coords ni pays connu → on ne place pas (évite les points au mauvais endroit)
+      nPlaced++;
+      if (pos.precise) nPrecise++;
+      var sev = SEV[it.severite] || SEV.info;
+      var el = document.createElement('div');
+      el.className = 'vk-pin';
+      var dot = document.createElement('div');
+      dot.className = 'vk-pin__dot' + (it.severite === 'critique' ? ' is-critique' : '');
+      dot.style.background = sev.c;
+      el.appendChild(dot);
+      el.title = it.titre || '';
+      if (it.id) byId[it.id] = { pos: pos, it: it, dot: dot };
+      el.addEventListener('click', function (e){ e.stopPropagation(); selectDot(dot); openNote(it); map.flyTo({ center: pos.c, zoom: Math.max(map.getZoom(), 4.5), duration: 700 }); });
+      new mapboxgl.Marker({ element: el }).setLngLat(pos.c).addTo(map);
+      bounds.extend(pos.c);
+    });
+    if (nPlaced) { try { map.fitBounds(bounds, { padding: 90, maxZoom: 5.5, duration: 0 }); } catch (e) {} }
+    // Centrage sur un signal precis (?focus=id), ex. depuis « Voir sur la carte » d'une note.
+    var focus = new URLSearchParams(location.search).get('focus');
+    if (focus && byId[focus]) { var f = byId[focus]; selectDot(f.dot); openNote(f.it); map.flyTo({ center: f.pos.c, zoom: 5.5, duration: 900 }); }
+    var sub = document.getElementById('vk-sub');
+    if (!nPlaced) { sub.textContent = 'En attente de signaux géolocalisés…'; return; }
+    var approx = nPlaced - nPrecise;
+    sub.textContent = nPlaced + (nPlaced > 1 ? ' signaux localisés' : ' signal localisé')
+      + (approx ? ' · ' + nPrecise + ' précis, ' + approx + ' au pays' : '');
+  }
+
+  function load(){
+    window.algorAuth.supabase.auth.getSession()
+      .then(function (res){
+        var jwt = res && res.data && res.data.session && res.data.session.access_token;
+        if (!jwt) return Promise.reject();
+        return fetch(REMOTE + (document.documentElement.lang === 'en' ? '?lang=en' : ''), { cache: 'no-store', headers: { Authorization: 'Bearer ' + jwt } });
+      })
+      .then(function (r){ return r.ok ? r.json() : Promise.reject(); })
+      .then(function (d){ var a = Array.isArray(d) ? d : (d.items || []);
+        a.sort(function (x, y){ return String(y.date).localeCompare(String(x.date)); });
+        plot(a); })
+      .catch(function (){ var l = document.getElementById('loading'); if (l) l.textContent = 'Flux de veille indisponible.'; });
+  }
+  var _started = false, _carte = false;
+  function lancer(){ if (_started || !_carte || !window.__algorAuthGranted) return; _started = true; load(); }
+  window.addEventListener('algorAuthReady', lancer);
+  function start(){ _carte = true; lancer(); }
+  map.on('load', start);
+  map.on('idle', start);
+  setTimeout(start, 3000); // filet : afficher les signaux meme si l'evenement load tarde
+})();
+</script>
+</body>
+</html>

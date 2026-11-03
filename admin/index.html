@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Algor Int — Admin</title>
+<link rel="icon" type="image/jpeg" href="../favicon.jpg">
+
+
+<link rel="stylesheet" href="/shared/home/fonts.css?v=20260707a" />
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.24.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.24.0/mapbox-gl.js"></script>
+<link rel="stylesheet" href="admin.css?v=20260529a">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tmcw/togeojson@5/dist/togeojson.umd.js"></script>
+</head>
+<body>
+
+<!-- ═══ LOGIN OVERLAY ═══ -->
+<div id="login-overlay">
+  <div class="sa-bg-gradient"></div>
+  <div class="sa-bg-noise"></div>
+  <div class="sa-glow sa-glow-top"></div>
+  <div class="sa-glow sa-glow-bottom"></div>
+  <div class="sa-spot sa-spot-1"></div>
+  <div class="sa-spot sa-spot-2"></div>
+
+  <div class="sa-card-wrap">
+    <div class="sa-tilt" id="login-tilt">
+      <div class="sa-beams" aria-hidden="true">
+        <span class="sa-beam sa-beam-top"></span>
+        <span class="sa-beam sa-beam-right"></span>
+        <span class="sa-beam sa-beam-bottom"></span>
+        <span class="sa-beam sa-beam-left"></span>
+        <span class="sa-corner sa-corner-tl"></span>
+        <span class="sa-corner sa-corner-tr"></span>
+        <span class="sa-corner sa-corner-br"></span>
+        <span class="sa-corner sa-corner-bl"></span>
+      </div>
+
+      <div class="sa-card">
+        <div class="sa-card-pattern" aria-hidden="true"></div>
+
+        <div class="sa-head">
+          <div class="sa-logo">
+            <img src="/shared/algor-mark.jpg" alt="Algor Acces" decoding="async">
+          </div>
+          <h1 class="sa-title">Console admin</h1>
+          <p class="sa-sub">Administration cartographique Algor Acces.</p>
+        </div>
+
+        <div class="sa-field">
+          <span class="sa-field-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></span>
+          <input id="login-email" type="email" placeholder="Adresse email" autocomplete="email" spellcheck="false">
+        </div>
+
+        <div class="sa-field">
+          <span class="sa-field-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+          <input id="login-password" type="password" placeholder="Mot de passe" autocomplete="current-password">
+          <button type="button" class="sa-eye" id="login-eye" aria-label="Afficher le mot de passe">
+            <span class="sa-eye-off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg></span>
+            <span class="sa-eye-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg></span>
+          </button>
+        </div>
+
+        <div class="sa-error" id="login-error" style="display:none"></div>
+
+        <button id="login-btn" type="button" class="sa-submit">
+          <span class="sa-submit-content">
+            <span class="sa-btn-text">Connexion</span>
+            <span class="sa-btn-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+          </span>
+        </button>
+
+        <div class="sa-foot">
+          <span>algoracces.fr</span>
+          <span class="sa-foot-sep">·</span>
+          <span>administration</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MAIN APP ═══ -->
+<div id="app" style="display:none">
+
+  <!-- HEADER -->
+  <div id="admin-header">
+    <div class="admin-header-left">
+      <a href="../index.html" class="admin-logo-link">
+        <img src="../favicon.jpg" alt="" style="height:18px;opacity:0.6">
+        <span class="admin-header-title">Admin</span>
+      </a>
+    </div>
+    <div class="admin-header-cell">
+      <span class="admin-header-label">Zone</span>
+      <select id="zone-select" class="admin-select">
+        <option value="moyen-orient">Moyen-Orient</option>
+        <option value="sahel">Sahel</option>
+        <option value="rdc">RDC</option>
+      </select>
+    </div>
+    <div class="admin-header-spacer"></div>
+    <div class="admin-header-cell">
+      <span id="user-badge" class="user-badge"></span>
+      <span id="role-badge" class="role-badge"></span>
+    </div>
+    <div class="admin-header-cell">
+      <button id="btn-logout" class="admin-header-btn">Deconnexion</button>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div id="admin-body">
+
+    <!-- SIDEBAR -->
+    <div id="sidebar">
+      <nav id="sidebar-nav">
+        <button class="sidebar-tab active" data-tab="points">Points</button>
+        <button class="sidebar-tab" data-tab="actors">Acteurs</button>
+        <button class="sidebar-tab" data-tab="io">Import / Export</button>
+        <button class="sidebar-tab" data-tab="logs">Logs</button>
+        <button class="sidebar-tab" data-tab="users">Utilisateurs</button>
+        <button class="sidebar-tab" data-tab="dossiers">Dossiers</button>
+      </nav>
+
+      <!-- Tab: Points -->
+      <div class="sidebar-panel active" id="panel-points">
+        <div class="panel-header">
+          <span>Points admin</span>
+          <span id="points-count" class="panel-count">0</span>
+        </div>
+        <div id="points-toolbar">
+          <div class="pt-search-wrap">
+            <span class="pt-search-icon">⌕</span>
+            <input type="text" id="points-search" class="admin-input pt-search-input" placeholder="Rechercher (nom, pays, detail)  ⌘K">
+            <button id="points-search-clear" class="pt-search-clear" title="Effacer">×</button>
+          </div>
+          <div class="pt-filters">
+            <select id="points-filter-actor" class="admin-select admin-select-sm"><option value="">Tous acteurs</option></select>
+            <select id="points-filter-period" class="admin-select admin-select-sm"><option value="">Toutes periodes</option></select>
+          </div>
+          <div class="pt-bulk-bar" id="points-bulk-bar">
+            <span id="pt-bulk-count">0 selectionnes</span>
+            <div class="pt-bulk-actions">
+              <button id="pt-bulk-clear" class="admin-btn admin-btn-sm">Deselectionner</button>
+              <button id="pt-bulk-delete" class="admin-btn admin-btn-sm admin-btn-danger">Supprimer</button>
+            </div>
+          </div>
+          <div class="pt-select-all-wrap">
+            <label class="pt-select-all-label">
+              <input type="checkbox" id="pt-select-all" class="pt-checkbox">
+              <span>Tout selectionner (visible)</span>
+            </label>
+            <button id="btn-export-csv" class="admin-btn admin-btn-sm" title="Exporter en CSV">CSV</button>
+          </div>
+        </div>
+        <div id="points-list" class="panel-scroll"></div>
+      </div>
+
+      <!-- Tab: Actors -->
+      <div class="sidebar-panel" id="panel-actors">
+        <div class="panel-header"><span>Acteurs & couleurs</span></div>
+        <div id="actors-list" class="panel-scroll"></div>
+      </div>
+
+      <!-- Tab: Import/Export -->
+      <div class="sidebar-panel" id="panel-io">
+        <div class="panel-header">
+          <span>Import / Export</span>
+          <span id="io-zone-badge" class="io-zone-badge"></span>
+        </div>
+        <div class="panel-content">
+
+          <!-- ── SECTION 1 : IMPORT GEOJSON ── -->
+          <div class="io-block">
+            <div class="io-block-header">
+              <span class="io-block-num">01</span>
+              <span class="io-block-title">Importer GeoJSON</span>
+            </div>
+            <div class="io-block-desc">Ajoute les points du fichier a la zone active. Les couleurs sont attribuees automatiquement selon la table des acteurs.</div>
+            <input type="file" id="import-file" accept=".geojson,.json" class="admin-input-file">
+            <button id="btn-import" class="admin-btn admin-btn-full io-btn-action">
+              <span class="io-btn-icon">+</span> Importer dans la carte
+            </button>
+            <div id="import-status" class="io-status"></div>
+          </div>
+
+          <!-- ── SECTION 2 : EXPORT GEOJSON ── -->
+          <div class="io-block">
+            <div class="io-block-header">
+              <span class="io-block-num">02</span>
+              <span class="io-block-title">Exporter GeoJSON</span>
+            </div>
+            <div class="io-block-desc">Telecharge tous les points Supabase de la zone active au format GeoJSON. Compatible avec reimport.</div>
+            <button id="btn-export" class="admin-btn admin-btn-full io-btn-export">
+              <span class="io-btn-icon">&#8615;</span> Exporter les points
+            </button>
+          </div>
+
+          <div class="io-divider"></div>
+
+          <!-- ── SECTION 3 : MIGRATION BATCH ── -->
+          <div class="io-block">
+            <div class="io-block-header">
+              <span class="io-block-num">03</span>
+              <span class="io-block-title">Migration fichiers statiques</span>
+              <span class="io-tag io-tag-admin">Admin</span>
+            </div>
+            <div class="io-block-desc">Importe tous les fichiers GeoJSON/KML de la zone dans Supabase. Les doublons sont detectes et ignores automatiquement.</div>
+            <button id="btn-batch-import" class="admin-btn admin-btn-full io-btn-batch">
+              <span class="io-btn-icon">&#8644;</span> Migrer vers Supabase
+            </button>
+            <div id="batch-import-status" class="io-status"></div>
+            <div id="batch-import-progress" class="io-progress-wrap" style="display:none">
+              <div class="io-progress-bar"><div id="batch-progress-fill" class="io-progress-fill"></div></div>
+              <span id="batch-progress-label" class="io-progress-label"></span>
+            </div>
+            <div style="margin-top:10px">
+              <button id="btn-purge-empty" class="admin-btn admin-btn-full admin-btn-danger">Purger les points sans nom / sans periode</button>
+              <div id="purge-status" class="io-status"></div>
+            </div>
+          </div>
+
+          <div class="io-divider"></div>
+
+          <!-- ── SECTION 4 : CALQUES / OVERLAYS ── -->
+          <div class="io-block" id="calques-section">
+            <div class="io-block-header">
+              <span class="io-block-num">04</span>
+              <span class="io-block-title">Calques de la zone</span>
+            </div>
+            <div class="io-block-desc">Fichiers overlay affiches sur la carte publique. Importez un GeoJSON pour remplir ou remplacer un calque.</div>
+            <div id="calques-list"></div>
+            <div id="calques-empty" class="io-status">Aucun calque defini pour cette zone.</div>
+            <input type="file" id="calque-import-file" accept=".geojson,.json,.csv" style="display:none">
+          </div>
+
+          <div class="io-divider"></div>
+
+          <!-- ── SECTION 5 : CONVERTISSEUR ── -->
+          <div class="io-block" id="converter-section">
+            <div class="io-block-header">
+              <span class="io-block-num">05</span>
+              <span class="io-block-title">Convertisseur vers GeoJSON</span>
+            </div>
+            <div class="io-block-desc">Collez un tableau HTML ou CSV ci-dessous. Le convertisseur detecte automatiquement les colonnes lat/lng si presentes.</div>
+            <textarea id="converter-input" rows="8" placeholder="Collez ici votre tableau HTML (<table>...</table>) ou des donnees CSV..." style="width:100%;background:#1a1c20;color:#ccc;border:1px solid #333;border-radius:4px;padding:8px;font-family:monospace;font-size:12px;resize:vertical;margin-bottom:8px;"></textarea>
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+              <button id="btn-convert" class="admin-btn admin-btn-full">Convertir en GeoJSON</button>
+              <button id="btn-convert-download" class="admin-btn admin-btn-full" style="display:none;">Telecharger .geojson</button>
+            </div>
+            <div id="converter-status" class="io-status"></div>
+            <textarea id="converter-output" rows="6" readonly style="display:none;width:100%;background:#111;color:#0f0;border:1px solid #333;border-radius:4px;padding:8px;font-family:monospace;font-size:11px;resize:vertical;margin-top:6px;"></textarea>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Tab: Logs -->
+      <div class="sidebar-panel" id="panel-logs">
+        <div class="panel-header">
+          <span>Journal d'activite</span>
+          <select id="log-zone-filter" class="admin-select admin-select-sm">
+            <option value="all">Toutes zones</option>
+            <option value="moyen-orient">Moyen-Orient</option>
+            <option value="sahel">Sahel</option>
+            <option value="rdc">RDC</option>
+          </select>
+        </div>
+        <div id="logs-list" class="panel-scroll"></div>
+      </div>
+
+      <!-- Tab: Users -->
+      <div class="sidebar-panel" id="panel-users">
+        <div id="users-container" class="panel-scroll"></div>
+      </div>
+
+      <!-- Tab: Dossiers (acces interne aux dossiers clients) -->
+      <div class="sidebar-panel" id="panel-dossiers">
+        <div class="panel-header">
+          <span>Dossiers clients</span>
+        </div>
+        <div class="panel-scroll" style="padding:14px">
+          <p style="font-size:12.5px;line-height:1.5;color:#6E6390;margin:0 0 14px">
+            Dossiers réservés à l'équipe interne. Accès journalisé.
+          </p>
+          <p style="font-size:12.5px;line-height:1.55;color:#6E6390;margin:0">
+            Dossier client retiré du site public (donnée client confidentielle).
+            Accès interne sécurisé à reconstruire derrière un bucket privé réservé à l'équipe.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAP -->
+    <div id="admin-map-wrap">
+      <div id="admin-map"></div>
+      <div id="map-crosshair">+</div>
+      <div id="map-coords"></div>
+    </div>
+  </div>
+
+  <!-- TOAST / UNDO -->
+  <div id="toast-host" class="toast-host"></div>
+
+  <!-- KBD SHORTCUTS PANEL -->
+  <div id="kbd-overlay" class="kbd-overlay" style="display:none">
+    <div class="kbd-box">
+      <div class="kbd-head">
+        <span>Raccourcis clavier</span>
+        <button class="kbd-close" id="kbd-close">×</button>
+      </div>
+      <div class="kbd-list">
+        <div class="kbd-row"><kbd>⌘K</kbd> <kbd>/</kbd> <span>Focus recherche</span></div>
+        <div class="kbd-row"><kbd>Esc</kbd> <span>Fermer le drawer / effacer recherche</span></div>
+        <div class="kbd-row"><kbd>Del</kbd> <kbd>⌫</kbd> <span>Supprimer la selection</span></div>
+        <div class="kbd-row"><kbd>⌘A</kbd> <span>Selectionner tous les points visibles</span></div>
+        <div class="kbd-row"><kbd>⌘S</kbd> <span>Sauvegarder le point ouvert</span></div>
+        <div class="kbd-row"><kbd>⌘Z</kbd> <span>Annuler derniere suppression</span></div>
+        <div class="kbd-row"><kbd>?</kbd> <span>Afficher cette aide</span></div>
+      </div>
+    </div>
+  </div>
+
+  <button id="kbd-help-btn" class="kbd-help-btn" title="Raccourcis clavier (?)">?</button>
+
+  <!-- POINT DRAWER (bottom) -->
+  <div id="point-drawer">
+    <div class="drawer-header">
+      <span id="drawer-title">Nouveau point</span>
+      <button id="form-cancel" class="drawer-close">X</button>
+    </div>
+    <div id="form-error" class="form-error" style="display:none"></div>
+    <div class="drawer-body">
+      <div class="drawer-row">
+        <div class="drawer-field">
+          <label>Acteur</label>
+          <select id="field-actor" class="admin-input"></select>
+        </div>
+        <div class="drawer-field">
+          <label>Periode</label>
+          <select id="field-period" class="admin-input"></select>
+        </div>
+        <div class="drawer-field drawer-field-sm">
+          <label>Lng</label>
+          <input type="number" id="field-lng" step="0.00001" class="admin-input">
+        </div>
+        <div class="drawer-field drawer-field-sm">
+          <label>Lat</label>
+          <input type="number" id="field-lat" step="0.00001" class="admin-input">
+        </div>
+        <div class="drawer-field drawer-field-sm">
+          <label>Victimes</label>
+          <input type="number" id="field-casualties" value="0" min="0" class="admin-input">
+        </div>
+      </div>
+      <div class="drawer-row">
+        <div class="drawer-field">
+          <label>Date</label>
+          <input type="text" id="field-date" placeholder="ex: 15/01/2026" class="admin-input">
+        </div>
+        <div class="drawer-field">
+          <label>Pays</label>
+          <input type="text" id="field-country" placeholder="ex: Mali" class="admin-input">
+        </div>
+        <div class="drawer-field">
+          <label>Evenement</label>
+          <input type="text" id="field-event" placeholder="ex: Attaque" class="admin-input">
+        </div>
+        <div class="drawer-field drawer-field-lg">
+          <label>Detail</label>
+          <input type="text" id="field-detail" placeholder="Description libre" class="admin-input">
+        </div>
+      </div>
+      <div class="drawer-actions">
+        <button id="form-save" class="admin-btn">Sauvegarder</button>
+        <button id="form-delete" class="admin-btn admin-btn-danger" style="display:none">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script type="module" src="admin.js?v=20260521b"></script>
+</body>
+</html>

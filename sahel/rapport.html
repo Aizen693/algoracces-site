@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<script>(function(){/* PIVOT 2026-06 : carte theatre desactivee, remplacee par /carte/ (HUMINT par pays). Reversible : supprimer ce bloc. */var b=location.search.indexOf("legacy=1")!==-1||localStorage.getItem("carto-legacy")==="1";if(!b)location.replace("/carte/");})();</script>
+<meta charset="UTF-8">
+<script src="/shared/i18n.js?v=20261020c"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Algor Int — Rapport analytique Sahel</title>
+<link rel="icon" type="image/jpeg" href="../favicon.jpg" />
+<meta name="description" content="Rapport analytique Sahel : synthèse décisionnelle, incidents sourcés et datés, lecture par période. Accès réservé aux abonnés Algor Acces." />
+
+
+<link rel="stylesheet" href="/shared/home/fonts.css?v=20260707a" />
+<script type="module" src="../shared/site-auth.js?v=20261020a"></script>
+<script>/* V1 : promesse d'acces premium, posee avant le corps (cf. zones). */
+window.algorReady = new Promise(function (res) {
+  window.addEventListener('algorAuthReady', function () { res(); }, { once: true });
+});</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#F4F2F8;--bg1:#FFFFFF;--bg2:#FFFFFF;--bg3:#F1EDF7;--ln:rgba(24,20,40,0.07);--ln1:rgba(24,20,40,0.12);--tx:#3A3450;--tx1:#6E6982;--tx2:#A19DB0;--txh:#181428;--ac:#6B3FA0;--ach:#5A2F8C;--acd:rgba(107,63,160,0.08);--acb:rgba(107,63,160,0.22);--bc:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;--b:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;--m:'JetBrains Mono','Courier New',monospace;--serif:'Instrument Serif',Georgia,serif}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{font-family:var(--m);background:var(--bg);color:var(--tx);-webkit-font-smoothing:antialiased}
+body{min-height:100vh}
+#header{height:44px;background:var(--bg1);border-bottom:1px solid var(--ln);display:flex;align-items:center;padding:0 24px;gap:16px;position:sticky;top:0;z-index:100}
+#header h1{font-family:var(--bc);font-size:13px;font-weight:600;color:var(--txh);letter-spacing:.05em;text-transform:uppercase}
+.hdr-sep{width:1px;height:20px;background:var(--ln)}
+.hdr-tag{font-family:var(--m);font-size:9px;color:var(--ac);letter-spacing:.12em;text-transform:uppercase}
+.hdr-spacer{flex:1}
+.hdr-back{font-family:var(--m);font-size:9px;color:var(--tx1);text-decoration:none;letter-spacing:.08em;text-transform:uppercase;transition:color .15s;display:flex;align-items:center;gap:6px}
+.hdr-back:hover{color:var(--ac)}
+#main{max-width:1200px;margin:0 auto;padding:40px 24px 80px}
+.hero-label{font-family:var(--m);font-size:9px;color:var(--ac);letter-spacing:.2em;text-transform:uppercase;margin-bottom:8px}
+.hero-title{font-family:var(--bc);font-size:32px;font-weight:600;color:var(--txh);letter-spacing:.03em;text-transform:uppercase;line-height:1.15;margin-bottom:6px}
+.hero-sub{font-family:var(--b);font-size:13px;color:var(--tx1);line-height:1.6;max-width:650px;margin-bottom:40px}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:48px}
+.metric-card{background:var(--bg1);border:1px solid var(--ln);padding:18px 20px}
+.metric-label{font-family:var(--m);font-size:8px;color:var(--tx2);letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px}
+.metric-value{font-family:var(--bc);font-size:28px;font-weight:600;color:var(--txh)}
+.metric-value small{font-size:12px;color:var(--tx1);font-weight:400;margin-left:4px}
+.section{margin-bottom:48px}
+.section-header{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+.section-num{font-family:var(--m);font-size:9px;color:var(--ac);letter-spacing:.15em}
+.section-title{font-family:var(--bc);font-size:18px;font-weight:600;color:var(--txh);letter-spacing:.04em;text-transform:uppercase}
+.section-desc{font-family:var(--b);font-size:11px;color:var(--tx1);margin-bottom:20px;line-height:1.6}
+.chart-box{background:var(--bg1);border:1px solid var(--ln);padding:24px;position:relative}
+.chart-wrap{position:relative;width:100%;height:340px}
+.chart-wrap-sm{position:relative;width:100%;height:280px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:16px}
+.legend-item{display:flex;align-items:center;gap:5px;font-family:var(--m);font-size:8px;color:var(--tx1)}
+.legend-dot{width:8px;height:8px;flex-shrink:0}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.locked-section{background:var(--bg1);border:1px solid var(--acb);padding:48px 40px;text-align:center;position:relative;margin-top:48px}
+.locked-section::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--ac),transparent)}
+.lock-icon{width:40px;height:40px;border:1px solid var(--acb);display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+.lock-icon svg{stroke:var(--ac)}
+.locked-title{font-family:var(--bc);font-size:22px;font-weight:600;color:var(--txh);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px}
+.locked-desc{font-family:var(--b);font-size:12px;color:var(--tx1);line-height:1.7;max-width:500px;margin:0 auto 24px}
+.locked-list{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:28px}
+.locked-tag{font-family:var(--m);font-size:8px;color:var(--ac);background:var(--acd);border:1px solid var(--acb);padding:4px 10px;letter-spacing:.1em;text-transform:uppercase}
+.locked-cta{display:inline-block;font-family:var(--bc);font-size:13px;font-weight:600;color:var(--bg);background:var(--ac);padding:10px 32px;text-transform:uppercase;letter-spacing:.06em;text-decoration:none;transition:background .15s}
+.locked-cta:hover{background:var(--ach)}
+#footer{border-top:1px solid var(--ln);padding:16px 24px;display:flex;align-items:center;justify-content:center;font-family:var(--m);font-size:7px;color:var(--tx2);letter-spacing:.14em;text-transform:uppercase}
+#loading{text-align:center;padding:80px 0;font-family:var(--m);font-size:11px;color:var(--tx1);letter-spacing:.1em}
+.data-table{width:100%;border-collapse:collapse;margin-top:16px}
+.data-table th,.data-table td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--ln);font-family:var(--m);font-size:9px}
+.data-table th{color:var(--tx2);text-transform:uppercase;letter-spacing:.1em;font-weight:400;font-size:7px}
+.data-table td{color:var(--tx)}
+.data-table tr:hover td{background:var(--bg2)}
+.tag{display:inline-block;font-family:var(--m);font-size:7px;padding:2px 6px;letter-spacing:.08em;text-transform:uppercase;border:1px solid}
+.border-header{font-family:var(--bc);font-size:26px;font-weight:600;color:var(--txh);text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px}
+.border-sub{font-family:var(--b);font-size:11px;color:var(--tx1);margin-bottom:6px}
+.border-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:32px}
+.border-tag{font-family:var(--m);font-size:7px;padding:3px 10px;letter-spacing:.1em;text-transform:uppercase;border:1px solid;border-radius:0}
+.corridor-box{background:var(--bg2);border:1px solid var(--ln);padding:14px 18px;margin-bottom:12px}
+.corridor-title{font-family:var(--bc);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.corridor-desc{font-family:var(--m);font-size:8px;color:var(--tx1);letter-spacing:.03em}
+.corridor-tag{font-family:var(--m);font-size:7px;padding:2px 8px;border-radius:0;display:inline-block;margin-left:8px}
+.stat-row{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap}
+.stat-box{flex:1;min-width:120px;border:1px solid;padding:12px 16px;text-align:center}
+.stat-val{font-family:var(--bc);font-size:22px;font-weight:600;margin-bottom:2px}
+.stat-label{font-family:var(--m);font-size:7px;color:var(--tx1);letter-spacing:.08em;text-transform:uppercase}
+.timeline-item{display:flex;gap:16px;margin-bottom:20px;position:relative;padding-left:20px}
+.timeline-item::before{content:'';position:absolute;left:4px;top:8px;width:10px;height:10px;border-radius:50%;border:2px solid var(--tx2);background:var(--bg1)}
+.timeline-item::after{content:'';position:absolute;left:8px;top:20px;width:2px;height:calc(100% + 4px);background:var(--ln)}
+.timeline-item:last-child::after{display:none}
+.timeline-date{font-family:var(--m);font-size:8px;color:var(--ac);letter-spacing:.08em;text-transform:uppercase;min-width:120px;flex-shrink:0}
+.timeline-title{font-family:var(--bc);font-size:13px;font-weight:600;color:var(--txh);text-transform:uppercase;margin-bottom:3px}
+.timeline-desc{font-family:var(--b);font-size:10px;color:var(--tx1);line-height:1.5}
+.info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.info-card{background:var(--bg2);border:1px solid var(--ln);padding:16px 18px}
+.info-card-title{font-family:var(--bc);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.info-card-val{font-family:var(--bc);font-size:22px;font-weight:600;color:var(--txh);margin-bottom:2px}
+.info-card-sub{font-family:var(--m);font-size:8px;color:var(--tx1);margin-bottom:8px}
+.info-card-desc{font-family:var(--b);font-size:9px;color:var(--tx1);line-height:1.5;margin-bottom:8px}
+.info-card-pin{font-family:var(--m);font-size:7px;color:var(--tx1);margin-bottom:3px}
+.info-card-warn{font-family:var(--m);font-size:7px;color:#ff9800;margin-bottom:3px}
+.sources-line{font-family:var(--m);font-size:7px;color:var(--tx2);margin-top:16px;letter-spacing:.04em}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.passage-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.passage-col{background:var(--bg2);border:1px solid var(--ln);padding:16px}
+.passage-col-title{font-family:var(--bc);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.passage-item{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-family:var(--m);font-size:9px;color:var(--tx)}
+.passage-legend{display:flex;gap:16px;margin-top:16px;font-family:var(--m);font-size:8px;color:var(--tx1)}
+.passage-legend-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
+.arrow-step{text-align:center;font-family:var(--m);font-size:10px;color:var(--tx2);margin:8px 0;letter-spacing:.05em}
+.security-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.security-box{background:var(--bg2);border:1px solid var(--ln);padding:16px 18px}
+.security-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-family:var(--m);font-size:9px}
+.security-val{font-weight:500}
+.bar-indicator{height:6px;background:var(--bg3);margin:8px 0;border-radius:0;overflow:hidden}
+.bar-fill{height:100%;border-radius:0}
+.evo-wrap{background:var(--bg1);border:1px solid var(--acb);padding:24px;position:relative;margin-bottom:48px}
+.evo-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--ac),transparent)}
+.evo-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px}
+.evo-title{font-family:var(--bc);font-size:18px;font-weight:600;color:var(--txh);letter-spacing:.04em;text-transform:uppercase}
+.evo-period{font-family:var(--m);font-size:8px;color:var(--ac);letter-spacing:.12em;text-transform:uppercase}
+.evo-sub{font-family:var(--b);font-size:11px;color:var(--tx1);margin-bottom:20px;line-height:1.6}
+.evo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.evo-card{background:var(--bg2);border:1px solid var(--ln);padding:16px 18px;position:relative}
+.evo-card-label{font-family:var(--m);font-size:8px;color:var(--tx2);letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px}
+.evo-card-row{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.evo-card-val{font-family:var(--bc);font-size:26px;font-weight:600;color:var(--txh);line-height:1}
+.evo-card-val small{font-size:11px;color:var(--tx1);font-weight:400;margin-left:3px}
+.evo-delta{display:inline-block;font-family:var(--m);font-size:10px;font-weight:500;padding:2px 7px;border:1px solid;letter-spacing:.05em}
+.evo-up{color:#ff5252;border-color:rgba(255,82,82,0.5);background:rgba(255,82,82,0.10)}
+.evo-down{color:#66bb6a;border-color:rgba(102,187,106,0.5);background:rgba(102,187,106,0.10)}
+.evo-flat{color:#78909c;border-color:rgba(120,144,156,0.5);background:rgba(120,144,156,0.08)}
+.evo-new{color:#ffa726;border-color:rgba(255,167,38,0.5);background:rgba(255,167,38,0.10)}
+.evo-card-sub{font-family:var(--m);font-size:7px;color:var(--tx1);letter-spacing:.08em;margin-top:8px}
+@media(max-width:800px){.metrics{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr}.passage-grid{grid-template-columns:1fr}.info-grid{grid-template-columns:1fr}.three-col{grid-template-columns:1fr}.security-grid{grid-template-columns:1fr}.evo-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div id="header">
+  <h1>Algor Int</h1><div class="hdr-sep"></div>
+  <span class="hdr-tag">Rapport analytique · Calques</span>
+  <div class="hdr-spacer"></div>
+  <a class="hdr-back" href="./index.html">&larr; Retour carte</a>
+</div>
+<div id="main">
+  <div class="hero-label">Sahel · Mali · Burkina Faso · Niger · Mauritanie · Tchad</div>
+  <div class="hero-title">Analyse multicouche du theatre sahelien</div>
+  <div class="hero-sub">Synthese analytique generee dynamiquement a partir des 8 calques overlay : ethnies, forces armees, infrastructures, evenements securitaires, population deplacee, ressources minieres, points d'eau, flux et trafics.</div>
+
+  <!-- Synthese decisionnelle (page 1 - IA + edition manuelle, persiste localStorage) -->
+  <div id="synthese-host"></div>
+
+  <div id="loading">Chargement des 8 calques...</div>
+  <div id="content" style="display:none"></div>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- SECTION FRONTIERE MAURITANIE-MALI                                -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <div style="margin-top:64px;padding-top:32px;border-top:1px solid var(--ln)">
+    <div class="border-header">Frontiere Mauritanie-Mali : Analyse des flux transfrontaliers</div>
+    <div class="border-sub">Zone frontaliere 2 067 km · Regions : Hodh El Chargui · Hodh El Gharbi · Assaba · Corridor Nord Nouadhibou</div>
+    <div class="border-tags">
+      <span class="border-tag" style="color:#ff5252;border-color:#ff5252">Donnees 2023-2026</span>
+      <span class="border-tag" style="color:#66bb6a;border-color:#66bb6a">Sources : UNHCR · IOM · ACLED · GRANIT · GI-TOC · ADF</span>
+      <span class="border-tag" style="color:#ff9800;border-color:#ff9800">Mise a jour : Mars 2026</span>
+    </div>
+  </div>
+
+  <!-- S08: Points de passage -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">08</span>
+      <span class="section-title">Points de passage : officiel vs. non-officiel</span>
+    </div>
+    <div class="section-desc">Frontiere Mauritanie-Mali (2 067 km) — Situation 2025-2026</div>
+    <div class="passage-grid">
+      <div class="passage-col">
+        <div class="passage-col-title" style="color:#ff9800"><span style="font-size:12px">&#x1F315;</span> Corridor Nord</div>
+        <div class="passage-item">Bir Moghrein-Araouane <span class="corridor-tag" style="color:#ff5252;border:1px solid #ff5252">Informel</span></div>
+        <div class="passage-item">Tidjikja-Tombouctou (piste) <span class="corridor-tag" style="color:#ff9800;border:1px solid #ff9800">Zone militaire</span></div>
+        <div class="passage-item">Route orpailleurs (Zouerate-Taoudenni) <span class="corridor-tag" style="color:#ff5252;border:1px solid #ff5252">Non controle</span></div>
+        <div class="passage-item">Piste Ain Bentili-frontiere <span class="corridor-tag" style="color:#ff5252;border:1px solid #ff5252">Zone interdite</span></div>
+      </div>
+      <div class="passage-col">
+        <div class="passage-col-title" style="color:#ff5252"><span style="font-size:12px">&#x1F534;</span> Frontiere Est (Hodh El Chargui)</div>
+        <div class="passage-item">Bassikounou-Nioro du Sahel <span class="corridor-tag" style="color:#66bb6a;border:1px solid #66bb6a">Principal &#x2713;</span></div>
+        <div class="passage-item">Amourj-Wagadou (foret) <span class="corridor-tag" style="color:#ff9800;border:1px solid #ff9800">JNIM / Informel</span></div>
+        <div class="passage-item">Fassala-Nara <span class="corridor-tag" style="color:#ab47bc;border:1px solid #ab47bc">Transhumance</span></div>
+        <div class="passage-item">Nema-Menaka (piste) <span class="corridor-tag" style="color:#ff5252;border:1px solid #ff5252">Informel</span></div>
+      </div>
+      <div class="passage-col">
+        <div class="passage-col-title" style="color:#66bb6a"><span style="font-size:12px">&#x1F7E2;</span> Frontiere Sud (Hodh Gharbi / Assaba)</div>
+        <div class="passage-item">Selibaby-Kayes (Gogui) <span class="corridor-tag" style="color:#29b6f6;border:1px solid #29b6f6">FMP OIM &#x2713;</span></div>
+        <div class="passage-item">Kiffa-Diema (Assaba) <span class="corridor-tag" style="color:#ff9800;border:1px solid #ff9800">Semi-officiel</span></div>
+        <div class="passage-item">Bourem Guebara-Yelimane <span class="corridor-tag" style="color:#ff5252;border:1px solid #ff5252">Non materialise</span></div>
+        <div class="passage-item">Guidimakha-Kayes (pistes) <span class="corridor-tag" style="color:#ab47bc;border:1px solid #ab47bc">Multiples pistes</span></div>
+      </div>
+    </div>
+    <div class="passage-legend">
+      <span><span class="passage-legend-dot" style="background:#66bb6a"></span> Point officiel controle</span>
+      <span><span class="passage-legend-dot" style="background:#ff9800"></span> Semi-officiel / saisonnier</span>
+      <span><span class="passage-legend-dot" style="background:#ff5252"></span> Informel / interdit</span>
+    </div>
+    <div class="sources-line">Plus de 70% de la frontiere n'est pas materialisee (absence de bornes). Sources : UNDP/PBF 2023, Wikipedia, Cridem 2026</div>
+  </div>
+
+  <!-- S09: Volume refugies + S10: Profil flux -->
+  <div class="section">
+    <div class="two-col">
+      <div>
+        <div class="section-header">
+          <span class="section-num">09</span>
+          <span class="section-title">Volume de refugies par region mauritanienne</span>
+        </div>
+        <div class="section-desc">UNHCR — Evolution 2022-2026 (milliers de personnes)</div>
+        <div class="chart-box">
+          <div class="chart-wrap-sm"><canvas id="c-refugees"></canvas></div>
+          <div class="sources-line">Sources : UNHCR Mauritania Country Profile 2024-2026 · UNHCR Refugee Influx Hodh Chargui Mar.2026 · PASAS-Minka Nov.2025</div>
+        </div>
+      </div>
+      <div>
+        <div class="section-header">
+          <span class="section-num">10</span>
+          <span class="section-title">Profil des flux entrants depuis le Mali</span>
+        </div>
+        <div class="section-desc">OIM DTM · UNHCR — Donnees 2024 (estimation)</div>
+        <div class="chart-box">
+          <div class="chart-wrap-sm"><canvas id="c-profil"></canvas></div>
+          <div class="stat-row">
+            <div class="stat-box" style="border-color:#ff5252"><div class="stat-val" style="color:#ff5252">73%</div><div class="stat-label">Hommes 20-30 ans</div></div>
+            <div class="stat-box" style="border-color:#ffa726"><div class="stat-val" style="color:#ffa726">15%</div><div class="stat-label">Motif orpaillage</div></div>
+            <div class="stat-box" style="border-color:#29b6f6"><div class="stat-val" style="color:#29b6f6">53%</div><div class="stat-label">Recherche d'emploi</div></div>
+          </div>
+          <div class="sources-line">Sources : OIM DTM Mali Q3 2024 · Journal du Mali Avr.2025 · UNHCR Profiling Mauritanie Nov.2024</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S11: Corridor Nord -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">11</span>
+      <span class="section-title">Corridor Nord : Transit Mali-Nouadhibou (orpailleurs & migration irreguliere)</span>
+    </div>
+    <div class="section-desc">Route saharienne — Flux 2024-2025 · Sources : OIM, Frontex, IRA, Journal du Mali</div>
+    <div class="two-col">
+      <div>
+        <div class="corridor-box" style="border-left:3px solid #ff5252">
+          <div class="corridor-title" style="color:#ff5252">&#x1F1F2;&#x1F1F1; Mali — Zones de depart</div>
+          <div class="corridor-desc">Kayes · Nioro du Sahel · Kidal · Taoudenni (sites auriferes)</div>
+        </div>
+        <div class="arrow-step">&#x2193; piste saharienne ~1 200 km</div>
+        <div class="corridor-box" style="border-left:3px solid #ff9800">
+          <div class="corridor-title" style="color:#ff9800">&#x1F1F2;&#x1F1F7; Mauritanie — Traversee desertique</div>
+          <div class="corridor-desc">Zone militaire Nord-Est · Tidjikja · Adrar · Atar (relai)</div>
+        </div>
+        <div class="arrow-step">&#x2193; Route de l'Espoir / piste</div>
+        <div class="corridor-box" style="border-left:3px solid #29b6f6">
+          <div class="corridor-title" style="color:#29b6f6">&#x1F1F2;&#x1F1F7; Nouadhibou — Point d'embarquement</div>
+          <div class="corridor-desc">Transit vers Canaries (Espagne) · +25 000 departs en 2024 · -46% H1 2025 (renforcement securitaire)</div>
+        </div>
+        <div class="arrow-step">&#x2193; Route Atlantique (la plus meurtriere)</div>
+        <div class="corridor-box" style="border-left:3px solid #66bb6a">
+          <div class="corridor-title" style="color:#66bb6a">&#x1F1EA;&#x1F1F8; Iles Canaries — Destination finale</div>
+          <div class="corridor-desc">41 425 arrivees 2024 · Mali = 1er pays d'origine UE 2024 · 16 500 Maliens arrives en Europe</div>
+        </div>
+      </div>
+      <div>
+        <div class="chart-box">
+          <div class="chart-wrap-sm"><canvas id="c-corridor"></canvas></div>
+          <div class="stat-row">
+            <div class="stat-box" style="border-color:#ff5252"><div class="stat-val" style="color:#ff5252">+500</div><div class="stat-label">Deces route Atlantique 2024</div></div>
+            <div class="stat-box" style="border-color:#ff9800"><div class="stat-val" style="color:#ff9800">+2 000</div><div class="stat-label">Personnes interceptees H1 2025</div></div>
+          </div>
+          <div class="stat-row">
+            <div class="stat-box" style="border-color:#29b6f6"><div class="stat-val" style="color:#29b6f6">1 800</div><div class="stat-label">Entrees/mois en Mauritanie (OIM 2024)</div></div>
+            <div class="stat-box" style="border-color:#66bb6a"><div class="stat-val" style="color:#66bb6a">210 M&#x20AC;</div><div class="stat-label">UE &#x2192; Mauritanie (controle frontiere, fev.2025)</div></div>
+          </div>
+          <div class="sources-line">Sources : Frontex 2024 · PASAS-Minka Nov.2025 · Journal du Mali Avr.2025</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S12: Effort securitaire -->
+  <div class="section">
+    <div class="two-col">
+      <div>
+        <div class="section-header">
+          <span class="section-num">12</span>
+          <span class="section-title">Effort securitaire — Frontieres Est & Sud</span>
+        </div>
+        <div class="section-desc">Dispositif FAM · Gendarmerie · Cooperation internationale 2024-2026</div>
+        <div class="security-grid">
+          <div class="security-box" style="border-top:2px solid #ff5252">
+            <div style="font-family:var(--bc);font-size:12px;font-weight:600;color:#ff5252;text-transform:uppercase;margin-bottom:12px">Frontiere Est — Hodh El Chargui</div>
+            <div class="security-row"><span>Couverture terrain</span><span class="security-val" style="color:#66bb6a">Actif &#x2713;</span></div>
+            <div style="font-family:var(--m);font-size:7px;color:var(--tx2);margin-bottom:4px">Couverture renseignement</div>
+            <div class="bar-indicator"><div class="bar-fill" style="width:65%;background:#66bb6a"></div></div>
+            <div class="security-row"><span>Drones surveillance</span><span class="security-val" style="color:#66bb6a">Deployes</span></div>
+            <div class="security-row"><span>Unites mobiles desert</span><span class="security-val" style="color:#66bb6a">~5 000 FAM</span></div>
+            <div class="security-row"><span>Cooperation US (AFRICOM)</span><span class="security-val" style="color:#66bb6a">2025-2026</span></div>
+            <div class="security-row"><span>Incursions detectees (2024-26)</span><span class="security-val" style="color:#ff5252">+12 cas</span></div>
+          </div>
+          <div class="security-box" style="border-top:2px solid #66bb6a">
+            <div style="font-family:var(--bc);font-size:12px;font-weight:600;color:#66bb6a;text-transform:uppercase;margin-bottom:12px">Frontiere Sud — Hodh Gharbi & Assaba</div>
+            <div class="security-row"><span>Brigades Hodh Gharbi</span><span class="security-val" style="color:#29b6f6">Nouvelles 2026</span></div>
+            <div style="font-family:var(--m);font-size:7px;color:var(--tx2);margin-bottom:4px">Couverture securitaire</div>
+            <div class="bar-indicator"><div class="bar-fill" style="width:45%;background:#29b6f6"></div></div>
+            <div class="security-row"><span>Manoeuvres Assaba (dec.2025)</span><span class="security-val" style="color:#66bb6a">Realisees</span></div>
+            <div class="security-row"><span>Gendarmerie "Zbar 2024"</span><span class="security-val" style="color:#29b6f6">Multi-regions</span></div>
+            <div class="security-row"><span>Systeme biometrique frontiere</span><span class="security-val" style="color:#ff9800">En deploiement</span></div>
+            <div class="security-row"><span>Expulsions (debut 2025)</span><span class="security-val" style="color:#ff5252">+28 000</span></div>
+          </div>
+        </div>
+        <div class="chart-box" style="margin-top:16px">
+          <div class="chart-wrap-sm"><canvas id="c-security"></canvas></div>
+        </div>
+        <div class="sources-line">Sources : ADF Mag. Jan.2026 · Cridem Dec.2025 · GRANIT Oct.2025 · Medias24 Juin 2024 · PASAS Nov.2025</div>
+      </div>
+      <div>
+        <div class="section-header">
+          <span class="section-num">13</span>
+          <span class="section-title">Chronologie des incidents frontaliers critiques</span>
+        </div>
+        <div class="section-desc">Zone frontaliere Mauritanie-Mali · 2022-2026 · Sources : RFI, Cridem, ACLED</div>
+        <div class="chart-box" style="padding:20px 24px">
+          <div class="timeline-item">
+            <div><div class="timeline-date">Janvier & Mars 2022</div>
+            <div class="timeline-title">Premiers incidents transfrontaliers documentes</div>
+            <div class="timeline-desc">Deux commercants mauritaniens blesses par balle. 3 incidents pres du Hodh Chargui. Debut de la serie de tensions. (Source : UNDP/PBF)</div></div>
+          </div>
+          <div class="timeline-item">
+            <div><div class="timeline-date">2022 — Continu</div>
+            <div class="timeline-title">Declaration "zone interdite" & Zone militaire Nord-Est</div>
+            <div class="timeline-desc">Mauritanie ferme formellement sa frontiere nord-est aux civils. Zone tampon militarisee (Cheggat-Ain Bentili-Dhar Tichitt). (Source : Wikipedia, Voyage.gc.ca)</div></div>
+          </div>
+          <div class="timeline-item">
+            <div><div class="timeline-date">Jan. 2023 - Avr. 2024</div>
+            <div class="timeline-title">Afflux massif — 200 000 refugies franchissent la frontiere</div>
+            <div class="timeline-desc">Offensive JNIM Kayes/Segou. Mbera : 110 000 personnes. 90 000+ hors camp. Pression securitaire mauritanienne declaree menace nationale. (Source : UNHCR)</div></div>
+          </div>
+          <div class="timeline-item">
+            <div><div class="timeline-date">Aout 2024</div>
+            <div class="timeline-title">Mali interdit la transhumance mauritanienne</div>
+            <div class="timeline-desc">Decision unilaterale du Mali. Concentration de betail au sud de la Mauritanie. Risque de conflit intercommunautaire. Tension diplomatique. (Source : GRANIT Oct.2025)</div></div>
+          </div>
+          <div class="timeline-item">
+            <div><div class="timeline-date">Oct.2025 - Fev.2026</div>
+            <div class="timeline-title">Nouveau flux : +10 000 refugies en 4 mois (Hodh Chargui)</div>
+            <div class="timeline-desc">Depuis le 24 octobre 2025. Offensive JNIM dans l'Ouest Mali (Kayes). 318 000 total estime fin 2025. Saturation des services. (Source : UNHCR Mar.2026)</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S14: Economies illicites -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">14</span>
+      <span class="section-title">Economies illicites et flux transfrontaliers informels</span>
+    </div>
+    <div class="section-desc">Trafics documentes 2024-2026 · Sources : GI-TOC, ACLED, UNHCR, ISS Africa, Timbuktu Institute</div>
+    <div class="info-grid">
+      <div class="info-card" style="border-top:2px solid #ffa726">
+        <div class="info-card-title" style="color:#ffa726">&#x26CF; Orpaillage & Transit Or</div>
+        <div class="info-card-val">Kayes &#x2192; Dubai</div>
+        <div class="info-card-sub">via Mauritanie et Maghreb</div>
+        <div class="info-card-desc">Or extrait (Kayes, Kenieba) transite par la Mauritanie vers Nouadhibou ou Nouakchott puis vers le Maghreb et Dubai. Les orpailleurs empruntent le corridor Nord. Financement partiel du JNIM (Katibat Serma).</div>
+        <div class="info-card-pin">&#x1F4CD; Routes : Kayes &#x2192; Selibaby &#x2192; Kiffa &#x2192; Atar &#x2192; Nouadhibou</div>
+        <div class="info-card-warn">&#x26A0; Taoudenni (nord Mali) : site aurifere cle, corridor saharien</div>
+      </div>
+      <div class="info-card" style="border-top:2px solid #66bb6a">
+        <div class="info-card-title" style="color:#66bb6a">&#x1F402; Betail (Transhumance & Vol)</div>
+        <div class="info-card-val">300 000+</div>
+        <div class="info-card-sub">tetes concentrees cote mauritanien (2025)</div>
+        <div class="info-card-desc">Betail malien en Mauritanie suite a l'interdiction de transhumance d'aout 2024. Betail vole au Mali (Macina, Kayes) revendu via marches mauritaniens. FVR (Fievre Vallee du Rift) : epidemie sept.-oct. 2025, deces humains et pertes animales.</div>
+        <div class="info-card-pin">&#x1F4CD; Axe : Nioro-Fassala-Nema (transhumance)</div>
+        <div class="info-card-warn">&#x26A0; Wagadou forest : vol betail + base JNIM</div>
+      </div>
+      <div class="info-card" style="border-top:2px solid #ff5252">
+        <div class="info-card-title" style="color:#ff5252">&#x26FD; Carburant & Contrebande</div>
+        <div class="info-card-val">Blocus JNIM</div>
+        <div class="info-card-sub">Segou-Sikasso-Bamako, Oct.2025 (ACLED)</div>
+        <div class="info-card-desc">JNIM controle les routes de ravitaillement en carburant. Convois brules pres Sikasso, Kolondieba, Loulouni. Impact sur prix des biens de 1ere necessite au Mali et dans les zones frontalieres mauritaniennes.</div>
+        <div class="info-card-pin">&#x1F4CD; Route : Ghana/ports cotiers &#x2192; Nord Mali &#x2192; Mauritanie</div>
+        <div class="info-card-warn">&#x26A0; Contrebande carburant (Mauritanie-Mali) : marche informel</div>
+      </div>
+      <div class="info-card" style="border-top:2px solid #e040fb">
+        <div class="info-card-title" style="color:#e040fb">&#x1F6B6; Traite humaine & Migration</div>
+        <div class="info-card-val">16 500</div>
+        <div class="info-card-sub">Maliens en Europe irregulier 2024 (OIM)</div>
+        <div class="info-card-desc">Mali = 1er pays d'origine des irreguliers en Europe (2024). Route : Mali &#x2192; Mauritanie &#x2192; Nouadhibou &#x2192; Canaries. +500 morts route Atlantique 2024. Expulsion de +500 Maliens de Mauritanie en mars 2025 (reconduits a Gogui).</div>
+        <div class="info-card-pin">&#x1F4CD; FMP Gogui (OIM) : point de suivi retours forces</div>
+        <div class="info-card-warn">&#x26A0; Detentions arbitraires, refoulements documentes (HRW 2025)</div>
+      </div>
+      <div class="info-card" style="border-top:2px solid #ef5350">
+        <div class="info-card-title" style="color:#ef5350">&#x1F52B; Armes & Reseau JNIM</div>
+        <div class="info-card-val">Wagadou</div>
+        <div class="info-card-sub">Foret frontaliere, base operationnelle JNIM</div>
+        <div class="info-card-desc">La foret de Wagadou (frontiere Mauritanie-Mali) est la base du GSIM/JNIM. Armes circulent depuis la Libye (nord Mali) vers le centre et la zone frontaliere. Aucune grande attaque en Mauritanie, mais infiltration progressive documentee.</div>
+        <div class="info-card-pin">&#x1F4CD; Zones : Amourj, Bassikounou, Foret Wagadou</div>
+        <div class="info-card-warn">&#x26A0; Motos, equipements : contrebande via ports cotiers</div>
+      </div>
+      <div class="info-card" style="border-top:2px solid #29b6f6">
+        <div class="info-card-title" style="color:#29b6f6">&#x1F6D2; Denrees & Commerce informel</div>
+        <div class="info-card-val">35%</div>
+        <div class="info-card-sub">population Hodh Chargui = refugies (UNHCR 2025)</div>
+        <div class="info-card-desc">Marches frontaliers informels : mil, sorgho, legumes, intrants agricoles. Dependance humanitaire forte (PAM/WFP). Services de base satures : sante, eau, education. KOICA : 4M USD UNHCR Hodh Chargui 2024-2026.</div>
+        <div class="info-card-pin">&#x1F4CD; Bassikounou, Nema, Amourj : marches actifs</div>
+        <div class="info-card-warn">&#x26A0; Risque de penurie suite retrait USAID 2025</div>
+      </div>
+    </div>
+    <div class="sources-line">Sources : GI-TOC 2025 · ACLED Nov.2025 · UNHCR Mar.2026 · PASAS Nov.2025 · Journal du Mali Avr.2025 · HRW Aout 2025 · ADF Magazine Jan.2026</div>
+  </div>
+
+</div>
+<div id="footer">Algor Int · Rapport analytique · Sahel · Usage restreint</div>
+
+<script>
+var CALQUES = {
+  ethnies:         { file: 'ethnies.geojson',         label: 'Ethnies',          color: '#e07c5a' },
+  forces:          { file: 'forces.geojson',          label: 'Forces',           color: '#e63946' },
+  population:      { file: 'population.geojson',      label: 'Population',       color: '#ab47bc' },
+  mines:           { file: 'mines.geojson',           label: 'Mines',            color: '#d4a017' },
+  infrastructures: { file: 'infrastructures.geojson', label: 'Infrastructures',  color: '#66bb6a' },
+  evenements:      { file: 'evenements.geojson',      label: 'Evenements',       color: '#ff5252' },
+  flux:            { file: 'flux.geojson',            label: 'Flux & trafics',   color: '#ff9800' }
+};
+// Biweekly snapshots (chronological) for evolution panel
+var BIWEEKLY = [
+  '2026-jan-01-15','2026-jan-16-31',
+  '2026-fev-01-14','2026-fev-15-28',
+  '2026-mars-01-15','2026-mars-16-31'
+];
+var BIW_DATA = {};
+var GC = 'rgba(24,20,40,0.08)', TC = 'rgba(58,52,80,0.7)', CF = { family: "'JetBrains Mono'" };
+
+function countBy(features, key) {
+  var m = {};
+  features.forEach(function(f) { var v = (f.properties[key] || 'Non precise').toString().trim(); if (v) m[v] = (m[v] || 0) + 1; });
+  return m;
+}
+function sortDesc(obj) {
+  return Object.entries(obj).sort(function(a, b) { return b[1] - a[1]; });
+}
+// ── EVOLUTION 14-JOUR : helpers ──
+function parseBiwEvent(f) {
+  var p = f.properties || {};
+  var desc = (p.description || '') + '';
+  var mD = desc.match(/Date\s*[:]\s*([\d\/]+)/);
+  var mP = desc.match(/Pays\s*[:]\s*([^\n]+)/);
+  var mE = desc.match(/Evenement\s*[:]\s*([^\n]+)/);
+  return {
+    actor: (p.name || '') + '',
+    date: mD ? mD[1].trim() : '',
+    pays: mP ? mP[1].trim() : '',
+    event: mE ? mE[1].trim() : ''
+  };
+}
+// Correlation evenements biweekly -> calques du menu (par mots-cles)
+var LAYER_KW = {
+  ethnies:         ['peul','touareg','bambara','songhai','dogon','mossi','haoussa','ethnique','intercommunautaire','communautaire'],
+  forces:          ['fama','militaire','armee','soldat','convoi','embuscade','policier','gendarm','garnison','patrouille','execution','operation','poste militaire','base','gsim','jnim','isgs','katiba','djihad','jihad'],
+  'points-eau':    ['puits','forage','eau','riviere','fleuve','hydrau'],
+  population:      ['civils','refugies','refugie','deplaces','deplace','camp','enlevement','victime','morts','tues','tue','blesses','assassina'],
+  mines:           ['mine','orpail','aurifere','morila','loulo','taoudenni','extract','or '],
+  infrastructures: ['aeroport','pont','route','hub','port','depot','entrepot','corridor logistique','poste frontier','poste forestier'],
+  evenements:      [], // catch-all: tous les evenements
+  flux:            ['citern','carburant','contreband','transhuman','blocus','trafic','migration','migrant','expuls','frontier','passage','accuse','desescalade','diplomat','incursion']
+};
+
+function matchLayers(text) {
+  var t = (text || '').toLowerCase();
+  var hit = {};
+  Object.keys(LAYER_KW).forEach(function(layer) {
+    if (layer === 'evenements') { hit[layer] = true; return; }
+    var kws = LAYER_KW[layer];
+    for (var i = 0; i < kws.length; i++) {
+      if (t.indexOf(kws[i]) !== -1) { hit[layer] = true; return; }
+    }
+  });
+  return hit;
+}
+
+function aggBiw(feats) {
+  var a = { total: feats.length, byLayer: {} };
+  Object.keys(LAYER_KW).forEach(function(l) { a.byLayer[l] = 0; });
+  feats.forEach(function(f) {
+    var e = parseBiwEvent(f);
+    var txt = e.actor + ' ' + e.event + ' ' + e.pays;
+    var hits = matchLayers(txt);
+    Object.keys(hits).forEach(function(l) { if (hits[l]) a.byLayer[l]++; });
+  });
+  return a;
+}
+function deltaPct(prev, curr) {
+  if (prev === 0 && curr === 0) return { cls: 'evo-flat', lbl: '=' };
+  if (prev === 0) return { cls: 'evo-new', lbl: 'NEW' };
+  if (curr === 0) return { cls: 'evo-down', lbl: '-100%' };
+  var d = Math.round((curr - prev) / prev * 100);
+  if (d === 0) return { cls: 'evo-flat', lbl: '=' };
+  var lbl = (d > 0 ? '+' : '') + d + '%';
+  return { cls: (d > 0 ? 'evo-up' : 'evo-down'), lbl: lbl };
+}
+function labelBiw(fn) {
+  var m = fn.match(/2026-(\w+)-(\d+)-(\d+)/);
+  if (!m) return fn;
+  var mon = { jan:'Janv.', fev:'Fev.', mars:'Mars', avril:'Avril', mai:'Mai', juin:'Juin', juil:'Juil.', aout:'Aout', sep:'Sep.', oct:'Oct.', nov:'Nov.', dec:'Dec.' }[m[1]] || m[1];
+  return m[2] + '-' + m[3] + ' ' + mon;
+}
+function buildEvolutionBlock() {
+  // Find 2 most recent biweekly files with at least 1 event in either
+  var avail = BIWEEKLY.filter(function(fn) { return BIW_DATA[fn] !== undefined; });
+  if (avail.length < 2) return '';
+  var curr = avail[avail.length - 1];
+  var prev = avail[avail.length - 2];
+  var C = aggBiw(BIW_DATA[curr]);
+  var P = aggBiw(BIW_DATA[prev]);
+  var periodLbl = labelBiw(prev) + ' \u2192 ' + labelBiw(curr) + ' 2026';
+
+  function card(label, prevV, currV, unit, sub) {
+    var d = deltaPct(prevV, currV);
+    return '<div class="evo-card">' +
+      '<div class="evo-card-label">' + label + '</div>' +
+      '<div class="evo-card-row">' +
+        '<div class="evo-card-val">' + currV + (unit ? '<small>' + unit + '</small>' : '') + '</div>' +
+        '<span class="evo-delta ' + d.cls + '">' + d.lbl + '</span>' +
+      '</div>' +
+      '<div class="evo-card-sub">Prec. ' + prevV + (unit ? ' ' + unit : '') + (sub ? ' \u00B7 ' + sub : '') + '</div>' +
+    '</div>';
+  }
+
+  // 8 calques du menu (meme ordre)
+  var layerOrder = [
+    { key: 'ethnies',         label: 'Ethnies',          sub: 'Conflits intercommunautaires' },
+    { key: 'forces',          label: 'Forces',           sub: 'Militaire / groupes armes' },
+    { key: 'points-eau',      label: 'Points eau',       sub: 'Puits / infra hydraulique' },
+    { key: 'population',      label: 'Population',       sub: 'Civils / deplaces / victimes' },
+    { key: 'mines',           label: 'Mines',            sub: 'Sites miniers / orpaillage' },
+    { key: 'infrastructures', label: 'Infrastructures',  sub: 'Aeroports / ponts / routes' },
+    { key: 'evenements',      label: 'Evenements',       sub: 'Total incidents documentes' },
+    { key: 'flux',            label: 'Flux & trafics',   sub: 'Migration / contrebande / frontiere' }
+  ];
+
+  var cards = layerOrder.map(function(L) {
+    var prevV = P.byLayer[L.key] || 0;
+    var currV = C.byLayer[L.key] || 0;
+    return card(L.label, prevV, currV, '', L.sub);
+  }).join('');
+
+  var h = '<div class="evo-wrap">' +
+    '<div class="evo-head">' +
+      '<div class="evo-title">\u2605 Evolution 14 jours</div>' +
+      '<div class="evo-period">' + periodLbl + '</div>' +
+    '</div>' +
+    '<div class="evo-sub">Correlation des evenements des 2 dernieres quinzaines avec les 8 calques overlay de la carte. Chaque evenement est classe dans un ou plusieurs calques selon son contenu.</div>' +
+    '<div class="evo-grid">' + cards + '</div>' +
+  '</div>';
+  return h;
+}
+
+function detectPays(f) {
+  var p = f.properties, pays = p.pays || '';
+  if (!pays && p['Pays + Lieu']) pays = p['Pays + Lieu'].split(' - ')[0].trim();
+  if (!pays && f.geometry && f.geometry.coordinates) {
+    var lng = Array.isArray(f.geometry.coordinates[0]) ? f.geometry.coordinates[0][0] : f.geometry.coordinates[0];
+    var lat = Array.isArray(f.geometry.coordinates[0]) ? f.geometry.coordinates[0][1] : f.geometry.coordinates[1];
+    if (lng < -12) pays = 'Mauritanie';
+    else if (lng < -5 && lat > 14) pays = 'Mauritanie';
+    else if (lng < -3 && lat > 10) pays = 'Mali';
+    else if (lng < 0.5 && lat < 15.5) pays = 'Burkina Faso';
+    else if (lng < 5) pays = 'Niger';
+    else if (lng > 10) pays = 'Tchad';
+    else pays = 'Mali';
+  }
+  if (pays.indexOf('Mali') !== -1) return 'Mali';
+  if (pays.indexOf('Burkina') !== -1) return 'Burkina Faso';
+  if (pays.indexOf('Niger') !== -1) return 'Niger';
+  if (pays.indexOf('Mauritani') !== -1) return 'Mauritanie';
+  if (pays.indexOf('Tchad') !== -1) return 'Tchad';
+  if (pays.indexOf('Ghana') !== -1) return 'Ghana';
+  if (pays.indexOf('Ivoire') !== -1) return 'Cote d\'Ivoire';
+  return pays || 'Non precise';
+}
+
+// Load all calques + biweekly snapshots
+var keys = Object.keys(CALQUES);
+var calqPromises = keys.map(function(k) {
+  return window.algorReady.then(function () { return window.algorAuth.loadZoneFile('sahel/' + CALQUES[k].file); }).then(function(d) {
+    CALQUES[k].data = d; CALQUES[k].count = d.features ? d.features.length : 0;
+  }).catch(function() { CALQUES[k].data = { features: [] }; CALQUES[k].count = 0; });
+});
+var biwPromises = BIWEEKLY.map(function(fn) {
+  return window.algorReady.then(function () { return window.algorAuth.loadZoneFile('sahel/' + fn + '.geojson'); })
+    .then(function(d) { BIW_DATA[fn] = (d && d.features) ? d.features : []; })
+    .catch(function() { BIW_DATA[fn] = []; });
+});
+Promise.all(calqPromises.concat(biwPromises)).then(function() {
+  document.getElementById('loading').style.display = 'none';
+  var ct = document.getElementById('content'); ct.style.display = 'block';
+
+  var evts = CALQUES.evenements, forces = CALQUES.forces, infra = CALQUES.infrastructures;
+  var pop = CALQUES.population, flux = CALQUES.flux, mines = CALQUES.mines;
+  var ethnies = CALQUES.ethnies;
+
+  var totalPts = keys.reduce(function(s, k) { return s + CALQUES[k].count; }, 0);
+  var totalDeplaces = 0;
+  if (pop.data.features) pop.data.features.forEach(function(f) {
+    totalDeplaces += parseInt(f.properties.personnes || 0);
+  });
+
+  // ── BUILD ALL HTML FIRST, THEN CREATE CHARTS ──
+  var html = '';
+
+  // METRICS
+  html += '<div class="metrics">' +
+    '<div class="metric-card"><div class="metric-label">Total features</div><div class="metric-value">' + totalPts.toLocaleString('fr') + '</div></div>' +
+    '<div class="metric-card"><div class="metric-label">Attaques / evenements</div><div class="metric-value">' + evts.count + '</div></div>' +
+    '<div class="metric-card"><div class="metric-label">Deplaces / refugies</div><div class="metric-value">' + (totalDeplaces > 1000000 ? (totalDeplaces / 1000000).toFixed(1) + '<small>M</small>' : totalDeplaces.toLocaleString('fr')) + '</div></div>' +
+    '<div class="metric-card"><div class="metric-label">Calques</div><div class="metric-value">8</div></div>' +
+  '</div>';
+
+  // ── EVOLUTION 14 JOURS (biweekly delta) ──
+  html += buildEvolutionBlock();
+
+  // S1
+  html += '<div class="section"><div class="section-header"><span class="section-num">01</span><span class="section-title">Empreinte par calque</span></div>' +
+    '<div class="section-desc">Volume de donnees par couche thematique (echelle logarithmique).</div>' +
+    '<div class="chart-box"><div class="chart-wrap"><canvas id="c1"></canvas></div></div></div>';
+
+  // S2 + S3
+  html += '<div class="section"><div class="two-col"><div>' +
+    '<div class="section-header"><span class="section-num">02</span><span class="section-title">Evenements par type</span></div>' +
+    '<div class="section-desc">Ventilation des ' + evts.count + ' evenements securitaires par categorie.</div>' +
+    '<div class="chart-box"><div class="chart-wrap-sm"><canvas id="c2"></canvas></div></div></div><div>' +
+    '<div class="section-header"><span class="section-num">03</span><span class="section-title">Evenements par pays</span></div>' +
+    '<div class="section-desc">Repartition geographique des attaques et incidents frontaliers.</div>' +
+    '<div class="chart-box"><div class="chart-wrap-sm"><canvas id="c3"></canvas></div></div></div></div></div>';
+
+  // S4
+  html += '<div class="section"><div class="section-header"><span class="section-num">04</span><span class="section-title">Dispositif militaire par pays</span></div>' +
+    '<div class="section-desc">Repartition des bases, QG et garnisons par force armee et par pays.</div>' +
+    '<div class="legend" id="leg-forces"></div><div class="chart-box"><div class="chart-wrap-sm"><canvas id="c4"></canvas></div></div></div>';
+
+  // S5
+  html += '<div class="section"><div class="section-header"><span class="section-num">05</span><span class="section-title">Infrastructures strategiques</span></div>' +
+    '<div class="section-desc">Repartition des aeroports, ports, hubs logistiques et depots par pays.</div>' +
+    '<div class="chart-box"><div class="chart-wrap-sm"><canvas id="c5"></canvas></div></div></div>';
+
+  // S6
+  html += '<div class="section"><div class="section-header"><span class="section-num">06</span><span class="section-title">Population deplacee et refugiee</span></div>' +
+    '<div class="section-desc">Nombre de personnes deplacees par site (' + pop.count + ' sites).</div>' +
+    '<div class="chart-box"><div class="chart-wrap"><canvas id="c6"></canvas></div></div></div>';
+
+  // S7
+  html += '<div class="section"><div class="section-header"><span class="section-num">07</span><span class="section-title">Flux et trafics illicites</span></div>' +
+    '<div class="section-desc">Corridors de trafic identifies (' + flux.count + ' routes).</div>' +
+    '<div class="chart-box"><table class="data-table" id="flux-table"><thead><tr><th>Route</th><th>Type</th><th>Rang</th></tr></thead><tbody></tbody></table></div></div>';
+
+  // INSERT ALL HTML AT ONCE
+  ct.innerHTML = html;
+
+  // ── NOW CREATE ALL CHARTS (DOM is ready) ──
+
+  // Prepare data
+  var radarLabels = keys.map(function(k) { return CALQUES[k].label; });
+  var radarData = keys.map(function(k) { return Math.log10(CALQUES[k].count + 1); });
+  var radarColors = keys.map(function(k) { return CALQUES[k].color; });
+  var typeMap = countBy(evts.data.features || [], 'type');
+  var typeSorted = sortDesc(typeMap);
+  var typeColors = { 'Attaque': '#ff1744', 'Incident frontalier': '#ff6d00', 'Siege': '#d50000', 'Crise diplomatique': '#ab47bc', 'Economique': '#ffd740', 'Geopolitique': '#7b1fa2' };
+  var paysEvts = {};
+  (evts.data.features || []).forEach(function(f) { var p = detectPays(f); paysEvts[p] = (paysEvts[p] || 0) + 1; });
+  var paysSorted = sortDesc(paysEvts);
+  var paysColors = { 'Mali': '#e63946', 'Burkina Faso': '#ff9800', 'Niger': '#66bb6a', 'Mauritanie': '#29b6f6', 'Tchad': '#ab47bc' };
+  var forcesByPays = {}, allForces = {};
+  var forceColors = { 'FAMA': '#2e7d32', 'FAMA / Wagner': '#6c757d', 'FAN': '#558b2f', 'ANA': '#33691e', 'VDP': '#ccaa00', 'Dan Nan Ambassagou': '#d4a017', 'ANT': '#7cb342' };
+  (forces.data.features || []).forEach(function(f) { var p = detectPays(f), fc = f.properties.force || 'Autre'; allForces[fc] = true; if (!forcesByPays[p]) forcesByPays[p] = {}; forcesByPays[p][fc] = (forcesByPays[p][fc] || 0) + 1; });
+  var fpLabels = Object.keys(forcesByPays).sort();
+  var forceNames = Object.keys(allForces).sort();
+  var infraByPays = {}, allInfraTypes = {};
+  var infraColors = { 'Aeroport': '#4fc3f7', 'Aeroport / Base': '#4fc3f7', 'Hub / Entrepot': '#66bb6a', 'Pont strategique': '#8d6e63', 'Corridor logistique': '#78909c' };
+  (infra.data.features || []).forEach(function(f) { if (f.geometry.type !== 'Point') return; var p = detectPays(f), t = f.properties.type || 'Autre'; allInfraTypes[t] = true; if (!infraByPays[p]) infraByPays[p] = {}; infraByPays[p][t] = (infraByPays[p][t] || 0) + 1; });
+  var ipLabels = Object.keys(infraByPays).sort();
+  var infraTypeNames = Object.keys(allInfraTypes);
+  var popData = (pop.data.features || []).map(function(f) { return { name: f.properties.name || 'Site', count: parseInt(f.properties.personnes || 0), type: f.properties.type || '' }; }).sort(function(a, b) { return b.count - a.count; });
+  var popTypeColors = { 'IDPs': '#e040fb', 'Camp refugies': '#ab47bc', 'Refugies': '#ce93d8', 'Siege': '#d50000', 'Flux': '#ff9800' };
+
+  // C1: Radar
+  new Chart(document.getElementById('c1'), { type: 'radar', data: { labels: radarLabels, datasets: [{ data: radarData, backgroundColor: 'rgba(107,63,160,0.12)', borderColor: '#6B3FA0', borderWidth: 2, pointBackgroundColor: radarColors, pointRadius: 5, pointHoverRadius: 8 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx) { return keys[ctx.dataIndex] ? CALQUES[keys[ctx.dataIndex]].label + ': ' + CALQUES[keys[ctx.dataIndex]].count + ' features' : ''; } } } }, scales: { r: { angleLines: { color: GC }, grid: { color: GC }, pointLabels: { color: TC, font: Object.assign({ size: 10 }, CF) }, ticks: { display: false } } } } });
+
+  // C2: Donut types
+  new Chart(document.getElementById('c2'), { type: 'doughnut', data: { labels: typeSorted.map(function(e) { return e[0]; }), datasets: [{ data: typeSorted.map(function(e) { return e[1]; }), backgroundColor: typeSorted.map(function(e) { return typeColors[e[0]] || '#888'; }), borderColor: '#FFFFFF', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'bottom', labels: { color: TC, font: Object.assign({ size: 8 }, CF), boxWidth: 8, padding: 6 } } } } });
+
+  // C3: Donut pays
+  new Chart(document.getElementById('c3'), { type: 'doughnut', data: { labels: paysSorted.map(function(e) { return e[0]; }), datasets: [{ data: paysSorted.map(function(e) { return e[1]; }), backgroundColor: paysSorted.map(function(e) { return paysColors[e[0]] || '#78909c'; }), borderColor: '#FFFFFF', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'bottom', labels: { color: TC, font: Object.assign({ size: 8 }, CF), boxWidth: 8, padding: 6 } } } } });
+
+  // C4: Forces stacked bar + legend
+  var legF = document.getElementById('leg-forces');
+  if (legF) forceNames.forEach(function(fc) { var d = document.createElement('div'); d.className = 'legend-item'; d.innerHTML = '<div class="legend-dot" style="background:' + (forceColors[fc] || '#888') + '"></div>' + fc; legF.appendChild(d); });
+  new Chart(document.getElementById('c4'), { type: 'bar', data: { labels: fpLabels, datasets: forceNames.map(function(fc) { return { label: fc, data: fpLabels.map(function(p) { return (forcesByPays[p] || {})[fc] || 0; }), backgroundColor: (forceColors[fc] || '#888') + 'cc', borderColor: forceColors[fc] || '#888', borderWidth: 0.5 }; }) }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { stacked: true, grid: { color: GC }, ticks: { color: TC, font: Object.assign({ size: 9 }, CF) } }, y: { stacked: true, grid: { color: GC }, ticks: { color: TC, font: Object.assign({ size: 9 }, CF), stepSize: 1 }, beginAtZero: true } } } });
+
+  // C5: Infra stacked bar
+  new Chart(document.getElementById('c5'), { type: 'bar', data: { labels: ipLabels, datasets: infraTypeNames.map(function(t) { return { label: t, data: ipLabels.map(function(p) { return (infraByPays[p] || {})[t] || 0; }), backgroundColor: (infraColors[t] || '#66bb6a') + 'cc', borderColor: infraColors[t] || '#66bb6a', borderWidth: 0.5 }; }) }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'bottom', labels: { color: TC, font: Object.assign({ size: 8 }, CF), boxWidth: 8, padding: 6 } } }, scales: { x: { stacked: true, grid: { color: GC }, ticks: { color: TC, font: Object.assign({ size: 9 }, CF) } }, y: { stacked: true, grid: { color: GC }, ticks: { color: TC, font: Object.assign({ size: 9 }, CF), stepSize: 1 }, beginAtZero: true } } } });
+
+  // C6: Population bar horizontal
+  new Chart(document.getElementById('c6'), { type: 'bar', data: { labels: popData.map(function(d) { return d.name.length > 30 ? d.name.substring(0, 28) + '...' : d.name; }), datasets: [{ data: popData.map(function(d) { return d.count; }), backgroundColor: popData.map(function(d) { return (popTypeColors[d.type] || '#ab47bc') + 'cc'; }), borderColor: popData.map(function(d) { return popTypeColors[d.type] || '#ab47bc'; }), borderWidth: 1 }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: GC }, ticks: { color: TC, font: Object.assign({ size: 9 }, CF), callback: function(v) { return v >= 1000000 ? (v/1000000) + 'M' : v >= 1000 ? (v/1000) + 'k' : v; } }, beginAtZero: true }, y: { grid: { color: GC }, ticks: { color: TC, font: Object.assign({ size: 8 }, CF) } } } } });
+
+  // S7: Flux table (DOM manipulation)
+  var fluxTable = document.querySelector('#flux-table tbody');
+  var fluxTypeColors = { 'Narcotrafic': '#c62828', 'Trafic d\'armes': '#bf360c', 'Migration': '#8d6e63', 'Contrebande or': '#f9a825', 'Contrebande': '#8e24aa', 'Trafic medicaments': '#8e24aa' };
+  if (fluxTable) (flux.data.features || []).forEach(function(f) {
+    var p = f.properties, tr = document.createElement('tr');
+    var tc = fluxTypeColors[p.type] || '#ff9800';
+    tr.innerHTML = '<td>' + (p.name || '--') + '</td><td><span class="tag" style="color:' + tc + ';border-color:' + tc + '40">' + (p.type || '--') + '</span></td><td>' + (p.rank || '--') + '</td>';
+    fluxTable.appendChild(tr);
+  });
+});
+
+// ── CHARTS STATIQUES FRONTIERE MAURITANIE-MALI ──
+// S09: Refugies par region
+new Chart(document.getElementById('c-refugees'), {
+  type: 'bar',
+  data: {
+    labels: ['2022', '2023', 'Avr.2024', 'Dec.2024', 'Juin 2025', 'Janv.2026', 'Mars 2026'],
+    datasets: [
+      { label: 'Hodh El Chargui (camp + hors camp)', data: [85, 155, 200, 230, 260, 290, 318], backgroundColor: '#e63946cc', borderColor: '#e63946', borderWidth: 1 },
+      { label: 'Autres regions (Guidimakha, Assaba...)', data: [8, 15, 25, 35, 45, 55, 60], backgroundColor: '#29b6f644', borderColor: '#29b6f6', borderWidth: 1 }
+    ]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top', labels: { color: TC, font: Object.assign({ size: 8 }, CF), boxWidth: 8 } } },
+    scales: { x: { stacked: true, grid: { color: GC }, ticks: { color: TC, font: Object.assign({ size: 8 }, CF) } }, y: { stacked: true, grid: { color: GC }, ticks: { color: TC, font: Object.assign({ size: 8 }, CF), callback: function(v) { return v + 'k'; } }, beginAtZero: true } } }
+});
+
+// S10: Profil flux
+new Chart(document.getElementById('c-profil'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Refugies (conflit)', 'Migrants eco.', 'Orpailleurs', 'Retournes / expulses', 'Transhumants', 'Autres'],
+    datasets: [{ data: [45, 25, 15, 8, 5, 2], backgroundColor: ['#e63946', '#29b6f6', '#ffa726', '#ff7043', '#66bb6a', '#ab47bc'], borderColor: '#FFFFFF', borderWidth: 2 }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'right', labels: { color: TC, font: Object.assign({ size: 8 }, CF), boxWidth: 8, padding: 6 } } } }
+});
+
+// S11: Corridor Nord
+new Chart(document.getElementById('c-corridor'), {
+  type: 'line',
+  data: {
+    labels: ['2021', '2022', '2023', '2024', 'H1 2025'],
+    datasets: [
+      { label: 'Arrivees Canaries (toutes nationalites)', data: [22, 31, 40, 41, 18], borderColor: '#29b6f6', backgroundColor: '#29b6f622', borderWidth: 2, pointRadius: 5, tension: 0.3, fill: false },
+      { label: 'Maliens irreguliers Europe (estime)', data: [4, 6, 9, 12, 10], borderColor: '#ff9800', backgroundColor: '#ff980022', borderWidth: 2, pointRadius: 5, tension: 0.3, fill: false, borderDash: [5, 3] }
+    ]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top', labels: { color: TC, font: Object.assign({ size: 8 }, CF), boxWidth: 8 } } },
+    scales: { x: { grid: { color: GC }, ticks: { color: TC, font: Object.assign({ size: 9 }, CF) } }, y: { grid: { color: GC }, ticks: { color: TC, font: Object.assign({ size: 9 }, CF), callback: function(v) { return v + 'k'; } }, beginAtZero: true } } }
+});
+
+// S12: Radar securite
+new Chart(document.getElementById('c-security'), {
+  type: 'radar',
+  data: {
+    labels: ['Renseignement de terrain', 'Surveillance aerienne (drones)', 'Unites mobiles terrain', 'Cooperation internationale', 'Controle biometrique', 'Presence physique postes'],
+    datasets: [
+      { label: 'Hodh El Chargui (Est)', data: [80, 70, 75, 60, 40, 55], backgroundColor: 'rgba(230,57,70,0.15)', borderColor: '#e63946', borderWidth: 2, pointBackgroundColor: '#e63946', pointRadius: 4 },
+      { label: 'Hodh El Gharbi / Assaba (Sud)', data: [30, 25, 40, 45, 50, 35], backgroundColor: 'rgba(102,187,106,0.15)', borderColor: '#66bb6a', borderWidth: 2, pointBackgroundColor: '#66bb6a', pointRadius: 4 }
+    ]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'bottom', labels: { color: TC, font: Object.assign({ size: 8 }, CF), boxWidth: 8 } } },
+    scales: { r: { angleLines: { color: GC }, grid: { color: GC }, pointLabels: { color: TC, font: Object.assign({ size: 8 }, CF) }, ticks: { display: true, color: TC, font: { size: 7 }, backdropColor: 'transparent', stepSize: 25 }, suggestedMin: 0, suggestedMax: 100 } } }
+});
+</script>
+
+<!-- Synthese decisionnelle IA - module ES + init -->
+<script type="module" src="../shared/synthese-rapport.js?v=20260621n"></script>
+<script>
+  window.addEventListener('DOMContentLoaded', function () {
+    if (!window.AlgorSynthese) return;
+    AlgorSynthese.init({
+      containerId: 'synthese-host',
+      zoneId: 'sahel',
+      zoneLabel: 'Sahel — Mali, Burkina Faso, Niger, Mauritanie, Tchad (2026)',
+      reportTitle: 'Sahel — Analyse multicouche du theatre',
+    });
+  });
+</script>
+</body>
+</html>

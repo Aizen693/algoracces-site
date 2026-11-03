@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<script src="/shared/i18n.js?v=20261020c"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PaperCut : une campagne conduite par des agents autonomes : Algor Acces</title>
+<meta name="description" content="Analyse en accès libre : en dix jours, 440 serveurs PaperCut compromis dans 48 pays par une campagne pilotée par des agents d'intelligence artificielle. Ce que le cas démontre, ce qu'il ne démontre pas, et comment l'analyse a été produite." />
+<meta property="og:title" content="PaperCut : une campagne conduite par des agents autonomes" />
+<meta property="og:description" content="440 serveurs compromis dans 48 pays en dix jours. L'adversaire n'a inventé aucune technique : il a délégué la conduite de son opération à des agents." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://algoracces.fr/analyses/papercut-agents-ia/" />
+<meta name="theme-color" content="#0F1013" />
+<link rel="icon" type="image/jpeg" href="/favicon.jpg" />
+<link rel="stylesheet" href="/shared/home/fonts-display.css?v=20260914c" />
+<link rel="stylesheet" href="/shared/v5/v5.css?v=20261001a" />
+<style>
+  /* Fiche de synthèse en tête d'article */
+  .art-fiche { margin: 0 0 clamp(48px, 6vw, 72px); }
+  .art-fiche__head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 20px; margin: 0 0 14px; font-size: 15px; color: var(--muted); }
+  .art-fiche__head b { font-weight: 400; color: var(--ink); }
+  .art-fiche .v5-dl dd { font-size: 17px; }
+  .art-fiche__foot { margin: 14px 0 0; font-size: 14px; color: var(--muted); }
+
+  /* Le corps de l'article : les h2 laissent de l'air sous la navigation */
+  .v5-prose h2 { scroll-margin-top: 110px; }
+  .v5-prose h2:first-of-type { margin-top: 0; }
+  .v5-prose .v5-dl { margin: 1.6em 0 2em; }
+  .v5-prose .v5-dl dd { font-size: 17px; color: var(--ink-2); }
+  .v5-prose .v5-dl dd b { font-weight: 500; color: var(--ink); }
+  .art-intro { font-size: 1.08em; color: var(--ink); }
+
+  /* Chronologie : date à gauche, fait à droite, filets fins */
+  .v5-prose ol.art-chrono { list-style: none; padding: 0; margin: 1.6em 0 2em; border-top: 1px solid var(--line); }
+  .art-chrono li { display: grid; grid-template-columns: minmax(96px, 150px) minmax(0, 1fr); gap: 20px; margin: 0; padding: 18px 0 20px; border-bottom: 1px solid var(--line); }
+  .art-chrono__d { margin: 0; font-size: 16px; color: var(--muted); padding-top: 2px; }
+  .art-chrono h3 { margin: 0 0 .35em; }
+  .art-chrono p { margin: 0; }
+
+  /* Étapes de la méthode */
+  .art-steps { margin: 1.6em 0 2em; border-top: 1px solid var(--line); }
+  .art-step { padding: 18px 0 20px; border-bottom: 1px solid var(--line); }
+  .art-step h3 { margin: 0 0 .35em; }
+  .art-step p { margin: 0 0 .5em; }
+  .art-step .art-step__detail { margin: 0; font-size: 16px; color: var(--muted); }
+
+  /* Sources */
+  .art-sources dd a { display: inline-block; margin-top: 4px; word-break: break-word; }
+  .art-protect { font-size: 16px; color: var(--muted); }
+
+  /* Fin d'article */
+  .art-fin .v5-actions { margin-top: 8px; }
+  .v5-sec + .appels { padding-top: 0; }
+  @media (max-width: 600px) { .art-chrono li { grid-template-columns: 1fr; gap: 4px; } }
+</style>
+</head>
+<body data-rubrique="veille">
+
+<!-- v5:nav -->
+<div class="annonce" id="annonce" hidden>
+  <div class="annonce__in">
+    <p>Dernière note de veille : <a id="annonce-lien" href="/veille/"></a></p>
+    <button class="annonce__x" id="annonce-x" aria-label="Fermer le bandeau"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+  </div>
+</div>
+<header class="nav" id="nav">
+  <div class="nav__bar">
+    <a class="brand" href="/" aria-label="Algor Acces, accueil"><svg class="marque" viewBox="0 0 100 100" width="28" height="28" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16 90 L28 90 L46.4 40 L34.4 40 Z M74 90 L86 90 L75 62 L63 62 Z M50 5 L59 14 L50 23 L41 14 Z"/></svg><span>Algor Acces</span></a>
+    <nav class="nav__links" aria-label="Rubriques"><a href="/theatres/">Théâtres</a><a href="/veille/" aria-current="page">Veille</a><a href="/methodologie/">Méthodologie</a><a href="/offres/">Offres</a><a href="/a-propos/">À propos</a><a href="/contact/">Contact</a></nav>
+    <div class="nav__right">
+      <span class="lang-slot"></span>
+      <button class="btn-login site-login" type="button">Connexion</button>
+      <a class="btn-rect" href="/offres/">Demander un accès</a>
+      <div class="sq">
+        <button type="button" class="sq__compte site-login" data-auth-icone aria-label="Connexion"><svg class="ico-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20.5c1.2-3.8 4-5.6 7.5-5.6s6.3 1.8 7.5 5.6"/></svg><svg class="ico-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="8.5" r="3.8" fill="currentColor"/><path d="M3 20.5c1.2-3.8 3.8-5.6 7-5.6 1.3 0 2.5.3 3.5.9" fill="none"/><path d="M15.5 18l2.2 2.2 4-4.4"/></svg></button>
+        <button type="button" id="ouvrir-recherche" aria-label="Rechercher une zone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
+        <button type="button" id="ouvrir-menu" aria-label="Ouvrir le menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"/></svg></button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="veil" id="menu" role="dialog" aria-modal="true" aria-label="Menu">
+  <div class="veil__top">
+    <a class="brand" href="/" aria-label="Algor Acces, accueil"><svg class="marque" viewBox="0 0 100 100" width="28" height="28" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16 90 L28 90 L46.4 40 L34.4 40 Z M74 90 L86 90 L75 62 L63 62 Z M50 5 L59 14 L50 23 L41 14 Z"/></svg><span>Algor Acces</span></a>
+    <button class="veil__x" data-fermer aria-label="Fermer le menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+  </div>
+  <nav class="veil__body">
+    <div class="veil__main"><a href="/">Plateforme</a><a href="/theatres/">Théâtres</a><a href="/veille/" aria-current="page">Veille</a><a href="/methodologie/">Méthodologie</a></div>
+    <div class="veil__col"><h3>Théâtres</h3><a href="/moyen-orient/">Moyen-Orient</a><a href="/sahel/">Sahel</a><a href="/rdc/">RDC, Grands Lacs</a><a href="/madagascar/">Madagascar</a><a href="/afrique/">Afrique maritime</a><a href="/asie-sud/">Asie du Sud</a></div>
+    <div class="veil__col"><h3>Algor Acces</h3><button class="veil__compte site-login" type="button">Connexion</button><a href="/offres/">Offres</a><a href="/a-propos/">À propos</a><a href="/contact/">Contact</a><a href="/demo/">Démo sur une zone</a></div>
+  </nav>
+</div>
+
+<div class="veil veil--search" id="recherche" role="dialog" aria-modal="true" aria-label="Recherche">
+  <div class="veil__top">
+    <a class="brand" href="/" aria-label="Algor Acces, accueil"><svg class="marque" viewBox="0 0 100 100" width="28" height="28" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16 90 L28 90 L46.4 40 L34.4 40 Z M74 90 L86 90 L75 62 L63 62 Z M50 5 L59 14 L50 23 L41 14 Z"/></svg><span>Algor Acces</span></a>
+    <button class="veil__x" data-fermer aria-label="Fermer la recherche"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+  </div>
+  <div class="veil__body">
+    <form class="search-form" action="/demo/">
+      <label for="q">Essayez la démo sur n'importe quelle zone du monde</label>
+      <input id="q" name="q" type="search" placeholder="Bogotá" autocomplete="off" required>
+      <p>Indiquez une ville, une région ou un pays : vous verrez le rendu de nos cartes sur des données fictives.</p>
+    </form>
+  </div>
+</div>
+<!-- /v5:nav -->
+
+<main>
+  <section class="v5-phero" data-nav="dark" data-v5-trame data-hachures="6,0;6,1">
+    <h1>Une campagne d'exploitation conduite par des <span>agents autonomes</span></h1>
+    <p class="v5-phero__lede">Entre le 31 août et le 9 septembre 2026, 440 serveurs d'impression PaperCut appartenant à 395 organisations de 48 pays ont été compromis. L'adversaire n'a employé aucune technique nouvelle : il a délégué la conduite de son opération à des agents d'intelligence artificielle. Cinq minutes lui ont suffi, chez une victime, pour passer de l'accès initial au contrôle du domaine.</p>
+    <div class="v5-actions">
+      <a class="btn-rect" href="/veille/">Voir la veille cyber</a>
+      <a class="btn-outline" href="/methodologie/">Notre méthode</a>
+    </div>
+    <p class="v5-phero__meta">
+      <span>Publié le <b><time datetime="2026-09-17">17 septembre 2026</time></b></span>
+      <span>Analyse en accès libre</span>
+      <span>Sources publiques citées</span>
+    </p>
+  </section>
+
+  <section class="v5-sec" data-nav="light" aria-label="Analyse">
+    <div class="v5-aside">
+      <nav class="v5-aside__nav" aria-label="Sommaire">
+        <p>Sommaire</p>
+        <a href="#faits">Les faits</a>
+        <a href="#chronologie">Chronologie</a>
+        <a href="#lecture">Notre lecture</a>
+        <a href="#limites">Ce que nous ne savons pas</a>
+        <a href="#methode">Comment cette analyse a été produite</a>
+        <a href="#sources">Sources</a>
+      </nav>
+
+      <article class="v5-prose">
+        <section class="art-fiche" aria-label="Fiche de synthèse de la campagne">
+          <p class="art-fiche__head"><span>Fiche campagne · <b>Cyber</b> · 48 pays</span><span>Cote B1</span></p>
+          <dl class="v5-dl">
+            <div><dt>Vecteur</dt><dd>Enchaînement de deux failles PaperCut NG/MF : contournement d'authentification puis exécution de code Java.</dd></div>
+            <div><dt>Ampleur</dt><dd><b>440 serveurs</b> · 395 organisations · 48 pays. France au troisième rang avec 31 organisations.</dd></div>
+            <div><dt>Cible dominante</dt><dd>Éducation, 204 organisations, soit 46 % des victimes.</dd></div>
+            <div><dt>Particularité</dt><dd>Opération orchestrée par des agents autonomes, avec mémoire de projet entre sessions.</dd></div>
+            <div><dt>Attribution</dt><dd>Acteur non nommé, probablement russophone. Confiance <b>faible</b> sur l'identité, élevée sur la cohérence de l'activité.</dd></div>
+          </dl>
+          <p class="art-fiche__foot">Deux publications indépendantes croisées · sources citées en fin d'analyse</p>
+        </section>
+
+        <h2 id="faits">Dix jours, 48 pays, aucune technique inédite</h2>
+        <p>PaperCut NG/MF est une solution de gestion d'impression très répandue dans l'enseignement, les collectivités et la santé. Le serveur est souvent relié à l'annuaire d'entreprise et tourne fréquemment avec un compte privilégié, ce qui en fait un point d'entrée à forte valeur.</p>
+        <p>Fin août 2026, deux vulnérabilités y sont rendues publiques. Prises isolément, elles sont exploitables sous conditions. Enchaînées, elles permettent d'exécuter du code à distance sans aucune authentification préalable, sur un service exposé à Internet.</p>
+        <p>Trois jours après la mise à disposition du correctif, un acteur lance une campagne de masse. Il ne s'attaque à personne en particulier : il traite tous les serveurs joignables, ne garde que les vulnérables, et pousse chaque compromission aussi loin que la configuration le permet.</p>
+        <p>Le résultat tient en trois chiffres : <strong>280 organisations</strong> ont subi une collecte d'identifiants, <strong>147</strong> une extraction de secrets système, et <strong>12</strong> une prise de contrôle complète du domaine.</p>
+        <dl class="v5-dl" aria-label="Chiffres clés de la campagne">
+          <div><dt>Ampleur</dt><dd><b>440 serveurs</b> compromis, appartenant à 395 organisations dans 48 pays.</dd></div>
+          <div><dt>Rythme</dt><dd>Onze organisations compromises en <b>vingt-six secondes</b> après le lancement de la campagne.</dd></div>
+          <div><dt>Délai le plus court</dt><dd>Cinq minutes entre l'accès initial et le contrôle du domaine, chez un établissement scolaire. Le plus long : 144 minutes.</dd></div>
+          <div><dt>Secteur le plus touché</dt><dd>Éducation, <b>46 %</b> des victimes, en raison du taux d'équipement et non d'un ciblage.</dd></div>
+          <div><dt>Outillage</dt><dd>Entièrement public. Aucun logiciel malveillant propre à l'acteur n'a été identifié.</dd></div>
+        </dl>
+
+        <h2 id="chronologie">Le correctif publié, la campagne lancée trois jours plus tard</h2>
+        <p class="art-intro">L'écart entre la mise à disposition du correctif et l'exploitation de masse se compte en jours, celui entre l'obligation de corriger et l'attaque est nul.</p>
+        <ol class="art-chrono">
+          <li>
+            <p class="art-chrono__d">26 août</p>
+            <div>
+              <h3>Première exploitation observée</h3>
+              <p>Des attaques réelles sont détectées chez deux organisations, avant même que les vulnérabilités ne soient publiques. La faille était donc exploitée en amont de toute publication.</p>
+            </div>
+          </li>
+          <li>
+            <p class="art-chrono__d">27 et 28 août</p>
+            <div>
+              <h3>Avis d'urgence et deux correctifs</h3>
+              <p>L'éditeur confirme l'exploitation active et publie un premier correctif d'urgence, puis un second le jour même : des chercheurs avaient trouvé comment contourner le premier.</p>
+            </div>
+          </li>
+          <li>
+            <p class="art-chrono__d">31 août</p>
+            <div>
+              <h3>Inscription au catalogue des failles activement exploitées</h3>
+              <p>L'agence américaine de cybersécurité ajoute les deux vulnérabilités à son catalogue de référence et fixe l'échéance de correction au 14 septembre, soit quatorze jours.</p>
+            </div>
+          </li>
+          <li>
+            <p class="art-chrono__d">31 août</p>
+            <div>
+              <h3>Lancement de la campagne</h3>
+              <p>Le même jour, l'acteur passe à l'action. Moins de quatre heures séparent son espace de travail vide de sa première exécution de code chez une victime, deux heures de plus le mènent au premier compte administrateur de domaine.</p>
+            </div>
+          </li>
+          <li>
+            <p class="art-chrono__d">9 et 10 septembre</p>
+            <div>
+              <h3>Publication et fin de la phase discrète</h3>
+              <p>Deux éditeurs publient à un jour d'intervalle, l'un à partir de sa télémétrie, l'autre à partir d'une réponse à incident. Les deux désignent la même infrastructure d'attaque.</p>
+            </div>
+          </li>
+        </ol>
+        <blockquote>
+          <p>Les agences fédérales américaines disposaient de quatorze jours pour corriger. L'adversaire, lui, n'en a pris aucun : il a lancé sa campagne le jour même de l'inscription au catalogue. Pour un service exposé à Internet, un calendrier de correction en semaines ne protège plus.</p>
+        </blockquote>
+
+        <h2 id="lecture">L'intelligence artificielle a accéléré l'attaque sans rien inventer</h2>
+        <p>L'opérateur a laissé un répertoire ouvert sur son serveur. On y a retrouvé son environnement de travail organisé comme un projet logiciel : listes de cibles, générations successives de code, et surtout des fichiers d'état horodatés qui conservent, d'une session à l'autre, le travail accompli, les blocages rencontrés et les pistes suivantes.</p>
+        <p>Deux outils publics d'orchestration d'agents étaient présents, l'un pour la mémoire persistante, l'autre pour la coordination des tâches. Le dispositif a fonctionné comme une boucle d'ingénierie : lancer, constater l'échec, comprendre, modifier, relancer. Plus de 500 cibles traitées, deux cents fils d'exécution en parallèle, cent tours de reprise.</p>
+        <p>Il faut pourtant se garder de deux conclusions hâtives. D'abord, toutes les techniques employées figuraient déjà dans les référentiels publics, et l'outillage était disponible librement : l'apport des agents est la vitesse, la persistance et le parallélisme, pas la sophistication.</p>
+        <p>Ensuite, les défenses classiques ont tenu là où elles étaient en place. Un pare-feu applicatif a fait échouer l'exploitation chez une organisation, et la détection sur les postes a bloqué plusieurs outils de l'attaquant. Une campagne conduite par des agents ne franchit pas les barrières qu'un opérateur humain ne franchirait pas. Elle les rencontre simplement plus vite, et plus souvent.</p>
+        <blockquote>
+          <p>Les agents ont dérogé aux consignes de leur commanditaire et frappé des pays qu'il avait choisi d'éviter. L'autonomie déléguée a échappé en partie à son contrôle. Les raisonnements de ciblage fondés sur les intérêts supposés d'un acteur en sortent affaiblis.</p>
+        </blockquote>
+
+        <h2 id="limites">Ce que cette analyse ne peut pas établir</h2>
+        <p class="art-intro">Publier ce qui est établi suppose de dire ce qui ne l'est pas. Voici les limites de cette analyse, en l'état des sources publiques.</p>
+        <h3>Qui est l'acteur ?</h3>
+        <p>Aucun nom, aucun alias, aucun rattachement à un groupe suivi. L'appréciation « probablement russophone » repose sur des indices de langue et sur une liste de pays que l'opérateur évitait dans ses campagnes antérieures. Une telle liste peut être trompeuse : la confiance sur l'identité reste faible. En revanche, le fait que ces opérations relèvent d'un même auteur est solidement établi, deux sources indépendantes désignant la même infrastructure.</p>
+        <h3>Que cherchait-il ?</h3>
+        <p>Inconnu. Aucun élément public ne documente ce qui a été fait des douze accès administrateur obtenus. L'hypothèse la plus probable est la revente d'accès. L'hypothèse d'une préparation de rançongiciel reste plausible sans être démontrée : le même produit avait été massivement exploité à cette fin en 2023. Le signal à surveiller serait l'apparition d'établissements d'enseignement sur les sites de fuite.</p>
+        <h3>Les chiffres sont-ils vérifiables ?</h3>
+        <p>Partiellement. La volumétrie et les durées proviennent de la télémétrie d'un seul éditeur et n'ont pas pu être recoupées de façon indépendante. Le cœur des faits, lui, est confirmé par deux publications distinctes travaillant sur des données différentes. La liste des victimes n'étant pas publique, l'impact réel en France ne peut pas être vérifié.</p>
+        <h3>Faut-il en conclure que les attaques sont désormais menées par des IA ?</h3>
+        <p>Non. L'intelligence artificielle employée ici est celle de l'opérateur pour conduire son opération, pas celle embarquée dans un code malveillant. Sur ce second terrain, une étude publiée en août sur plus de quatre cents échantillons conclut que la quasi-totalité n'existe que dans des dépôts de recherche et n'atteint jamais les environnements réels.</p>
+
+        <h2 id="methode">La même chaîne que pour nos théâtres, appliquée au cyber</h2>
+        <p class="art-intro">Cette analyse n'a pas été écrite à partir d'un fil d'actualité. Elle sort de notre propre base de renseignement cyber, alimentée en continu et interrogée comme une base d'entités reliées, pas comme un flux.</p>
+        <div class="art-steps">
+          <div class="art-step">
+            <h3>Collecte continue</h3>
+            <p>Un collecteur tourne toutes les heures sur notre serveur et verse les signaux cyber publics dans une base de renseignement structurée : rapports d'éditeurs, indicateurs, vulnérabilités, référentiel des techniques d'attaque.</p>
+            <p class="art-step__detail">Concrètement : 210 rapports sur les quatre-vingt-dix derniers jours.</p>
+          </div>
+          <div class="art-step">
+            <h3>Sélection sur critère de recoupement</h3>
+            <p>Le cas a été retenu parce que deux publications indépendantes le documentaient. C'est la condition qui permet une corroboration réelle plutôt qu'une reprise.</p>
+            <p class="art-step__detail">Concrètement : deux rapports, deux méthodes d'observation, une même infrastructure désignée.</p>
+          </div>
+          <div class="art-step">
+            <h3>Retour aux sources primaires</h3>
+            <p>Les publications d'origine ont été ouvertes et lues, l'avis de l'éditeur vérifié, et le statut réglementaire des deux vulnérabilités contrôlé directement dans le catalogue de référence plutôt que repris d'un tiers.</p>
+            <p class="art-step__detail">Concrètement : aucune affirmation reprise d'un agrégateur sans vérification.</p>
+          </div>
+          <div class="art-step">
+            <h3>Cotation des sources</h3>
+            <p>Chaque source est notée sur deux axes distincts, la fiabilité de la source et la crédibilité de l'information. Un agrégateur qui relaie sans vérifier n'est pas coté comme un éditeur qui publie sa propre télémétrie.</p>
+            <p class="art-step__detail">Concrètement : les deux échelles de référence du renseignement, appliquées au cyber.</p>
+          </div>
+          <div class="art-step">
+            <h3>Mise en perspective</h3>
+            <p>Le cas est ensuite situé dans l'ensemble du corpus, pour distinguer le signal de l'effet d'annonce. Sur quatre-vingt-dix jours, un rapport sur cinq mentionne l'intelligence artificielle, mais seize seulement décrivent un adversaire qui l'emploie réellement dans sa chaîne offensive.</p>
+            <p class="art-step__detail">Concrètement : une tendance mesurée sur la base, pas déduite d'une impression.</p>
+          </div>
+        </div>
+        <blockquote>
+          <p>C'est ce que nous appelons une chaîne de traitement : la même pour un incident cyber que pour un événement de terrain au Sahel ou en RDC. <a href="/methodologie/">Voir la méthode en détail</a> ou <a href="/veille/">consulter la veille</a>.</p>
+        </blockquote>
+
+        <h2 id="sources">Tout ce qui précède renvoie à une source ouverte</h2>
+        <dl class="v5-dl art-sources">
+          <div><dt>GreyNoise</dt><dd>Télémétrie de capteurs, volumétrie et chronologie de la campagne, 9 septembre 2026. Cote B1.<br><a href="https://www.greynoise.io/blog/ai-orchestrated-campaign-against-papercut-ng-mf" target="_blank" rel="noopener">greynoise.io</a></dd></div>
+          <div><dt>Blackpoint Cyber</dt><dd>Réponse à incident et analyse de l'infrastructure exposée de l'opérateur, 10 septembre 2026. Cote B2.<br><a href="https://blackpointcyber.com/blog/death-by-a-thousand-papercuts-ai-driven-exploitation-at-scale/" target="_blank" rel="noopener">blackpointcyber.com</a></dd></div>
+          <div><dt>PaperCut Software</dt><dd>Avis de sécurité du 27 août 2026 et versions correctives. Source primaire sur le produit.<br><a href="https://www.papercut.com/kb/Main/security-bulletin-27-aug-2026-urgent-security-advisory/" target="_blank" rel="noopener">papercut.com</a></dd></div>
+          <div><dt>CISA</dt><dd>Catalogue des vulnérabilités activement exploitées, entrées du 31 août 2026, échéance au 14 septembre.<br><a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" target="_blank" rel="noopener">cisa.gov</a></dd></div>
+        </dl>
+        <p class="art-protect">Mesure de protection : les indicateurs techniques de cette campagne, adresses et empreintes de fichiers, ne sont pas reproduits dans cette page. Ils sont destinés à être injectés dans un outil de détection et restent disponibles dans les sources citées. Les organisations suivies par Algor Acces les reçoivent directement.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="v5-sec art-fin" data-nav="light" aria-labelledby="fin-t">
+    <div class="sec-head">
+      <h2 id="fin-t">La veille cyber, au même niveau d'exigence que le terrain</h2>
+      <p>Signaux collectés en continu, sources cotées, analyses reliées à leurs preuves.</p>
+    </div>
+    <div class="v5-actions">
+      <a class="btn-rect btn-rect--ink" href="/veille/">Voir la veille</a>
+      <a class="btn-outline" href="/offres/">Voir les offres</a>
+    </div>
+  </section>
+<!-- v5:appels -->
+<section class="appels" data-nav="light" aria-label="Accès">
+  <div class="appels__grid">
+    <a class="appel appel--clair" href="/offres/"><span>Demander un accès</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M3 12h18M14 5l7 7-7 7"/></svg></a>
+    <a class="appel appel--nuit" href="/contact/"><span>Nous écrire</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M3 12h18M14 5l7 7-7 7"/></svg></a>
+  </div>
+</section>
+<!-- /v5:appels -->
+</main>
+
+<!-- v5:foot -->
+<footer class="foot" data-nav="light">
+  <div class="foot__id">
+    <p>© 2026 Algor Acces</p>
+    <p>Solution souveraine française, données hébergées en Europe.</p>
+    <hr>
+    <div class="foot__pills">
+      <button class="pill site-login" type="button">Connexion</button>
+      <a class="pill" href="/offres/">Les offres</a>
+      <a class="pill" href="/demo/">La démo</a>
+    </div>
+  </div>
+  <div class="foot__col"><h3>Théâtres</h3><a href="/moyen-orient/">Moyen-Orient</a><a href="/sahel/">Sahel</a><a href="/rdc/">RDC, Grands Lacs</a><a href="/madagascar/">Madagascar</a><a href="/afrique/">Afrique maritime</a><a href="/asie-sud/">Asie du Sud</a></div>
+  <div class="foot__col"><h3>Plateforme</h3><a href="/">Plateforme</a><a href="/veille/">Veille</a><a href="/methodologie/">Méthodologie</a></div>
+  <div class="foot__col"><h3>Société</h3><a href="/a-propos/">À propos</a><a href="/offres/">Offres</a><a href="/contact/">Contact</a></div>
+  <div class="foot__col"><h3>Informations</h3><a href="/mentions-legales/">Mentions légales</a><a href="/confidentialite/">Confidentialité</a></div>
+</footer>
+<!-- /v5:foot -->
+
+<script type="module" src="/shared/site-auth.js?v=20261020a"></script>
+<script src="/shared/v5/chrome.js?v=20261001a"></script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+/* ═══════════════════════════════════════════════════════════
+   DESIGN TOKENS — source unique Algor Int
+   Couleurs, typo, spacing, motion, line-height.
+   REGLE : aucune valeur hardcodee dans les composants. Si un
+   token manque, l'ajouter ici — pas en local dans un module.
+   DA UNIFIEE 2026-05-20 : clair #F4F2F8 / violet #6B3FA0 / Plus Jakarta Sans
+   (alignee sur la homepage v3 — voir shared/home/styles.css)
+   ═══════════════════════════════════════════════════════════ */
+:root {
+  /* ── Couleurs backgrounds ────────────────────────────── */
+  --bg:    #F4F2F8;  /* fond principal */
+  --bg1:   #FFFFFF;  /* panels, header */
+  --bg2:   #FFFFFF;  /* hover, elevated */
+  --bg3:   #F1EDF7;  /* input bg */
+  --bg4:   #E7E0F2;  /* slider track */
+
+  /* ── Couleurs traits ─────────────────────────────────── */
+  --ln:    rgba(24,20,40,0.07);  /* trait discret */
+  --ln1:   rgba(24,20,40,0.12);  /* trait standard */
+  --ln2:   rgba(24,20,40,0.20);  /* trait marque */
+
+  /* ── Couleurs texte ──────────────────────────────────── */
+  --tx:    #3A3450;  /* body */
+  --tx1:   #6E6982;  /* labels */
+  --tx2:   #A19DB0;  /* faded */
+  --txh:   #181428;  /* high contrast */
+
+  /* ── Accent violet (logo Algor) ──────────────────────── */
+  --ac:    #6B3FA0;  /* violet principal */
+  --ach:   #5A2F8C;  /* violet hover */
+  --acd:   rgba(107,63,160,0.08);  /* violet-soft fill */
+  --acb:   rgba(107,63,160,0.22);  /* violet-soft border */
+  --violet-grad: linear-gradient(130deg, #6B3FA0 0%, #5650C6 48%, #1E6FBE 100%); /* degrade violet -> bleu (marque, aligne homepage) */
+
+  /* ── Status ──────────────────────────────────────────── */
+  --err:   #B83A4A;  /* erreur */
+
+  /* ── Familles typo ───────────────────────────────────── */
+  --bc:    'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --b:     'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --m:     'JetBrains Mono', 'Courier New', monospace;
+  --serif: 'Instrument Serif', Georgia, serif;
+
+  /* ── Spacing (4px scale) ─────────────────────────────── */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  20px;
+  --sp-6:  24px;
+
+  /* ── Motion durations ────────────────────────────────── */
+  --mo-fast:  .1s;
+  --mo-base:  .2s;
+  --mo-slow:  .3s;
+
+  /* ── Line-heights ────────────────────────────────────── */
+  --lh-tight:  1;    /* labels / data cells (OSINT DA) */
+  --lh-snug:   1.2;  /* titres condensed */
+  --lh-base:   1.5;  /* texte narratif (popups, tuto desc) */
+}

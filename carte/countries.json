@@ -1,0 +1,1548 @@
+{
+ "generated": "humint-mail-worker",
+ "countries": [
+  {
+   "name": "Burkina Faso",
+   "zone": "sahel",
+   "file": "/sahel/humint.geojson",
+   "center": [
+    -1.6,
+    12.3
+   ],
+   "zoom": 5.8,
+   "count": 541,
+   "events": [
+    "Arrestation",
+    "Arrivée d'un aéronef",
+    "Assassinat",
+    "Attaque",
+    "Bombardement",
+    "Combat / Affrontement",
+    "Convoi",
+    "Décès",
+    "Décision administrative",
+    "Déplacement / Réfugiés",
+    "Destruction",
+    "Embuscade",
+    "Enlèvement / Prise d'otage",
+    "Exercices",
+    "Frappe / Drône",
+    "IED / Explosif",
+    "Information / Divers",
+    "Intempéries",
+    "Menaces / Alerte",
+    "Opération (forces)",
+    "Présence / Mouvement",
+    "Taxes",
+    "Tirs",
+    "Vol / Pillage / Extorsion"
+   ],
+   "actors": [
+    "Civil",
+    "CIVIL",
+    "CIVIL INT",
+    "CIVIL-GENERAL INT",
+    "CIVILS",
+    "CIVILS – Divers informations",
+    "EI",
+    "EI-S-Attaque",
+    "FAN",
+    "FDS",
+    "FDS-Divers Informations",
+    "FDS-VDP",
+    "FDS/VDP",
+    "GAT",
+    "GENERAL EXT",
+    "GENERAL EXT-Divers Informations",
+    "GENERAL INT",
+    "GENERAL INT-Divers Informations",
+    "GSIM",
+    "GSIM – Drone observation",
+    "GSIM-Assassinats",
+    "GSIM-Attaque",
+    "GSIM-Embuscade",
+    "GSIM-Incursion",
+    "GSIM-Mouvement",
+    "GSIM-Présence",
+    "GSIM-Regroupements",
+    "GSIM-Taxes",
+    "GSIM, EI-S",
+    "HANI",
+    "JNIM",
+    "USA"
+   ],
+   "months": [
+    {
+     "key": "2025-12",
+     "label": "Décembre 2025"
+    },
+    {
+     "key": "2026-01",
+     "label": "Janvier 2026"
+    },
+    {
+     "key": "2026-02",
+     "label": "Février 2026"
+    },
+    {
+     "key": "2026-03",
+     "label": "Mars 2026"
+    },
+    {
+     "key": "2026-04",
+     "label": "Avril 2026"
+    },
+    {
+     "key": "2026-06",
+     "label": "Juin 2026"
+    },
+    {
+     "key": "2026-07",
+     "label": "Juillet 2026"
+    },
+    {
+     "key": "2026-08",
+     "label": "Août 2026"
+    },
+    {
+     "key": "2026-09",
+     "label": "Septembre 2026"
+    }
+   ],
+   "statut": "actualise",
+   "theatre": "Sahel"
+  },
+  {
+   "name": "Mali",
+   "zone": "sahel",
+   "file": "/sahel/humint.geojson",
+   "center": [
+    -3.5,
+    17.6
+   ],
+   "zoom": 5.2,
+   "count": 378,
+   "events": [
+    "Arrestation",
+    "Arrivée de carburant",
+    "Assassinat",
+    "Attaque",
+    "Combat / Affrontement",
+    "Convoi",
+    "Convoi renfort",
+    "Convoqué",
+    "Découverte d'ossements",
+    "Déplacement / Réfugiés",
+    "Désertion",
+    "Destruction",
+    "Embuscade",
+    "Enlèvement / Prise d'otage",
+    "Exécution",
+    "Exercice",
+    "Frappe / Drône",
+    "IED / Explosif",
+    "Inculpation",
+    "Information / Divers",
+    "Menaces / Alerte",
+    "Opération (forces)",
+    "Ouverture du feu",
+    "Présence / Mouvement",
+    "Rédition",
+    "Renforts",
+    "Saisie",
+    "Transfert de détenus",
+    "VHL piégé",
+    "VHL piégés",
+    "Vol / Pillage / Extorsion"
+   ],
+   "actors": [
+    "AC",
+    "AC-Destruction",
+    "AK",
+    "Alliance",
+    "CIVILS",
+    "CIVILS – Divers informations",
+    "CIVILS-Divers Informations",
+    "CIVILS-Réfugiés",
+    "EI",
+    "EI-S",
+    "EI-Sahel",
+    "EIGS",
+    "FAM/AC",
+    "FAMa",
+    "FAMA",
+    "FAMA-Désertion",
+    "FAMa, Africa Corps",
+    "FAMA/AC",
+    "FAMA/AC – Destruction et assassinats",
+    "FAMA/AK",
+    "FAN",
+    "FDS",
+    "FDS-Arrestation",
+    "FDS-Attaque",
+    "FDS-Désertion",
+    "FDS-Divers Informations",
+    "FLA",
+    "FLA, FAMA",
+    "GAE",
+    "GANE",
+    "GAT",
+    "GAT GSIM",
+    "GAT, GSIM",
+    "GENERAL EXT",
+    "GENERAL INT",
+    "GENERAL INT-Divers Informations",
+    "GSIM",
+    "GSIM-Divers Informations",
+    "GSIM-Embuscade",
+    "GSIM-Explosif Mine IED",
+    "GSIM-Mouvements",
+    "GSIM-Présence",
+    "GSIM/EIGS",
+    "HANI",
+    "KM",
+    "ONG",
+    "Sécurité d'État malienne",
+    "SMP",
+    "UN",
+    "USA"
+   ],
+   "months": [
+    {
+     "key": "2025-12",
+     "label": "Décembre 2025"
+    },
+    {
+     "key": "2026-01",
+     "label": "Janvier 2026"
+    },
+    {
+     "key": "2026-02",
+     "label": "Février 2026"
+    },
+    {
+     "key": "2026-03",
+     "label": "Mars 2026"
+    },
+    {
+     "key": "2026-04",
+     "label": "Avril 2026"
+    },
+    {
+     "key": "2026-06",
+     "label": "Juin 2026"
+    },
+    {
+     "key": "2026-07",
+     "label": "Juillet 2026"
+    },
+    {
+     "key": "2026-08",
+     "label": "Août 2026"
+    },
+    {
+     "key": "2026-09",
+     "label": "Septembre 2026"
+    }
+   ],
+   "statut": "actualise",
+   "theatre": "Sahel"
+  },
+  {
+   "name": "Nigeria",
+   "zone": "sahel",
+   "file": "/sahel/humint.geojson",
+   "center": [
+    8.1,
+    9.6
+   ],
+   "zoom": 5.4,
+   "count": 375,
+   "events": [
+    "Arrestation",
+    "Assassinat",
+    "Attaque",
+    "Combat / Affrontement",
+    "Déplacement / Réfugiés",
+    "Destruction",
+    "Embuscade",
+    "Enlèvement / Prise d'otage",
+    "Frappe / Drône",
+    "IED / Explosif",
+    "Information / Divers",
+    "Menaces / Alerte",
+    "Opération (forces)",
+    "Présence / Mouvement",
+    "Vol / Pillage / Extorsion"
+   ],
+   "actors": [
+    "Al Shabaab",
+    "BOKO HARAM",
+    "CIVILS",
+    "Ei",
+    "EI",
+    "FDS",
+    "FR",
+    "GAE",
+    "GAT",
+    "GAT EI",
+    "GAT, BOKO HARAM",
+    "GENERAL EXT",
+    "GENERAL INT",
+    "GSIM",
+    "HANI",
+    "ISWAP",
+    "OPHK (opération Hadin Kai)",
+    "USA"
+   ],
+   "months": [
+    {
+     "key": "2025-12",
+     "label": "Décembre 2025"
+    },
+    {
+     "key": "2026-01",
+     "label": "Janvier 2026"
+    },
+    {
+     "key": "2026-02",
+     "label": "Février 2026"
+    },
+    {
+     "key": "2026-03",
+     "label": "Mars 2026"
+    },
+    {
+     "key": "2026-04",
+     "label": "Avril 2026"
+    },
+    {
+     "key": "2026-06",
+     "label": "Juin 2026"
+    },
+    {
+     "key": "2026-09",
+     "label": "Septembre 2026"
+    }
+   ],
+   "statut": "actualise",
+   "theatre": "Sahel"
+  },
+  {
+   "name": "Niger",
+   "zone": "sahel",
+   "file": "/sahel/humint.geojson",
+   "center": [
+    8.1,
+    17.6
+   ],
+   "zoom": 5,
+   "count": 253,
+   "events": [
+    "Arrestation",
+    "Assassinat",
+    "Attaque",
+    "Combat / Affrontement",
+    "Déchéance de nationalité",
+    "Déplacement / Réfugiés",
+    "Destruction",
+    "Embuscade",
+    "Enlèvement / Prise d'otage",
+    "Frappe / Drône",
+    "IED / Explosif",
+    "Information / Divers",
+    "Interdiction de prêches",
+    "Menaces / Alerte",
+    "Opération (forces)",
+    "Présence / Mouvement",
+    "Promulgation de loi",
+    "Réception diplomatique",
+    "Rendition",
+    "Tirs",
+    "Vol / Pillage / Extorsion"
+   ],
+   "actors": [
+    "Boko Haram",
+    "BOKO HARAM",
+    "Civil",
+    "Civil INT",
+    "CIVILS",
+    "EI",
+    "EI-S",
+    "EI-S-Assassinat",
+    "EI-S-Attaque",
+    "EI-S-Combat",
+    "EI-Sahel",
+    "EI-SAHEL",
+    "EIFS",
+    "EIGS",
+    "FAN",
+    "FDS",
+    "FDS-Attaque",
+    "FDS/Lakurawa",
+    "GANE",
+    "GAT",
+    "GAT-Attaque",
+    "GENERAL EXT",
+    "GENERAL EXT-Divers Informations",
+    "GENERAL INT",
+    "GENERAL INT-Divers Informations",
+    "Groupe armé",
+    "GSIM",
+    "HANI",
+    "HANI-Assassinat",
+    "ISWAP",
+    "JAS",
+    "JAS – Assassinats et enlèvements",
+    "JAS – Assassinats et présence",
+    "JAS – Divers informations",
+    "JAS-Enlèvement",
+    "JAS-Enlèvements",
+    "JAS-Menaces",
+    "Junte",
+    "Lakurawa",
+    "Lakurawa (EIGS)",
+    "Lakurawa-Menacs",
+    "Lukawara",
+    "Militaires",
+    "Pro EI-S",
+    "USA"
+   ],
+   "months": [
+    {
+     "key": "2025-12",
+     "label": "Décembre 2025"
+    },
+    {
+     "key": "2026-01",
+     "label": "Janvier 2026"
+    },
+    {
+     "key": "2026-02",
+     "label": "Février 2026"
+    },
+    {
+     "key": "2026-03",
+     "label": "Mars 2026"
+    },
+    {
+     "key": "2026-04",
+     "label": "Avril 2026"
+    },
+    {
+     "key": "2026-06",
+     "label": "Juin 2026"
+    },
+    {
+     "key": "2026-07",
+     "label": "Juillet 2026"
+    },
+    {
+     "key": "2026-08",
+     "label": "Août 2026"
+    },
+    {
+     "key": "2026-09",
+     "label": "Septembre 2026"
+    }
+   ],
+   "statut": "actualise",
+   "theatre": "Sahel"
+  },
+  {
+   "name": "RDC",
+   "zone": "rdc",
+   "file": "/rdc/humint.geojson",
+   "center": [
+    27.5,
+    -2.5
+   ],
+   "zoom": 6.3,
+   "count": 62,
+   "events": [
+    "Assassinat",
+    "Attaque",
+    "Combat / Affrontement",
+    "Déplacement / Réfugiés",
+    "Embuscade",
+    "Enlèvement / Prise d'otage",
+    "Frappe / Drône",
+    "Information / Divers",
+    "Menaces / Alerte",
+    "Présence / Mouvement",
+    "Vol / Pillage / Extorsion"
+   ],
+   "actors": [
+    "CIVILS",
+    "FDS",
+    "GAE",
+    "GANE",
+    "GAT",
+    "GAT EI ISCAP",
+    "GAT et ISCAP",
+    "GAT ET ISCAP",
+    "GENERAL INT",
+    "HANI",
+    "UN"
+   ],
+   "months": [
+    {
+     "key": "2025-12",
+     "label": "Décembre 2025"
+    },
+    {
+     "key": "2026-01",
+     "label": "Janvier 2026"
+    },
+    {
+     "key": "2026-02",
+     "label": "Février 2026"
+    },
+    {
+     "key": "2026-03",
+     "label": "Mars 2026"
+    },
+    {
+     "key": "2026-04",
+     "label": "Avril 2026"
+    }
+   ],
+   "statut": "reference",
+   "theatre": "RDC, Grands Lacs"
+  },
+  {
+   "name": "Pakistan",
+   "zone": "asie-sud",
+   "file": "/asie-sud/reference-2026.geojson",
+   "center": [
+    69.34950392156863,
+    31.671421568627448
+   ],
+   "zoom": 5.5,
+   "count": 51,
+   "events": [
+    "Arrestation",
+    "Assassinat",
+    "Attaque",
+    "Combat / Affrontement",
+    "Embuscade",
+    "IED / Explosif",
+    "Information / Divers",
+    "Opération (forces)"
+   ],
+   "actors": [
+    "Afghan Taliban",
+    "Auteur non identifié",
+    "Auteur non identifié (TTP soupçonné)",
+    "BLA",
+    "BRAS",
+    "BSF",
+    "Inconnu",
+    "ISKP",
+    "Ittehad-ul-Mujahideen Pakistan",
+    "Jamaat-ul-Ahrar",
+    "Ministère pakistanais des Affaires étrangères",
+    "Pakistan Army",
+    "Police (CTD)",
+    "TTP"
+   ],
+   "months": [
+    {
+     "key": "2026-01",
+     "label": "Janvier 2026"
+    },
+    {
+     "key": "2026-02",
+     "label": "Février 2026"
+    },
+    {
+     "key": "2026-03",
+     "label": "Mars 2026"
+    },
+    {
+     "key": "2026-04",
+     "label": "Avril 2026"
+    },
+    {
+     "key": "2026-05",
+     "label": "Mai 2026"
+    },
+    {
+     "key": "2026-06",
+     "label": "Juin 2026"
+    },
+    {
+     "key": "2026-07",
+     "label": "Juillet 2026"
+    },
+    {
+     "key": "2026-08",
+     "label": "Août 2026"
+    },
+    {
+     "key": "2026-09",
+     "label": "Septembre 2026"
+    },
+    {
+     "key": "2026-10",
+     "label": "Octobre 2026"
+    }
+   ],
+   "statut": "osint",
+   "theatre": "Asie du Sud"
+  },
+  {
+   "name": "Bénin",
+   "zone": "sahel",
+   "file": "/sahel/humint.geojson",
+   "center": [
+    2.3,
+    9.5
+   ],
+   "zoom": 6.2,
+   "count": 49,
+   "events": [
+    "Arrestation",
+    "Assassinat",
+    "Attaque",
+    "Déplacement / Réfugiés",
+    "Destruction",
+    "Information / Divers",
+    "Opération (forces)",
+    "Présence / Mouvement",
+    "Vol / Pillage / Extorsion"
+   ],
+   "actors": [
+    "CIVIL INT",
+    "CIVILS",
+    "FDS",
+    "FR",
+    "GAT",
+    "GENERAL EXT",
+    "GSIM",
+    "HANI"
+   ],
+   "months": [
+    {
+     "key": "2026-01",
+     "label": "Janvier 2026"
+    },
+    {
+     "key": "2026-02",
+     "label": "Février 2026"
+    },
+    {
+     "key": "2026-03",
+     "label": "Mars 2026"
+    },
+    {
+     "key": "2026-04",
+     "label": "Avril 2026"
+    },
+    {
+     "key": "2026-06",
+     "label": "Juin 2026"
+    }
+   ],
+   "statut": "actualise",
+   "theatre": "Sahel"
+  },
+  {
+   "name": "Territoires palestiniens",
+   "zone": "moyen-orient",
+   "file": "/moyen-orient/reference-2026.geojson",
+   "center": [
+    34.79838095238095,
+    31.75026190476191
+   ],
+   "zoom": 5.5,
+   "count": 42,
+   "events": [
+    "Assassinat",
+    "Attaque",
+    "Combat / Affrontement",
+    "Destruction",
+    "Frappe / Drône",
+    "Opération (forces)"
+   ],
+   "actors": [
+    "Assaillant palestinien",
+    "Colon armé (avant-poste Eretz HaTzvi)",
+    "Colons israéliens",
+    "Israel/IDF",
+    "Tireur palestinien"
+   ],
+   "months": [
+    {
+     "key": "2026-04",
+     "label": "Avril 2026"
+    },
+    {
+     "key": "2026-05",
+     "label": "Mai 2026"
+    },
+    {
+     "key": "2026-06",
+     "label": "Juin 2026"
+    },
+    {
+     "key": "2026-07",
+     "label": "Juillet 2026"
+    },
+    {
+     "key": "2026-08",
+     "label": "Août 2026"
+    },
+    {
+     "key": "2026-09",
+     "label": "Septembre 2026"
+    },
+    {
+     "key": "2026-10",
+     "label": "Octobre 2026"
+    }
+   ],
+   "statut": "osint",
+   "theatre": "Moyen-Orient"
+  },
+  {
+   "name": "Madagascar",
+   "zone": "madagascar",
+   "file": "/madagascar/reference-2026.geojson",
+   "center": [
+    46.28685,
+    -20.012850000000004
+   ],
+   "zoom": 5.5,
+   "count": 40,
+   "events": [
+    "Arrestation",
+    "Assassinat",
+    "Attaque",
+    "Combat / Affrontement",
+    "Embuscade",
+    "Enlèvement / Prise d'otage",
+    "Menaces / Alerte",
+    "Opération (forces)",
+    "Présence / Mouvement",
+    "Vol / Pillage / Extorsion"
+   ],
+   "actors": [
+    "Ancien malfaiteur",
+    "Bandits armés",
+    "Dahalo",
+    "Forces de l'ordre",
+    "Foule (vindicte populaire)",
+    "Gen Z Madagascar",
+    "Gendarmerie nationale",
+    "Manifestants",
+    "Navire LSS SUCESS",
+    "Présidence de la Refondation",
+    "Ravisseurs"
+   ],
+   "months": [
+    {
+     "key": "2026-04",
+     "label": "Avril 2026"
+    },
+    {
+     "key": "2026-05",
+     "label": "Mai 2026"
+    },
+    {
+     "key": "2026-06",
+     "label": "Juin 2026"
+    },
+    {
+     "key": "2026-07",
+     "label": "Juillet 2026"
+    },
+    {
+     "key": "2026-08",
+     "label": "Août 2026"
+    },
+    {
+     "key": "2026-09",
+     "label": "Septembre 2026"
+    }
+   ],
+   "statut": "osint",
+   "theatre": "Madagascar"
+  },
+  {
+   "name": "Liban",
+   "zone": "moyen-orient",
+   "file": "/moyen-orient/reference-2026.geojson",
+   "center": [
+    35.447548387096774,
+    33.376290322580644
+   ],
+   "zoom": 5.5,
+   "count": 31,
+   "events": [
+    "Assassinat",
+    "Combat / Affrontement",
+    "Destruction",
+    "Frappe / Drône",
+    "IED / Explosif",
+    "Opération (forces)"
+   ],
+   "actors": [
+    "Hezbollah",
+    "Hezbollah (présumé)",
+    "Israel/IDF"
+   ],
+   "months": [
+    {
+     "key": "2026-04",
+     "label": "Avril 2026"
+    },
+    {
+     "key": "2026-05",
+     "label": "Mai 2026"
+    },
+    {
+     "key": "2026-06",
+     "label": "Juin 2026"
+    },
+    {
+     "key": "2026-07",
+     "label": "Juillet 2026"
+    },
+    {
+     "key": "2026-08",
+     "label": "Août 2026"
+    },
+    {
+     "key": "2026-09",
+     "label": "Septembre 2026"
+    }
+   ],
+   "statut": "osint",
+   "theatre": "Moyen-Orient"
+  },
+  {
+   "name": "Iran",
+   "zone": "moyen-orient",
+   "file": "/moyen-orient/reference-2026.geojson",
+   "center": [
+    57.36052380952382,
+    27.33666666666667
+   ],
+   "zoom": 5.5,
+   "count": 21,
+   "events": [
+    "Assassinat",
+    "Attaque",
+    "Combat / Affrontement",
+    "Destruction",
+    "Enlèvement / Prise d'otage",
+    "Frappe / Drône",
+    "IED / Explosif",
+    "Opération (forces)"
+   ],
+   "actors": [
+    "Forces de sécurité iraniennes",
+    "Forces iraniennes",
+    "Inconnu",
+    "Inconnus (hommes armés)",
+    "IRGC",
+    "IRGC-Qods Force",
+    "Israel/IDF",
+    "USA"
+   ],
+   "months": [
+    {
+     "key": "2026-04",
+     "label": "Avril 2026"
+    },
+    {
+     "key": "2026-05",
+     "label": "Mai 2026"
+    },
+    {
+     "key": "2026-06",
+     "label": "Juin 2026"
+    },
+    {
+     "key": "2026-07",
+     "label": "Juillet 2026"
+    },
+    {
+     "key": "2026-08",
+     "label": "Août 2026"
+    },
+    {
+     "key": "2026-09",
+     "label": "Septembre 2026"
+    }
+   ],
+   "statut": "osint",
+   "theatre": "Moyen-Orient"
+  },
+  {
+   "name": "Syrie",
+   "zone": "moyen-orient",
+   "file": "/moyen-orient/reference-2026.geojson",
+   "center": [
+    36.805,
+    33.94199999999999
+   ],
+   "zoom": 5.5,
+   "count": 19,
+   "events": [
+    "Attaque",
+    "Combat / Affrontement",
+    "Embuscade",
+    "Frappe / Drône",
+    "IED / Explosif",
+    "Opération (forces)",
+    "Présence / Mouvement"
+   ],
+   "actors": [
+    "Auteur non identifié",
+    "État islamique",
+    "État islamique (présumé)",
+    "Forces de sécurité syriennes",
+    "Forces gouvernementales syriennes (selon une source druze)",
+    "Inconnu",
+    "IRGC",
+    "Israel/IDF"
+   ],
+   "months": [
+    {
+     "key": "2026-05",
+     "label": "Mai 2026"
+    },
+    {
+     "key": "2026-06",
+     "label": "Juin 2026"
+    },
+    {
+     "key": "2026-07",
+     "label": "Juillet 2026"
+    },
+    {
+     "key": "2026-08",
+     "label": "Août 2026"
+    },
+    {
+     "key": "2026-09",
+     "label": "Septembre 2026"
+    }
+   ],
+   "statut": "osint",
+   "theatre": "Moyen-Orient"
+  },
+  {
+   "name": "Inde",
+   "zone": "asie-sud",
+   "file": "/asie-sud/reference-2026.geojson",
+   "center": [
+    76.74985625,
+    31.347050000000003
+   ],
+   "zoom": 5.5,
+   "count": 16,
+   "events": [
+    "Arrestation",
+    "Assassinat",
+    "Attaque",
+    "Combat / Affrontement",
+    "Opération (forces)",
+    "Présence / Mouvement"
+   ],
+   "actors": [
+    "Auteur non identifié",
+    "BSF",
+    "Inconnu",
+    "Indian Army",
+    "ISI (proxies)",
+    "J&K Police",
+    "Jharkhand Police",
+    "Module de Shahzad Bhatti",
+    "Pakistan Army",
+    "UP ATS"
+   ],
+   "months": [
+    {
+     "key": "2026-01",
+     "label": "Janvier 2026"
+    },
+    {
+     "key": "2026-04",
+     "label": "Avril 2026"
+    },
+    {
+     "key": "2026-05",
+     "label": "Mai 2026"
+    },
+    {
+     "key": "2026-06",
+     "label": "Juin 2026"
+    },
+    {
+     "key": "2026-07",
+     "label": "Juillet 2026"
+    },
+    {
+     "key": "2026-08",
+     "label": "Août 2026"
+    },
+    {
+     "key": "2026-09",
+     "label": "Septembre 2026"
+    }
+   ],
+   "statut": "osint",
+   "theatre": "Asie du Sud"
+  },
+  {
+   "name": "Afghanistan",
+   "zone": "asie-sud",
+   "file": "/asie-sud/reference-2026.geojson",
+   "center": [
+    68.91540624999999,
+    33.78533125
+   ],
+   "zoom": 5.5,
+   "count": 16,
+   "events": [
+    "Combat / Affrontement",
+    "Frappe / Drône",
+    "IED / Explosif"
+   ],
+   "actors": [
+    "AFF (Afghanistan Freedom Front)",
+    "Inconnu",
+    "Pakistan Air Force",
+    "Pakistan Army"
+   ],
+   "months": [
+    {
+     "key": "2026-02",
+     "label": "Février 2026"
+    },
+    {
+     "key": "2026-03",
+     "label": "Mars 2026"
+    },
+    {
+     "key": "2026-04",
+     "label": "Avril 2026"
+    },
+    {
+     "key": "2026-05",
+     "label": "Mai 2026"
+    },
+    {
+     "key": "2026-06",
+     "label": "Juin 2026"
+    },
+    {
+     "key": "2026-07",
+     "label": "Juillet 2026"
+    },
+    {
+     "key": "2026-08",
+     "label": "Août 2026"
+    },
+    {
+     "key": "2026-09",
+     "label": "Septembre 2026"
+    },
+    {
+     "key": "2026-10",
+     "label": "Octobre 2026"
+    }
+   ],
+   "statut": "osint",
+   "theatre": "Asie du Sud"
+  },
+  {
+   "name": "Irak",
+   "zone": "moyen-orient",
+   "file": "/moyen-orient/reference-2026.geojson",
+   "center": [
+    44.218583333333335,
+    36.22074999999999
+   ],
+   "zoom": 5.5,
+   "count": 12,
+   "events": [
+    "Frappe / Drône"
+   ],
+   "actors": [
+    "Auteur non identifié",
+    "Inconnu",
+    "Iran",
+    "IRGC",
+    "IRGC-Qods Force",
+    "Non revendiqué",
+    "USA/Arabie saoudite"
+   ],
+   "months": [
+    {
+     "key": "2026-04",
+     "label": "Avril 2026"
+    },
+    {
+     "key": "2026-05",
+     "label": "Mai 2026"
+    },
+    {
+     "key": "2026-06",
+     "label": "Juin 2026"
+    },
+    {
+     "key": "2026-07",
+     "label": "Juillet 2026"
+    },
+    {
+     "key": "2026-08",
+     "label": "Août 2026"
+    },
+    {
+     "key": "2026-09",
+     "label": "Septembre 2026"
+    }
+   ],
+   "statut": "osint",
+   "theatre": "Moyen-Orient"
+  },
+  {
+   "name": "Arabie saoudite",
+   "zone": "moyen-orient",
+   "file": "/moyen-orient/reference-2026.geojson",
+   "center": [
+    42.18683333333333,
+    21.284750000000003
+   ],
+   "zoom": 5.5,
+   "count": 12,
+   "events": [
+    "Attaque",
+    "Frappe / Drône"
+   ],
+   "actors": [
+    "Copilote omanais (vol flydubai FZ1073)",
+    "Houthis",
+    "Inconnu (drones lancés d'Irak)"
+   ],
+   "months": [
+    {
+     "key": "2026-07",
+     "label": "Juillet 2026"
+    },
+    {
+     "key": "2026-08",
+     "label": "Août 2026"
+    },
+    {
+     "key": "2026-09",
+     "label": "Septembre 2026"
+    },
+    {
+     "key": "2026-10",
+     "label": "Octobre 2026"
+    }
+   ],
+   "statut": "osint",
+   "theatre": "Moyen-Orient"
+  },
+  {
+   "name": "Yémen",
+   "zone": "moyen-orient",
+   "file": "/moyen-orient/reference-2026.geojson",
+   "center": [
+    44.24972727272728,
+    14.352454545454544
+   ],
+   "zoom": 5.5,
+   "count": 11,
+   "events": [
+    "Embuscade",
+    "Frappe / Drône",
+    "Information / Divers",
+    "Opération (forces)"
+   ],
+   "actors": [
+    "Arabie saoudite",
+    "Coalition saoudienne",
+    "Forces gouvernementales yéménites",
+    "Gouvernement yéménite (coalition saoudienne)",
+    "Houthis",
+    "Inconnu",
+    "Indéterminé"
+   ],
+   "months": [
+    {
+     "key": "2026-04",
+     "label": "Avril 2026"
+    },
+    {
+     "key": "2026-06",
+     "label": "Juin 2026"
+    },
+    {
+     "key": "2026-07",
+     "label": "Juillet 2026"
+    },
+    {
+     "key": "2026-08",
+     "label": "Août 2026"
+    },
+    {
+     "key": "2026-09",
+     "label": "Septembre 2026"
+    }
+   ],
+   "statut": "osint",
+   "theatre": "Moyen-Orient"
+  },
+  {
+   "name": "Togo",
+   "zone": "sahel",
+   "file": "/sahel/humint.geojson",
+   "center": [
+    0.8433509999999999,
+    9.590762833333335
+   ],
+   "zoom": 5.5,
+   "count": 6,
+   "events": [
+    "Déplacement / Réfugiés",
+    "Information / Divers",
+    "Opération (forces)",
+    "Présence / Mouvement"
+   ],
+   "actors": [
+    "FDS",
+    "GENERL EXT",
+    "GSIM"
+   ],
+   "months": [
+    {
+     "key": "2025-12",
+     "label": "Décembre 2025"
+    },
+    {
+     "key": "2026-01",
+     "label": "Janvier 2026"
+    },
+    {
+     "key": "2026-03",
+     "label": "Mars 2026"
+    },
+    {
+     "key": "2026-04",
+     "label": "Avril 2026"
+    }
+   ],
+   "statut": "actualise",
+   "theatre": "Sahel"
+  },
+  {
+   "name": "Koweït",
+   "zone": "moyen-orient",
+   "file": "/moyen-orient/reference-2026.geojson",
+   "center": [
+    47.7635,
+    29.452666666666662
+   ],
+   "zoom": 5.5,
+   "count": 6,
+   "events": [
+    "Attaque",
+    "Frappe / Drône"
+   ],
+   "actors": [
+    "Iran",
+    "IRGC",
+    "IRGC-Qods Force"
+   ],
+   "months": [
+    {
+     "key": "2026-05",
+     "label": "Mai 2026"
+    },
+    {
+     "key": "2026-06",
+     "label": "Juin 2026"
+    },
+    {
+     "key": "2026-07",
+     "label": "Juillet 2026"
+    },
+    {
+     "key": "2026-08",
+     "label": "Août 2026"
+    }
+   ],
+   "statut": "osint",
+   "theatre": "Moyen-Orient"
+  },
+  {
+   "name": "Jordanie",
+   "zone": "moyen-orient",
+   "file": "/moyen-orient/reference-2026.geojson",
+   "center": [
+    36.25699999999999,
+    31.479000000000003
+   ],
+   "zoom": 5.5,
+   "count": 5,
+   "events": [
+    "Frappe / Drône"
+   ],
+   "actors": [
+    "Inconnu",
+    "IRGC",
+    "IRGC-Qods Force"
+   ],
+   "months": [
+    {
+     "key": "2026-05",
+     "label": "Mai 2026"
+    },
+    {
+     "key": "2026-06",
+     "label": "Juin 2026"
+    },
+    {
+     "key": "2026-07",
+     "label": "Juillet 2026"
+    },
+    {
+     "key": "2026-08",
+     "label": "Août 2026"
+    }
+   ],
+   "statut": "osint",
+   "theatre": "Moyen-Orient"
+  },
+  {
+   "name": "Émirats arabes unis",
+   "zone": "moyen-orient",
+   "file": "/moyen-orient/reference-2026.geojson",
+   "center": [
+    55.21249999999999,
+    25.000749999999996
+   ],
+   "zoom": 5.5,
+   "count": 4,
+   "events": [
+    "Enlèvement / Prise d'otage",
+    "Frappe / Drône"
+   ],
+   "actors": [
+    "Inconnu",
+    "IRGC",
+    "IRGC-Qods Force"
+   ],
+   "months": [
+    {
+     "key": "2026-05",
+     "label": "Mai 2026"
+    },
+    {
+     "key": "2026-06",
+     "label": "Juin 2026"
+    }
+   ],
+   "statut": "osint",
+   "theatre": "Moyen-Orient"
+  },
+  {
+   "name": "Oman",
+   "zone": "moyen-orient",
+   "file": "/moyen-orient/reference-2026.geojson",
+   "center": [
+    56.324000000000005,
+    25.652666666666665
+   ],
+   "zoom": 5.5,
+   "count": 3,
+   "events": [
+    "Attaque",
+    "Frappe / Drône"
+   ],
+   "actors": [
+    "Inconnu",
+    "USA"
+   ],
+   "months": [
+    {
+     "key": "2026-05",
+     "label": "Mai 2026"
+    },
+    {
+     "key": "2026-06",
+     "label": "Juin 2026"
+    },
+    {
+     "key": "2026-09",
+     "label": "Septembre 2026"
+    }
+   ],
+   "statut": "osint",
+   "theatre": "Moyen-Orient"
+  },
+  {
+   "name": "Israël",
+   "zone": "moyen-orient",
+   "file": "/moyen-orient/reference-2026.geojson",
+   "center": [
+    35.111333333333334,
+    31.88233333333333
+   ],
+   "zoom": 5.5,
+   "count": 3,
+   "events": [
+    "Frappe / Drône"
+   ],
+   "actors": [
+    "Hezbollah",
+    "Houthis"
+   ],
+   "months": [
+    {
+     "key": "2026-05",
+     "label": "Mai 2026"
+    },
+    {
+     "key": "2026-06",
+     "label": "Juin 2026"
+    }
+   ],
+   "statut": "osint",
+   "theatre": "Moyen-Orient"
+  },
+  {
+   "name": "Détroit d'Ormuz",
+   "zone": "moyen-orient",
+   "file": "/moyen-orient/reference-2026.geojson",
+   "center": [
+    56.25,
+    26.567
+   ],
+   "zoom": 5.5,
+   "count": 2,
+   "events": [
+    "Attaque",
+    "Frappe / Drône"
+   ],
+   "actors": [
+    "IRGC"
+   ],
+   "months": [
+    {
+     "key": "2026-06",
+     "label": "Juin 2026"
+    }
+   ],
+   "statut": "osint",
+   "theatre": "Moyen-Orient"
+  },
+  {
+   "name": "Bahreïn",
+   "zone": "moyen-orient",
+   "file": "/moyen-orient/reference-2026.geojson",
+   "center": [
+    50.613,
+    26.208
+   ],
+   "zoom": 5.5,
+   "count": 1,
+   "events": [
+    "Frappe / Drône"
+   ],
+   "actors": [
+    "IRGC"
+   ],
+   "months": [
+    {
+     "key": "2026-07",
+     "label": "Juillet 2026"
+    }
+   ],
+   "statut": "osint",
+   "theatre": "Moyen-Orient"
+  },
+  {
+   "name": "Qatar",
+   "zone": "moyen-orient",
+   "file": "/moyen-orient/reference-2026.geojson",
+   "center": [
+    51.531,
+    25.286
+   ],
+   "zoom": 5.5,
+   "count": 1,
+   "events": [
+    "Frappe / Drône"
+   ],
+   "actors": [
+    "IRGC"
+   ],
+   "months": [
+    {
+     "key": "2026-07",
+     "label": "Juillet 2026"
+    }
+   ],
+   "statut": "osint",
+   "theatre": "Moyen-Orient"
+  },
+  {
+   "name": "Mer Rouge",
+   "zone": "moyen-orient",
+   "file": "/moyen-orient/reference-2026.geojson",
+   "center": [
+    43.333,
+    12.583
+   ],
+   "zoom": 5.5,
+   "count": 1,
+   "events": [
+    "Attaque"
+   ],
+   "actors": [
+    "Houthis"
+   ],
+   "months": [
+    {
+     "key": "2026-08",
+     "label": "Août 2026"
+    }
+   ],
+   "statut": "osint",
+   "theatre": "Moyen-Orient"
+  },
+  {
+   "name": "Chine",
+   "zone": "asie-sud",
+   "file": "/asie-sud/reference-2026.geojson",
+   "center": [
+    87.617,
+    43.825
+   ],
+   "zoom": 5.5,
+   "count": 1,
+   "events": [
+    "Information / Divers"
+   ],
+   "actors": [
+    "Ministère pakistanais des Affaires étrangères"
+   ],
+   "months": [
+    {
+     "key": "2026-04",
+     "label": "Avril 2026"
+    }
+   ],
+   "statut": "osint",
+   "theatre": "Asie du Sud"
+  }
+ ]
+}

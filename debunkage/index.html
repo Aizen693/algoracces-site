@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<script>(function(){/* PIVOT 2026-06 : demo desactivee. Reversible : supprimer ce bloc. */var b=location.search.indexOf("legacy=1")!==-1||localStorage.getItem("carto-legacy")==="1";if(!b)location.replace("/");})();</script>
+<meta charset="UTF-8" />
+<script src="/shared/i18n.js?v=20261020c"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Débunkage : cartographie de la désinformation · Algor Acces</title>
+<meta name="description" content="Algor Acces · Débunkage. Remontée à la source des campagnes de désinformation, cartographie des relais et des narratifs, identification des acteurs. Cas démo navigable d'une campagne anonymisée." />
+<meta property="og:title" content="Débunkage : cartographie de la désinformation · Algor Acces" />
+<meta property="og:description" content="Remonter à la source des campagnes hostiles. Cartographier les réseaux de relais. Exposer les acteurs. Cas démo navigable." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://algoracces.fr/debunkage/" />
+<meta name="theme-color" content="#0F1013" />
+<link rel="icon" type="image/jpeg" href="/favicon.jpg" />
+<link rel="stylesheet" href="/shared/home/fonts-display.css?v=20260914c" />
+<link rel="stylesheet" href="/shared/v5/v5.css?v=20261001a" />
+<style>
+  /* Ouverture */
+  .deb-def { margin: clamp(26px, 3vw, 40px) 0 0; max-width: 56ch; font-size: clamp(19px, 1.6vw, 23px); line-height: 1.45; letter-spacing: -0.01em; color: var(--on-night); }
+  .deb-def strong { font-weight: 500; }
+  .v5-phero .deb-def + .v5-phero__lede { margin-top: 18px; }
+  ul.v5-phero__meta { list-style: none; padding-left: 0; }
+
+  /* Visualisation : flux qui remontent vers la source */
+  .deb-viz { margin: clamp(48px, 6vw, 80px) 0 0; }
+  .deb-viz__svg { display: block; width: 100%; height: clamp(280px, 44vw, 620px); }
+  .deb-viz .dv-base { stroke: rgba(255,255,255,0.08); stroke-width: 1; fill: none; }
+  .deb-viz .flow { stroke: rgba(255,255,255,0.32); stroke-width: 1.1; stroke-linecap: round; fill: none; }
+  .deb-viz .dv-node { animation: dvNode 5s ease-in-out infinite; }
+  .deb-viz .dv-node:nth-child(2n) { animation-delay: -1.6s; }
+  .deb-viz .dv-node:nth-child(3n) { animation-delay: -2.9s; }
+  .deb-viz .dv-node:nth-child(4n) { animation-delay: -0.8s; }
+  @keyframes dvNode { 0%,100% { opacity: 1; } 50% { opacity: .7; } }
+  .deb-viz .dv-ring { fill: none; stroke: #FFFFFF; stroke-width: 1; transform-box: view-box; transform-origin: 548px 272px; animation: dvRing 4.2s ease-out infinite; }
+  @keyframes dvRing { 0% { transform: scale(0.42); opacity: 0; } 18% { opacity: 0.38; } 100% { transform: scale(2.3); opacity: 0; } }
+  .deb-viz .dv-core { transform-box: view-box; transform-origin: 548px 272px; animation: dvCore 3.4s ease-in-out infinite; }
+  @keyframes dvCore { 0%,100% { opacity: .7; } 50% { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    .deb-viz .dv-ring, .deb-viz .dv-core, .deb-viz .dv-node { animation: none; }
+    .deb-viz .dv-ring { opacity: .16; }
+    .deb-viz .dv-comets { display: none; }
+  }
+
+  /* Méthode */
+  #methode { scroll-margin-top: 0; }
+
+  /* Cas démo : carte embarquée */
+  .deb-embed-wrap { position: relative; width: 100%; height: 1040px; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: var(--paper); }
+  .deb-embed-wrap iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+  /* Acteurs et victimes */
+  .av-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(32px, 4vw, 64px); }
+  .av-col__head { padding-bottom: 18px; }
+  .av-col__title { margin: 0; font-weight: 400; font-size: clamp(28px, 2.6vw, 38px); line-height: 1.1; letter-spacing: -0.025em; }
+  .av-col__sub { display: block; margin-top: 8px; font-size: 15px; color: var(--muted); }
+  .av-list { border-top: 1px solid var(--ink); }
+  .av-list:empty { min-height: 120px; }
+  .av-item { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 16px; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .av-avatar { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--band); color: var(--ink); font-size: 15px; font-weight: 500; flex-shrink: 0; }
+  .av-avatar svg { width: 19px; height: 19px; }
+  .av-body { min-width: 0; }
+  .av-name { font-size: 17px; line-height: 1.25; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .av-country { margin-top: 3px; font-size: 15px; line-height: 1.35; color: var(--ink-2); }
+  .av-meta { margin-top: 3px; font-size: 14px; line-height: 1.4; color: var(--muted); }
+  .av-country .sep, .av-meta .sep { color: var(--faint); padding: 0 5px; }
+  .av-role { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2); white-space: nowrap; }
+  .av-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  @media (max-width: 900px) {
+    .av-grid { grid-template-columns: 1fr; }
+    .av-item { grid-template-columns: 40px minmax(0, 1fr); }
+    .av-item .av-role { grid-column: 2; justify-self: start; }
+  }
+
+  /* Soumettre une campagne */
+  #modal-overlay { position: fixed; inset: 0; z-index: 100; background: rgba(15,16,19,0.72); display: flex; align-items: center; justify-content: center; padding: 24px 16px; opacity: 0; pointer-events: none; transition: opacity .25s ease; overflow-y: auto; }
+  #modal-overlay.open { opacity: 1; pointer-events: auto; }
+  #modal-overlay .modal { position: relative; width: 100%; max-width: 580px; margin: auto; background: var(--paper); color: var(--ink); border-radius: 4px; padding: clamp(28px, 4vw, 44px); transform: translateY(10px); transition: transform .35s var(--ease); }
+  #modal-overlay.open .modal { transform: none; }
+  .modal-close { position: absolute; top: 12px; right: 12px; width: 40px; height: 40px; display: grid; place-items: center; font-size: 26px; line-height: 1; color: var(--muted); }
+  .modal-close:hover { color: var(--ink); }
+  .modal-h { margin: 0 40px 12px 0; font-weight: 400; font-size: clamp(28px, 3vw, 38px); line-height: 1.08; letter-spacing: -0.03em; }
+  .modal-sub { margin: 0 0 28px; font-size: 16px; line-height: 1.55; color: var(--ink-2); }
+  .deb-field { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+  .deb-field label { font-size: 15px; color: var(--muted); }
+  .deb-field input, .deb-field textarea { width: 100%; font: 400 17px/1.4 var(--sans); color: var(--ink); background: transparent; border: 0; border-bottom: 1px solid var(--stone); border-radius: 0; padding: 4px 0 10px; outline: none; transition: border-color .2s ease; }
+  .deb-field input:focus, .deb-field textarea:focus { border-bottom-color: var(--ink); }
+  .deb-field textarea { min-height: 80px; resize: vertical; }
+  .deb-field textarea::placeholder { color: var(--faint); }
+  .modal-actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 28px; }
+  .modal-note { margin-top: 16px; font-size: 14px; color: var(--muted); }
+  #modal-success { display: none; padding: 8px 0; }
+  #modal-success.show { display: block; }
+  #modal-success h3 { margin: 0 0 12px; font-weight: 400; font-size: clamp(28px, 3vw, 38px); line-height: 1.08; letter-spacing: -0.03em; }
+  #modal-success p { margin: 0; font-size: 16px; line-height: 1.55; color: var(--ink-2); max-width: 42ch; }
+  body.modal-open { overflow: hidden; }
+</style>
+</head>
+<body data-rubrique="debunkage">
+
+<!-- v5:nav -->
+<div class="annonce" id="annonce" hidden>
+  <div class="annonce__in">
+    <p>Dernière note de veille : <a id="annonce-lien" href="/veille/"></a></p>
+    <button class="annonce__x" id="annonce-x" aria-label="Fermer le bandeau"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+  </div>
+</div>
+<header class="nav" id="nav">
+  <div class="nav__bar">
+    <a class="brand" href="/" aria-label="Algor Acces, accueil"><svg class="marque" viewBox="0 0 100 100" width="28" height="28" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16 90 L28 90 L46.4 40 L34.4 40 Z M74 90 L86 90 L75 62 L63 62 Z M50 5 L59 14 L50 23 L41 14 Z"/></svg><span>Algor Acces</span></a>
+    <nav class="nav__links" aria-label="Rubriques"><a href="/theatres/">Théâtres</a><a href="/veille/">Veille</a><a href="/methodologie/">Méthodologie</a><a href="/offres/">Offres</a><a href="/a-propos/">À propos</a><a href="/contact/">Contact</a></nav>
+    <div class="nav__right">
+      <span class="lang-slot"></span>
+      <button class="btn-login site-login" type="button">Connexion</button>
+      <a class="btn-rect" href="/offres/">Demander un accès</a>
+      <div class="sq">
+        <button type="button" class="sq__compte site-login" data-auth-icone aria-label="Connexion"><svg class="ico-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20.5c1.2-3.8 4-5.6 7.5-5.6s6.3 1.8 7.5 5.6"/></svg><svg class="ico-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="8.5" r="3.8" fill="currentColor"/><path d="M3 20.5c1.2-3.8 3.8-5.6 7-5.6 1.3 0 2.5.3 3.5.9" fill="none"/><path d="M15.5 18l2.2 2.2 4-4.4"/></svg></button>
+        <button type="button" id="ouvrir-recherche" aria-label="Rechercher une zone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
+        <button type="button" id="ouvrir-menu" aria-label="Ouvrir le menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"/></svg></button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="veil" id="menu" role="dialog" aria-modal="true" aria-label="Menu">
+  <div class="veil__top">
+    <a class="brand" href="/" aria-label="Algor Acces, accueil"><svg class="marque" viewBox="0 0 100 100" width="28" height="28" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16 90 L28 90 L46.4 40 L34.4 40 Z M74 90 L86 90 L75 62 L63 62 Z M50 5 L59 14 L50 23 L41 14 Z"/></svg><span>Algor Acces</span></a>
+    <button class="veil__x" data-fermer aria-label="Fermer le menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+  </div>
+  <nav class="veil__body">
+    <div class="veil__main"><a href="/">Plateforme</a><a href="/theatres/">Théâtres</a><a href="/veille/">Veille</a><a href="/methodologie/">Méthodologie</a></div>
+    <div class="veil__col"><h3>Théâtres</h3><a href="/moyen-orient/">Moyen-Orient</a><a href="/sahel/">Sahel</a><a href="/rdc/">RDC, Grands Lacs</a><a href="/madagascar/">Madagascar</a><a href="/afrique/">Afrique maritime</a><a href="/asie-sud/">Asie du Sud</a></div>
+    <div class="veil__col"><h3>Algor Acces</h3><button class="veil__compte site-login" type="button">Connexion</button><a href="/offres/">Offres</a><a href="/a-propos/">À propos</a><a href="/contact/">Contact</a><a href="/demo/">Démo sur une zone</a></div>
+  </nav>
+</div>
+
+<div class="veil veil--search" id="recherche" role="dialog" aria-modal="true" aria-label="Recherche">
+  <div class="veil__top">
+    <a class="brand" href="/" aria-label="Algor Acces, accueil"><svg class="marque" viewBox="0 0 100 100" width="28" height="28" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16 90 L28 90 L46.4 40 L34.4 40 Z M74 90 L86 90 L75 62 L63 62 Z M50 5 L59 14 L50 23 L41 14 Z"/></svg><span>Algor Acces</span></a>
+    <button class="veil__x" data-fermer aria-label="Fermer la recherche"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+  </div>
+  <div class="veil__body">
+    <form class="search-form" action="/demo/">
+      <label for="q">Essayez la démo sur n'importe quelle zone du monde</label>
+      <input id="q" name="q" type="search" placeholder="Bogotá" autocomplete="off" required>
+      <p>Indiquez une ville, une région ou un pays : vous verrez le rendu de nos cartes sur des données fictives.</p>
+    </form>
+  </div>
+</div>
+<!-- /v5:nav -->
+
+<main>
+  <section class="v5-phero" data-nav="dark" data-v5-trame data-hachures="6,1">
+    <h1>Remonter à la source <span>des campagnes hostiles</span></h1>
+    <p class="deb-def"><strong>Le débunkage</strong> consiste à démonter une fausse information en remontant à son origine, à identifier qui la propage et par quels moyens, puis à la réfuter à l'aide de preuves vérifiables.</p>
+    <p class="v5-phero__lede">Quand une marque, une institution ou un dirigeant est ciblé par une désinformation coordonnée, nous retraçons la chaîne jusqu'au primo diffuseur et cartographions le réseau d'amplification, pour comprendre, démentir et, si nécessaire, agir.</p>
+    <div class="v5-actions">
+      <button class="btn-rect" type="button" onclick="openSubmitModal()">Soumettre une campagne</button>
+      <a class="btn-outline" href="#methode" onclick="event.preventDefault(); document.getElementById('methode').scrollIntoView({block:'start'});">Voir la méthode</a>
+      <a class="btn-outline" href="#dossier">Voir le cas démo</a>
+    </div>
+    <ul class="v5-phero__meta" aria-label="Méthodologie">
+      <li><b>Veille élargie</b></li>
+      <li>Reconstruction de genèse</li>
+      <li>Identification des relais</li>
+    </ul>
+
+    <figure class="deb-viz" role="img" aria-label="Visualisation : remontée des flux de désinformation jusqu'à leur source">
+      <svg class="deb-viz__svg" viewBox="0 0 720 560" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+        <defs>
+          <!-- p1..p8 : partent chacun d'une icone-source ; p9..p11 : flux secondaires sans icone -->
+          <path id="dv-p1"  d="M108,150 C 250,120 380,200 548,272"/>
+          <path id="dv-p2"  d="M170,96  C 320,90  430,170 548,272"/>
+          <path id="dv-p3"  d="M96,316  C 240,330 380,300 548,272"/>
+          <path id="dv-p4"  d="M286,212 C 360,210 450,238 548,272"/>
+          <path id="dv-p5"  d="M120,236 C 270,250 390,258 548,272"/>
+          <path id="dv-p6"  d="M236,430 C 340,400 450,330 548,272"/>
+          <path id="dv-p7"  d="M172,476 C 300,440 420,350 548,272"/>
+          <path id="dv-p8"  d="M360,378 C 420,360 480,320 548,272"/>
+          <path id="dv-p9"  d="M60,400  C 230,420 380,350 548,272"/>
+          <path id="dv-p10" d="M300,118 C 380,150 450,205 548,272"/>
+          <path id="dv-p11" d="M44,196  C 200,190 340,215 548,272"/>
+          <pattern id="dv-dots" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle cx="2" cy="2" r="0.8" fill="#FFFFFF" opacity="0.16"/>
+          </pattern>
+          <filter id="dv-soft" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="0.6"/></filter>
+        </defs>
+
+        <rect x="400" y="100" width="300" height="340" fill="url(#dv-dots)"/>
+
+        <g>
+          <use href="#dv-p1" class="dv-base"/><use href="#dv-p2" class="dv-base"/><use href="#dv-p3" class="dv-base"/>
+          <use href="#dv-p4" class="dv-base"/><use href="#dv-p5" class="dv-base"/><use href="#dv-p6" class="dv-base"/>
+          <use href="#dv-p7" class="dv-base"/><use href="#dv-p8" class="dv-base"/><use href="#dv-p9" class="dv-base"/>
+          <use href="#dv-p10" class="dv-base"/><use href="#dv-p11" class="dv-base"/>
+        </g>
+
+        <g class="deb-viz__flows">
+          <use href="#dv-p1" class="flow"/><use href="#dv-p2" class="flow"/><use href="#dv-p3" class="flow"/>
+          <use href="#dv-p4" class="flow"/><use href="#dv-p5" class="flow"/><use href="#dv-p6" class="flow"/>
+          <use href="#dv-p7" class="flow"/><use href="#dv-p8" class="flow"/><use href="#dv-p9" class="flow"/>
+          <use href="#dv-p10" class="flow"/><use href="#dv-p11" class="flow"/>
+        </g>
+
+        <g class="dv-nodes">
+          <g class="dv-node" transform="translate(108,150)"><circle r="13" fill="#1B1C21" stroke="#FFFFFF" stroke-opacity="0.28" stroke-width="1"/><circle cx="0" cy="-3" r="3.1" fill="#D9D9DC"/><path d="M-5.2 6 a5.2 5.2 0 0 1 10.4 0" fill="#D9D9DC"/></g>
+          <g class="dv-node" transform="translate(170,96)"><circle r="13" fill="#1B1C21" stroke="#FFFFFF" stroke-opacity="0.28" stroke-width="1"/><rect x="-6" y="-5" width="12" height="10" rx="1.6" fill="none" stroke="#D9D9DC" stroke-width="1.3"/><circle cx="-2.4" cy="-1.6" r="1.4" fill="#D9D9DC"/><path d="M-6 4 L-1.5 -0.5 L1.5 2 L3.5 0 L6 2.5" fill="none" stroke="#D9D9DC" stroke-width="1.3" stroke-linejoin="round"/></g>
+          <g class="dv-node" transform="translate(96,316)"><circle r="13" fill="#1B1C21" stroke="#FFFFFF" stroke-opacity="0.28" stroke-width="1"/><path d="M-3.4 -5 L5 0 L-3.4 5 Z" fill="#D9D9DC"/></g>
+          <g class="dv-node" transform="translate(286,212)"><circle r="13" fill="#1B1C21" stroke="#FFFFFF" stroke-opacity="0.28" stroke-width="1"/><path d="M0 -6.2 L6.4 5.4 L-6.4 5.4 Z" fill="none" stroke="#D9D9DC" stroke-width="1.3" stroke-linejoin="round"/><line x1="0" y1="-1.4" x2="0" y2="2.2" stroke="#D9D9DC" stroke-width="1.3" stroke-linecap="round"/><circle cx="0" cy="4" r="0.95" fill="#D9D9DC"/></g>
+          <g class="dv-node" transform="translate(120,236)"><circle r="13" fill="#1B1C21" stroke="#FFFFFF" stroke-opacity="0.28" stroke-width="1"/><circle r="6.2" fill="none" stroke="#D9D9DC" stroke-width="1.3"/><circle r="2.3" fill="#D9D9DC"/><line x1="-9.6" y1="0" x2="-6.4" y2="0" stroke="#D9D9DC" stroke-width="1.3" stroke-linecap="round"/><line x1="9.6" y1="0" x2="6.4" y2="0" stroke="#D9D9DC" stroke-width="1.3" stroke-linecap="round"/><line x1="0" y1="-9.6" x2="0" y2="-6.4" stroke="#D9D9DC" stroke-width="1.3" stroke-linecap="round"/><line x1="0" y1="9.6" x2="0" y2="6.4" stroke="#D9D9DC" stroke-width="1.3" stroke-linecap="round"/></g>
+          <g class="dv-node" transform="translate(236,430)"><circle r="13" fill="#1B1C21" stroke="#FFFFFF" stroke-opacity="0.28" stroke-width="1"/><path d="M-4 -4 L4 4 M4 -4 L-4 4" stroke="#D9D9DC" stroke-width="1.5" stroke-linecap="round"/></g>
+          <g class="dv-node" transform="translate(172,476)"><circle r="13" fill="#1B1C21" stroke="#FFFFFF" stroke-opacity="0.28" stroke-width="1"/><circle cx="0" cy="-3" r="3.1" fill="#D9D9DC"/><path d="M-5.2 6 a5.2 5.2 0 0 1 10.4 0" fill="#D9D9DC"/></g>
+          <g class="dv-node" transform="translate(360,378)"><circle r="13" fill="#1B1C21" stroke="#FFFFFF" stroke-opacity="0.28" stroke-width="1"/><path d="M-4 -6 L4 -6 L4 6 L0 2.4 L-4 6 Z" fill="#D9D9DC"/></g>
+        </g>
+
+        <g class="dv-comets" filter="url(#dv-soft)">
+          <g><circle r="2.2" fill="#FFFFFF"/><animateMotion dur="4.6s" begin="0s"    repeatCount="indefinite" rotate="auto"><mpath xlink:href="#dv-p1"/></animateMotion></g>
+          <g><circle r="2.2" fill="#FFFFFF"/><animateMotion dur="5.4s" begin="-1.6s" repeatCount="indefinite" rotate="auto"><mpath xlink:href="#dv-p3"/></animateMotion></g>
+          <g><circle r="2.2" fill="#FFFFFF"/><animateMotion dur="4.2s" begin="-0.8s" repeatCount="indefinite" rotate="auto"><mpath xlink:href="#dv-p4"/></animateMotion></g>
+          <g><circle r="2.2" fill="#FFFFFF"/><animateMotion dur="5.0s" begin="-2.3s" repeatCount="indefinite" rotate="auto"><mpath xlink:href="#dv-p6"/></animateMotion></g>
+          <g><circle r="2.2" fill="#FFFFFF"/><animateMotion dur="4.8s" begin="-1.1s" repeatCount="indefinite" rotate="auto"><mpath xlink:href="#dv-p8"/></animateMotion></g>
+          <g><circle r="2.2" fill="#FFFFFF"/><animateMotion dur="5.6s" begin="-3.0s" repeatCount="indefinite" rotate="auto"><mpath xlink:href="#dv-p10"/></animateMotion></g>
+          <g><circle r="2.2" fill="#FFFFFF"/><animateMotion dur="4.4s" begin="-0.5s" repeatCount="indefinite" rotate="auto"><mpath xlink:href="#dv-p2"/></animateMotion></g>
+        </g>
+
+        <g>
+          <circle class="dv-ring" cx="548" cy="272" r="30"/>
+          <circle class="dv-ring" cx="548" cy="272" r="30" style="animation-delay:-1.4s"/>
+          <circle class="dv-ring" cx="548" cy="272" r="30" style="animation-delay:-2.8s"/>
+        </g>
+        <circle class="dv-core" cx="548" cy="272" r="22" fill="#FFFFFF" fill-opacity="0.14"/>
+        <circle cx="548" cy="272" r="4.5" fill="#FFFFFF"/>
+
+        <g class="dv-lens">
+          <circle cx="548" cy="272" r="84" fill="#FFFFFF" fill-opacity="0.03"/>
+          <line x1="609" y1="333" x2="678" y2="402" stroke="#F2F2F4" stroke-width="7" stroke-linecap="round"/>
+          <circle cx="548" cy="272" r="86" fill="none" stroke="#F2F2F4" stroke-width="3"/>
+          <circle cx="548" cy="272" r="81" fill="none" stroke="#FFFFFF" stroke-width="1" opacity="0.22"/>
+          <path d="M475,226 A86 86 0 0 1 526,189" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+        </g>
+      </svg>
+    </figure>
+  </section>
+
+  <section class="v5-sec" data-nav="light" id="methode" aria-labelledby="methode-t">
+    <div class="sec-head">
+      <h2 id="methode-t">Trois temps · Veille, Genèse, Débunkage</h2>
+      <p>Brique facturable indépendamment, cumulables selon vos besoins : diagnostic ponctuel, veille récurrente ou intervention de crise.</p>
+    </div>
+    <ol class="v5-rows v5-rows--m">
+      <li class="v5-row">
+        <span class="v5-row__name">Détecter</span>
+        <span class="v5-row__d">Vous transmettez les liens hostiles déjà identifiés. Nous élargissons la surveillance aux contenus connexes, comptes relais et reprises secondaires pour cartographier l'étendue réelle de la campagne.</span>
+      </li>
+      <li class="v5-row">
+        <span class="v5-row__name">Remonter</span>
+        <span class="v5-row__d">Cœur différenciant. Reconstruction de la chaîne de diffusion par recoupement timestamp et similarité textuelle. Identification du contenu source, le primo diffuseur, des relais et bulles d'amplification, et lecture des narratifs, du sentiment et de l'engagement générés.</span>
+      </li>
+      <li class="v5-row">
+        <span class="v5-row__name">Exposer</span>
+        <span class="v5-row__d">Volet offensif. Analyse des acteurs, mise en lumière des comptes et entités d'amplification. Vous disposez d'éléments factuels pour réagir, démentir et, si nécessaire, agir en justice.</span>
+      </li>
+    </ol>
+  </section>
+
+  <section class="v5-sec v5-sec--band" data-nav="light" id="dossier" aria-labelledby="dossier-h2">
+    <div class="sec-head">
+      <h2 id="dossier-h2">Cartographie de la propagation</h2>
+      <p id="dossier-note">Cas anonymisé · structure méthodologique réelle, inspirée des rapports publics Viginum, DFRLab et EU DisinfoLab. Glissez la timeline pour suivre la propagation jour après jour.</p>
+    </div>
+    <div class="deb-embed-wrap">
+      <iframe src="carte-demo.html?embed=1" title="Cartographie de la propagation — démonstration interactive" loading="lazy"></iframe>
+    </div>
+  </section>
+
+  <section class="v5-sec" data-nav="light" id="acteurs-victimes" aria-labelledby="av-t">
+    <div class="sec-head">
+      <h2 id="av-t">Acteurs principaux et victimes ciblées</h2>
+      <p>L'identification des acteurs s'appuie sur les recoupements de signaux ouverts (timestamps, n-grams, plateformes, fuseaux). Les victimes sont nommées telles qu'elles apparaissent dans les narratifs et les conséquences observées.</p>
+    </div>
+    <div class="av-grid">
+      <div class="av-col">
+        <div class="av-col__head">
+          <h3 class="av-col__title">Qui propage</h3>
+          <span class="av-col__sub">Acteurs · top 8 par volume × audience</span>
+        </div>
+        <div id="av-acteurs" class="av-list"></div>
+      </div>
+      <div class="av-col">
+        <div class="av-col__head">
+          <h3 class="av-col__title">Qui est visé</h3>
+          <span class="av-col__sub">Victimes · cibles directes et indirectes</span>
+        </div>
+        <div id="av-victimes" class="av-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="v5-sec v5-sec--band" data-nav="light" aria-labelledby="fin-t">
+    <div class="sec-head">
+      <h2 id="fin-t">Votre organisation est ciblée ?</h2>
+      <p>Nous instruisons votre dossier sous 24h ouvrées : diagnostic, veille récurrente ou intervention de crise.</p>
+    </div>
+    <div class="v5-actions">
+      <button class="btn-rect btn-rect--ink" type="button" onclick="openSubmitModal()">Soumettre une campagne</button>
+      <a class="btn-outline" href="/contact/">Nous contacter</a>
+    </div>
+  </section>
+
+<div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-h">
+  <div class="modal">
+    <button class="modal-close" type="button" aria-label="Fermer" onclick="closeSubmitModal()">×</button>
+    <div id="modal-form">
+      <h2 class="modal-h" id="modal-h">Soumettre une campagne</h2>
+      <p class="modal-sub">Décrivez la campagne qui cible votre organisation. Un analyste Algor·Int vous recontacte sous 24h ouvrées pour cadrer le périmètre.</p>
+
+      <div class="deb-field">
+        <label for="f-org">Organisation</label>
+        <input type="text" id="f-org" autocomplete="organization" required>
+      </div>
+      <div class="deb-field">
+        <label for="f-contact">Contact (nom · fonction)</label>
+        <input type="text" id="f-contact" autocomplete="name" required>
+      </div>
+      <div class="deb-field">
+        <label for="f-email">Email professionnel</label>
+        <input type="email" id="f-email" autocomplete="email" required>
+      </div>
+      <div class="deb-field">
+        <label for="f-urls">Liens hostiles déjà identifiés (un par ligne)</label>
+        <textarea id="f-urls" placeholder="https://…"></textarea>
+      </div>
+      <div class="deb-field">
+        <label for="f-context">Contexte court</label>
+        <textarea id="f-context" placeholder="Quand a-t-elle commencé ? Quel est le narratif ?"></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-outline" type="button" onclick="closeSubmitModal()">Annuler</button>
+        <button class="btn-rect btn-rect--ink" type="button" onclick="submitLead()">Envoyer la demande</button>
+      </div>
+      <div class="modal-note">Données traitées en confidentialité · hébergement UE · consentement explicite pour relance.</div>
+    </div>
+
+    <div id="modal-success">
+      <h3>Demande reçue</h3>
+      <p>Un analyste Algor·Int vous recontacte sous 24h ouvrées pour cadrer la prestation.</p>
+      <div style="margin-top: 24px;"><button class="btn-outline" type="button" onclick="closeSubmitModal()">Fermer</button></div>
+    </div>
+  </div>
+</div>
+</main>
+
+<!-- v5:foot -->
+<footer class="foot" data-nav="light">
+  <div class="foot__id">
+    <p>© 2026 Algor Acces</p>
+    <p>Solution souveraine française, données hébergées en Europe.</p>
+    <hr>
+    <div class="foot__pills">
+      <button class="pill site-login" type="button">Connexion</button>
+      <a class="pill" href="/offres/">Les offres</a>
+      <a class="pill" href="/demo/">La démo</a>
+    </div>
+  </div>
+  <div class="foot__col"><h3>Théâtres</h3><a href="/moyen-orient/">Moyen-Orient</a><a href="/sahel/">Sahel</a><a href="/rdc/">RDC, Grands Lacs</a><a href="/madagascar/">Madagascar</a><a href="/afrique/">Afrique maritime</a><a href="/asie-sud/">Asie du Sud</a></div>
+  <div class="foot__col"><h3>Plateforme</h3><a href="/">Plateforme</a><a href="/veille/">Veille</a><a href="/methodologie/">Méthodologie</a></div>
+  <div class="foot__col"><h3>Société</h3><a href="/a-propos/">À propos</a><a href="/offres/">Offres</a><a href="/contact/">Contact</a></div>
+  <div class="foot__col"><h3>Informations</h3><a href="/mentions-legales/">Mentions légales</a><a href="/confidentialite/">Confidentialité</a></div>
+</footer>
+<!-- /v5:foot -->
+
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.24.0/mapbox-gl.js"></script>
+<script type="module" src="/shared/site-auth.js?v=20261020a"></script>
+<script src="/shared/v5/chrome.js?v=20261001a"></script>
+<script>
+/* ════ Data + Map ════
+   IIFE pour permettre la re-execution en SPA (sitenav.js) sans collisions
+   de const/let. Les fonctions appelées via onclick (modal) sont exposees
+   explicitement sur window. */
+(function () {
+function _whenMapboxReady(cb, tries) {
+  tries = tries || 0;
+  if (typeof mapboxgl !== 'undefined' && mapboxgl.Map) { cb(); return; }
+  if (tries > 120) { console.error('[debunkage] mapboxgl jamais chargé'); return; }
+  setTimeout(function () { _whenMapboxReady(cb, tries + 1); }, 50);
+}
+_whenMapboxReady(function () {
+
+mapboxgl.accessToken = 'pk.eyJ1IjoiYXo2OTMiLCJhIjoiY21uMGlhY2ZyMGx6bDJycjAxYWZjbWt5eiJ9.SQqOLLgLwWKnUGMztrSArg';
+
+const TYPE_COLOR = {
+  patient_zero: '#6B3FA0',
+  relai:        '#8B5FBF',
+  amplificateur:'#2E84D4',
+  site_copie:   '#C94A4A'
+};
+const TYPE_LABEL = {
+  patient_zero: 'Primo diffuseur',
+  relai:        'Relais primaire',
+  amplificateur:'Amplificateur',
+  site_copie:   'Site copie'
+};
+
+const state = {
+  data: null,
+  timelineProgress: 1.0,
+  activeReseaux: new Set()
+};
+
+let map;
+
+async function init() {
+  // Vitrine publique : seul le cas demo (Societe Lumiere) est servi ici.
+  // Les dossiers clients (clients) ne sont JAMAIS accessibles depuis cette page,
+  // meme via ?case=… — ils vivent derriere le verrou staff (cf. carte-afrique.html).
+  const PUBLIC_CASES = ['demo'];
+  const requested = (new URLSearchParams(location.search).get('case') || 'demo').replace(/[^a-z0-9_-]/gi, '');
+  const caseParam = PUBLIC_CASES.includes(requested) ? requested : 'demo';
+  const file = 'cas-' + caseParam + '.json';
+  const res = await fetch('./data/' + file + '?v=' + Date.now());
+  state.data = await res.json();
+  if (state.data.campagne && state.data.campagne.illustratif) showIllustratifBanner();
+
+  // Acteurs principaux / victimes ciblees : section toujours presente sur la page,
+  // independante de la carte. A rendre meme quand #map est absent.
+  if (document.getElementById('av-acteurs')) renderActeursVictimes();
+
+  // La carte démo est désormais intégrée en iframe (carte-demo.html). Sans conteneur
+  // #map sur cette page, l'ancien moteur (carte, sidebar, timeline, hero stats) ne
+  // s'initialise pas (le reste de la page continue de fonctionner normalement).
+  if (!document.getElementById('map')) return;
+  renderHeroStats();
+  renderSidebar();
+  buildMap();
+  renderTimeline();
+}
+
+function showIllustratifBanner(){
+  if (document.getElementById('illustratif-banner')) return;
+  const b = document.createElement('div');
+  b.id = 'illustratif-banner';
+  b.textContent = "SCÉNARIO ILLUSTRATIF : données d'exemple, non vérifiées. À remplacer par les données réelles de veille. Page privée, non indexée.";
+  b.style.cssText = "position:sticky;top:0;z-index:9999;background:#8E2A2A;color:#fff;font:500 13px/1.4 'Host Grotesk',-apple-system,sans-serif;padding:9px 16px;text-align:center;";
+  document.body.prepend(b);
+}
+
+function renderHeroStats(){
+  const d = state.data;
+  // Carte hero "Cas demo" remplacee par la visualisation animee .deb-viz (plus de hs-*).
+  document.getElementById('deb-top-name').textContent = d.campagne.nom;
+  document.getElementById('deb-top-meta').innerHTML =
+    `${escapeHtml(d.campagne.secteur)} · <strong>${escapeHtml(fmtPeriod(d.campagne.date_debut, d.campagne.date_fin))}</strong>`;
+  document.getElementById('tl-range').textContent = 'Timeline · ' + fmtPeriod(d.campagne.date_debut, d.campagne.date_fin);
+}
+
+function renderSidebar(){
+  const d = state.data;
+  document.getElementById('ds-nm').textContent = d.campagne.nom;
+  document.getElementById('ds-mt').textContent = `${d.campagne.secteur} · ${fmtPeriod(d.campagne.date_debut, d.campagne.date_fin)}`;
+  document.getElementById('ds-rs').textContent = d.campagne.resume;
+  document.getElementById('ds-meth').textContent = d.campagne.methodologie;
+
+  document.getElementById('ds-ct-narr').textContent = String(d.campagne.narratifs.length).padStart(2,'0');
+  document.getElementById('ds-narr-wrap').innerHTML = d.campagne.narratifs.map((n, i) => `
+    <div class="deb-narr">
+      <span class="deb-narr__ix">N${String(i+1).padStart(2,'0')}</span>
+      <span class="deb-narr__tx">${escapeHtml(n)}</span>
+    </div>
+  `).join('');
+
+  document.getElementById('ds-ct-net').textContent = String(d.reseaux.length).padStart(2,'0');
+  const netWrap = document.getElementById('ds-net-wrap');
+  netWrap.innerHTML = d.reseaux.map(r => `
+    <div class="deb-net" data-id="${r.id}">
+      <span class="deb-net__sw" style="background:${networkColor(r.id)}"></span>
+      <div>
+        <div class="deb-net__nm">${escapeHtml(r.nom)}</div>
+        <div class="deb-net__mt">${r.publications.length} publi · ${r.comptes.length} compte${r.comptes.length>1?'s':''} · ${escapeHtml(r.pays_estime)}</div>
+        <div class="deb-net__cf">Confiance ${escapeHtml(r.niveau_confiance)}</div>
+      </div>
+    </div>
+  `).join('');
+  netWrap.querySelectorAll('.deb-net').forEach(el => {
+    el.addEventListener('click', () => toggleReseau(el.dataset.id));
+  });
+
+  const totalAud = d.publications.reduce((s, p) => s + (p.audience_estimee || 0), 0);
+  const pz = d.publications.find(p => p.type === 'patient_zero');
+  const firstAmp = d.publications
+    .filter(p => p.type === 'amplificateur')
+    .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+  let delaiTxt = '—';
+  if (pz && firstAmp) {
+    const h = Math.round((new Date(firstAmp.date) - new Date(pz.date)) / 3600000);
+    delaiTxt = h < 72 ? h + ' h' : (h / 24).toFixed(1).replace('.', ',') + ' j';
+  }
+  document.getElementById('ds-stats').innerHTML = `
+    <div class="deb-stat"><span class="deb-stat__lbl">Publications</span><span class="deb-stat__val">${d.campagne.publications_total}</span></div>
+    <div class="deb-stat"><span class="deb-stat__lbl">Comptes coordonnés</span><span class="deb-stat__val">${d.campagne.comptes_total}</span></div>
+    <div class="deb-stat"><span class="deb-stat__lbl">Pays impliqués</span><span class="deb-stat__val">${d.campagne.pays_implique.length}</span></div>
+    <div class="deb-stat"><span class="deb-stat__lbl">Audience cumulée</span><span class="deb-stat__val">${(totalAud/1000).toFixed(0)}k</span></div>
+    <div class="deb-stat"><span class="deb-stat__lbl">Durée campagne</span><span class="deb-stat__val">${daysBetween(d.campagne.date_debut, d.campagne.date_fin)} j</span></div>
+    <div class="deb-stat"><span class="deb-stat__lbl">Délai PZ → diaspora</span><span class="deb-stat__val">${delaiTxt}</span></div>
+  `;
+}
+
+function networkColor(id){
+  const map = {
+    'cluster-bucarest': '#8B5FBF',
+    'cluster-budapest': '#2E84D4',
+    'cluster-belgrade': '#5650C6',
+    'amplificateurs-fr': '#5A8FA8',
+    'sites-copie': '#C94A4A',
+    'patient-zero': '#6B3FA0'
+  };
+  return map[id] || '#8B5FBF';
+}
+
+function toggleReseau(id){
+  if (state.activeReseaux.has(id)) state.activeReseaux.delete(id);
+  else state.activeReseaux.add(id);
+  const hasActive = state.activeReseaux.size > 0;
+  document.querySelectorAll('.deb-net').forEach(el => {
+    el.classList.toggle('is-active', state.activeReseaux.has(el.dataset.id));
+    el.classList.toggle('has-active', hasActive);
+  });
+  applyFilters();
+}
+
+function buildMap(){
+  map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/light-v11',
+    center: [20, 8],
+    zoom: 2.5,
+    minZoom: 1.5,
+    maxZoom: 9,
+    attributionControl: false
+  });
+  map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-left');
+  map.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-left');
+  map.on('load', () => {
+    document.getElementById('map-loader').style.display = 'none';
+    addLayers();
+    bindMapHover();
+    bindFullscreen();
+    fitToData();
+  });
+}
+
+function publiByReseau(pubId){
+  for (const r of state.data.reseaux) if (r.publications.includes(pubId)) return r;
+  return null;
+}
+
+function buildFeatures(){
+  const d = state.data;
+  const pubById = Object.fromEntries(d.publications.map(p => [p.id, p]));
+  const cutoffMs = timelineCutoffMs();
+
+  const visibleIds = new Set(d.publications.filter(p => {
+    if (new Date(p.date).getTime() > cutoffMs) return false;
+    if (state.activeReseaux.size > 0) {
+      const r = publiByReseau(p.id);
+      if (!r || !state.activeReseaux.has(r.id)) return false;
+    }
+    return true;
+  }).map(p => p.id));
+
+  const points = {
+    type: 'FeatureCollection',
+    features: d.publications.filter(p => visibleIds.has(p.id)).map(p => ({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [p.lon, p.lat] },
+      properties: {
+        ...p,
+        radius: radiusFor(p),
+        color: TYPE_COLOR[p.type] || '#8B5FBF',
+        is_pz: p.type === 'patient_zero' ? 1 : 0
+      }
+    }))
+  };
+
+  const arcs = {
+    type: 'FeatureCollection',
+    features: d.publications
+      .filter(p => p.parent_id && visibleIds.has(p.id) && visibleIds.has(p.parent_id))
+      .map(p => {
+        const parent = pubById[p.parent_id];
+        return {
+          type: 'Feature',
+          geometry: { type: 'LineString', coordinates: greatCircle([parent.lon, parent.lat], [p.lon, p.lat], 8) },
+          properties: { from: parent.id, to: p.id }
+        };
+      })
+  };
+
+  // Agregat arcs entre essaims : centroides par reseau + traits ponderes par nb d'arcs
+  const reseauById = (() => {
+    const map = {};
+    d.reseaux.forEach(r => { r.publications.forEach(pid => { map[pid] = r.id; }); });
+    return map;
+  })();
+  const centroidByCluster = (() => {
+    const sum = {}, count = {};
+    d.publications.filter(p => visibleIds.has(p.id)).forEach(p => {
+      const rid = reseauById[p.id];
+      if (!rid) return;
+      sum[rid] = sum[rid] || [0, 0];
+      sum[rid][0] += p.lon; sum[rid][1] += p.lat;
+      count[rid] = (count[rid] || 0) + 1;
+    });
+    const out = {};
+    Object.keys(sum).forEach(rid => { out[rid] = [sum[rid][0]/count[rid], sum[rid][1]/count[rid]]; });
+    return out;
+  })();
+  const pairCounts = {};
+  d.publications.filter(p => p.parent_id && visibleIds.has(p.id) && visibleIds.has(p.parent_id)).forEach(p => {
+    const fromCluster = reseauById[p.parent_id];
+    const toCluster = reseauById[p.id];
+    if (!fromCluster || !toCluster || fromCluster === toCluster) return;
+    const key = fromCluster + '→' + toCluster;
+    pairCounts[key] = (pairCounts[key] || 0) + 1;
+  });
+  const clusterArcs = {
+    type: 'FeatureCollection',
+    features: Object.entries(pairCounts).map(([key, weight]) => {
+      const [from, to] = key.split('→');
+      const a = centroidByCluster[from], b = centroidByCluster[to];
+      if (!a || !b) return null;
+      return {
+        type: 'Feature',
+        geometry: { type: 'LineString', coordinates: greatCircle(a, b, 24) },
+        properties: { from, to, weight }
+      };
+    }).filter(Boolean)
+  };
+
+  return { points, arcs, clusterArcs };
+}
+
+function radiusFor(p){
+  // Points constants tres petits — l'essain visuel se forme par accumulation et dezoom.
+  if (p.type === 'patient_zero') return 4;
+  return 2.2;
+}
+function greatCircle(a, b, n){
+  const pts = [];
+  for (let i = 0; i <= n; i++) {
+    const t = i / n;
+    pts.push([ a[0] + (b[0]-a[0]) * t, a[1] + (b[1]-a[1]) * t ]);
+  }
+  return pts;
+}
+
+function addLayers(){
+  const { points, arcs, clusterArcs } = buildFeatures();
+  map.addSource('arcs', { type: 'geojson', data: arcs });
+  map.addSource('cluster-arcs', { type: 'geojson', data: clusterArcs });
+  map.addSource('points', { type: 'geojson', data: points });
+
+  // Arcs inter-essaims : aggregat entre centroides de clusters — gros traits
+  map.addLayer({ id: 'cluster-arcs-glow', type: 'line', source: 'cluster-arcs',
+    paint: {
+      'line-color': '#6B3FA0',
+      'line-width': ['interpolate', ['linear'], ['get', 'weight'], 1, 4, 30, 12],
+      'line-opacity': 0.10, 'line-blur': 3
+    }
+  });
+  map.addLayer({ id: 'cluster-arcs-line', type: 'line', source: 'cluster-arcs',
+    paint: {
+      'line-color': '#6B3FA0',
+      'line-width': ['interpolate', ['linear'], ['get', 'weight'], 1, 0.6, 30, 2.2],
+      'line-opacity': 0.55
+    }
+  });
+
+  // Arcs par publication : tres fins, web subtil entre les dots
+  map.addLayer({ id: 'arcs-line', type: 'line', source: 'arcs',
+    paint: { 'line-color': '#6B3FA0', 'line-width': 0.4, 'line-opacity': 0.18 }
+  });
+
+  // Points : tous les dots en taille constante (essain visuel par accumulation).
+  map.addLayer({ id: 'points', type: 'circle', source: 'points',
+    paint: {
+      'circle-radius': ['get', 'radius'],
+      'circle-color': ['get', 'color'],
+      'circle-opacity': 0.78,
+      'circle-stroke-color': '#FFFFFF',
+      'circle-stroke-width': 0.4
+    }
+  });
+
+  // Patient zero : seul point legerement plus gros + ring violet discret
+  map.addLayer({ id: 'points-pz-ring', type: 'circle', source: 'points',
+    filter: ['==', ['get', 'is_pz'], 1],
+    paint: {
+      'circle-radius': 14,
+      'circle-color': 'transparent',
+      'circle-stroke-color': '#6B3FA0',
+      'circle-stroke-width': 1.2,
+      'circle-stroke-opacity': 0.5
+    }
+  });
+}
+
+function applyFilters(){
+  if (!map || !map.getSource || !map.getSource('points')) return;
+  const { points, arcs, clusterArcs } = buildFeatures();
+  map.getSource('points').setData(points);
+  map.getSource('arcs').setData(arcs);
+  map.getSource('cluster-arcs').setData(clusterArcs);
+}
+
+function fitToData(){
+  const lats = state.data.publications.map(p => p.lat);
+  const lons = state.data.publications.map(p => p.lon);
+  const bounds = [[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]];
+  map.fitBounds(bounds, { padding: { top: 60, right: 80, bottom: 60, left: 60 }, duration: 1200, maxZoom: 5 });
+}
+
+function bindFullscreen(){
+  const btn = document.getElementById('deb-fs');
+  const card = document.getElementById('deb-dossier');
+  if (!btn || !card) return;
+  const expandIcon = btn.querySelector('.deb-fs-icon-expand');
+  const shrinkIcon = btn.querySelector('.deb-fs-icon-shrink');
+  const label = btn.querySelector('.deb-fs-lbl');
+
+  function updateUI(on) {
+    card.classList.toggle('is-fullscreen', on);
+    document.body.classList.toggle('deb-fs-active', on);
+    if (expandIcon) expandIcon.style.display = on ? 'none' : 'block';
+    if (shrinkIcon) shrinkIcon.style.display = on ? 'block' : 'none';
+    if (label) label.textContent = on ? 'Quitter' : 'Plein écran';
+    btn.setAttribute('aria-label', on ? 'Quitter le plein écran' : 'Plein écran');
+    setTimeout(() => { if (map && map.resize) map.resize(); }, 60);
+    setTimeout(() => { if (map && map.resize) map.resize(); }, 360);
+  }
+
+  function isFsActive() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement);
+  }
+
+  function enterFs() {
+    if (card.requestFullscreen) return card.requestFullscreen();
+    if (card.webkitRequestFullscreen) return card.webkitRequestFullscreen();
+    // Fallback CSS si l'API Fullscreen n'est pas dispo (iframe sans allowfullscreen, etc.)
+    updateUI(true);
+  }
+  function exitFs() {
+    if (document.exitFullscreen) return document.exitFullscreen();
+    if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+    updateUI(false);
+  }
+
+  btn.addEventListener('click', () => {
+    if (isFsActive() || card.classList.contains('is-fullscreen')) exitFs();
+    else enterFs();
+  });
+
+  // Sync UI quand l'utilisateur appuie sur Echap ou le bouton du navigateur
+  function onFsChange() {
+    const fs = document.fullscreenElement === card || document.webkitFullscreenElement === card;
+    updateUI(fs);
+  }
+  document.addEventListener('fullscreenchange', onFsChange);
+  document.addEventListener('webkitfullscreenchange', onFsChange);
+}
+
+function bindMapHover(){
+  const tt = document.getElementById('tooltip');
+  map.on('mouseenter', 'points', () => { map.getCanvas().style.cursor = 'pointer'; });
+  map.on('mouseleave', 'points', () => { map.getCanvas().style.cursor = ''; tt.style.display = 'none'; });
+  map.on('mousemove', 'points', (e) => {
+    if (!e.features?.length) return;
+    const p = e.features[0].properties;
+    const date = new Date(p.date);
+    tt.innerHTML = `
+      <div class="tt-head">${escapeHtml(p.compte_display)}</div>
+      <div class="tt-meta">${TYPE_LABEL[p.type]} · ${escapeHtml((p.plateforme||'').toUpperCase())} · ${escapeHtml(p.ville)}</div>
+      <div class="tt-body">${escapeHtml(p.content_excerpt)}</div>
+      <div class="tt-foot">${fmtDateTime(date)} · ~${(p.audience_estimee/1000).toFixed(1)}k vues estimées</div>
+    `;
+    const rect = document.getElementById('map').getBoundingClientRect();
+    tt.style.left = (e.originalEvent.clientX - rect.left + 14) + 'px';
+    tt.style.top  = (e.originalEvent.clientY - rect.top + 14) + 'px';
+    tt.style.display = 'block';
+  });
+  map.on('click', 'points', (e) => {
+    const p = e.features[0].properties;
+    new mapboxgl.Popup({ closeButton: true, closeOnClick: true, maxWidth: '320px' })
+      .setLngLat(e.features[0].geometry.coordinates)
+      .setHTML(`
+        <div style="font-family:'Plus Jakarta Sans';font-weight:600;font-size:15px;color:#1F1437;letter-spacing:-0.012em;margin-bottom:4px">${escapeHtml(p.compte_display)}</div>
+        <div style="font-family:'JetBrains Mono';font-size:10.5px;color:#6B3FA0;letter-spacing:0.04em;margin-bottom:10px">${TYPE_LABEL[p.type]} · ${escapeHtml(p.plateforme)} · ${escapeHtml(p.ville)}</div>
+        <div style="font-size:13px;line-height:1.55;color:#4A4458;margin-bottom:10px">${escapeHtml(p.content_excerpt)}</div>
+        <div style="font-family:'JetBrains Mono';font-size:10px;color:#8A8499;letter-spacing:0.02em">${fmtDateTime(new Date(p.date))}</div>
+      `)
+      .addTo(map);
+  });
+}
+
+/* ════ Acteurs & Victimes ════ */
+const PAYS_NOM = {
+  RU: 'Russie', RO: 'Roumanie', HU: 'Hongrie', RS: 'Serbie', BG: 'Bulgarie',
+  CZ: 'Tchéquie', SK: 'Slovaquie', MD: 'Moldavie', BY: 'Bélarus',
+  DE: 'Allemagne', FR: 'France', IT: 'Italie', ES: 'Espagne',
+  BE: 'Belgique', CH: 'Suisse', AT: 'Autriche', PT: 'Portugal',
+  HK: 'Hong Kong', AE: 'Émirats A.U.'
+};
+function flagOf(cc){
+  if (!cc || cc.length !== 2) return '';
+  return String.fromCodePoint(...cc.toUpperCase().split('').map(c => c.charCodeAt(0) + 127397));
+}
+
+function renderActeursVictimes(){
+  const d = state.data;
+
+  // Top 8 acteurs : score = audience cumulee × log(1 + publications)
+  const byCompte = {};
+  d.publications.forEach(p => {
+    if (!byCompte[p.compte]) {
+      byCompte[p.compte] = {
+        compte: p.compte,
+        display: p.compte_display,
+        type: p.type,
+        ville: p.ville,
+        pays: p.pays,
+        plateforme: p.plateforme,
+        publications: 0,
+        audience: 0
+      };
+    }
+    byCompte[p.compte].publications += 1;
+    byCompte[p.compte].audience += p.audience_estimee || 0;
+  });
+  // mapping compte → cluster (premier reseau qui contient une de ses publis)
+  const compteCluster = {};
+  d.reseaux.forEach(r => {
+    r.comptes.forEach(c => { if (!compteCluster[c]) compteCluster[c] = r; });
+  });
+
+  // Selection equilibree : patient zero + top relais + top sites copie + top amplis
+  // pour raconter la chaine de propagation, pas seulement le volume.
+  const allActors = Object.values(byCompte)
+    .map(a => Object.assign(a, { score: a.audience * Math.log(1 + a.publications) }))
+    .sort((a, b) => b.score - a.score);
+  const pickByType = (type, n) => allActors.filter(a => a.type === type).slice(0, n);
+  const actorsArr = [
+    ...pickByType('patient_zero', 1),
+    ...pickByType('relai', 3),
+    ...pickByType('site_copie', 2),
+    ...pickByType('amplificateur', 2),
+  ];
+
+  const TYPE_LBL = { patient_zero: 'Primo diffuseur', relai: 'Relais primaire', amplificateur: 'Amplificateur', site_copie: 'Site copie' };
+
+  const acteursWrap = document.getElementById('av-acteurs');
+  acteursWrap.innerHTML = actorsArr.map(a => {
+    const clusterName = compteCluster[a.compte]?.nom || '—';
+    const initial = (a.display || a.compte || '?').replace(/^[@]/, '').charAt(0).toUpperCase();
+    const audK = (a.audience / 1000).toFixed(0) + 'k';
+    const pays = (a.pays || '').split(' ')[0]; // au cas où "Inconnu (hébergement RU)"
+    const paysNom = PAYS_NOM[pays] || pays || '—';
+    return `
+      <div class="av-item">
+        <div class="av-avatar">${escapeHtml(initial)}</div>
+        <div class="av-body">
+          <div class="av-name">${escapeHtml(a.display)}</div>
+          <div class="av-country">${escapeHtml(paysNom)} <span class="sep">·</span> ${escapeHtml(a.ville)}</div>
+          <div class="av-meta">${escapeHtml(clusterName)}<span class="sep">·</span>${a.publications} publi · ${audK} cumulé</div>
+        </div>
+        <div class="av-role" data-role="${a.type}"><span class="av-dot" style="background:${TYPE_COLOR[a.type] || TYPE_COLOR.relai}"></span>${TYPE_LBL[a.type] || a.type}</div>
+      </div>
+    `;
+  }).join('');
+
+  // Victimes : on prend depuis data si fourni, sinon fallback hardcode pour le cas demo
+  const victimes = d.victimes && d.victimes.length ? d.victimes : [
+    { type: 'marque', nom: 'Société Lumière', subtitle: 'Cible primaire de la campagne', narratifs: 'N01 · N03 · N04', impact: 'Allégations sanitaires sur les produits, mise en cause des pratiques industrielles', icon: 'building' },
+    { type: 'dirigeant', nom: 'Dirigeant (anonymisé)', subtitle: 'Cité nommément · documents falsifiés', narratifs: 'N02', impact: 'Mise en cause personnelle via faux documents joints aux relais', icon: 'user' },
+    { type: 'employes', nom: 'Cadres et salariés', subtitle: 'Cibles indirectes', narratifs: 'N02 · N05', impact: 'Suspicions par association, pression interne, hostilité réseaux sociaux', icon: 'users' },
+    { type: 'partenaires', nom: 'Partenaires commerciaux', subtitle: 'Distributeurs · sous-traitants', narratifs: 'N03 · N05', impact: 'Risque rupture de contrats, remise en question de la commande publique européenne', icon: 'link' },
+    { type: 'indirect', nom: 'Consommateurs', subtitle: 'Cibles informationnelles', narratifs: 'Tous narratifs', impact: 'Désinformation sur la sécurité des produits, érosion de confiance', icon: 'eye' },
+  ];
+
+  const ICONS = {
+    building: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2"/><path d="M10 21v-3h4v3"/></svg>',
+    user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>',
+    users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="3"/><path d="M2 20c0-3 3-5 7-5s7 2 7 5"/><path d="M14 15c2.5 0 6 1.5 6 5"/></svg>',
+    link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 1 0-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 1 0 5.66 5.66l1-1"/></svg>',
+    eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+  };
+  const VLBL = { marque: 'Marque', dirigeant: 'Dirigeant', employes: 'Employés', partenaires: 'Partenaires', indirect: 'Indirect' };
+
+  const victimesWrap = document.getElementById('av-victimes');
+  victimesWrap.innerHTML = victimes.map(v => `
+    <div class="av-item">
+      <div class="av-avatar">${ICONS[v.icon] || ICONS.eye}</div>
+      <div class="av-body">
+        <div class="av-name">${escapeHtml(v.nom)}</div>
+        <div class="av-meta">${escapeHtml(v.subtitle || '')}<span class="sep">·</span>Narratifs ${escapeHtml(v.narratifs || '—')}</div>
+      </div>
+      <div class="av-role" data-victim="${v.type}">${VLBL[v.type] || v.type}</div>
+    </div>
+  `).join('');
+}
+
+/* ════ Timeline ════ */
+function renderTimeline(){
+  const track = document.getElementById('timeline-track');
+  const handle = document.getElementById('timeline-handle');
+  const d = state.data;
+  const t0 = new Date(d.campagne.date_debut).getTime();
+  const t1 = new Date(d.campagne.date_fin).getTime();
+
+  // Axe : labels de dates répartis dynamiquement sur la période
+  const axis = document.getElementById('timeline-axis');
+  if (axis) {
+    const mois = ['jan','fév','mars','avr','mai','juin','juil','août','sept','oct','nov','déc'];
+    const N = 8;
+    axis.innerHTML = Array.from({ length: N + 1 }, (_, i) => {
+      const dd = new Date(t0 + (t1 - t0) * (i / N));
+      return `<span>${dd.getUTCDate()} ${mois[dd.getUTCMonth()]}</span>`;
+    }).join('');
+  }
+
+  d.publications.forEach(p => {
+    const t = new Date(p.date).getTime();
+    const pct = (t - t0) / (t1 - t0) * 100;
+    const tick = document.createElement('div');
+    tick.className = 'tl-tick' + (p.type === 'patient_zero' ? ' zero' : '');
+    tick.style.left = `calc(${pct}% - 1px)`;
+    tick.style.height = (p.type === 'patient_zero' ? '100%' : (14 + radiusFor(p)) + 'px');
+    tick.style.background = TYPE_COLOR[p.type] || '#8B5FBF';
+    track.appendChild(tick);
+  });
+
+  function setProgress(pct){
+    pct = Math.max(0, Math.min(1, pct));
+    state.timelineProgress = pct;
+    handle.style.left = (pct * 100) + '%';
+    const ms = t0 + (t1 - t0) * pct;
+    document.getElementById('tl-date').textContent = fmtDate(new Date(ms));
+    applyFilters();
+  }
+
+  let dragging = false;
+  function onMove(clientX){
+    const r = track.getBoundingClientRect();
+    setProgress((clientX - r.left) / r.width);
+  }
+  track.addEventListener('mousedown', e => { dragging = true; stopPlay(); onMove(e.clientX); });
+  window.addEventListener('mousemove', e => { if (dragging) onMove(e.clientX); });
+  window.addEventListener('mouseup', () => { dragging = false; });
+  track.addEventListener('touchstart', e => { stopPlay(); onMove(e.touches[0].clientX); }, { passive: true });
+  track.addEventListener('touchmove', e => { onMove(e.touches[0].clientX); }, { passive: true });
+
+  // ── Play / Pause / Reset / Vitesse ───────────────────────────
+  const playBtn = document.getElementById('tl-play');
+  const resetBtn = document.getElementById('tl-reset');
+  const speedBtn = document.getElementById('tl-speed');
+  const SPEEDS = [1, 2, 4, 0.5]; // multiplicateurs
+  let speedIdx = 0;
+  let playInterval = null;
+  const BASE_DURATION_MS = 16000; // 16s pour parcourir toute la timeline a 1x
+  const FRAME_MS = 60;
+
+  function playIconHTML(playing) {
+    return playing
+      ? '<svg viewBox="0 0 12 12" fill="currentColor"><rect x="3" y="2" width="2.4" height="8"/><rect x="6.6" y="2" width="2.4" height="8"/></svg>'
+      : '<svg viewBox="0 0 12 12" fill="currentColor"><path d="M3 1.5v9l8-4.5z"/></svg>';
+  }
+
+  function startPlay() {
+    if (playInterval) return;
+    // Si on est au bout, recommencer depuis 0
+    if (state.timelineProgress >= 0.999) setProgress(0);
+    playBtn.setAttribute('aria-label', 'Mettre en pause');
+    playBtn.innerHTML = playIconHTML(true);
+    const stepProgress = (FRAME_MS * SPEEDS[speedIdx]) / BASE_DURATION_MS;
+    playInterval = setInterval(() => {
+      const next = state.timelineProgress + stepProgress;
+      if (next >= 1) {
+        setProgress(1);
+        stopPlay();
+      } else {
+        setProgress(next);
+      }
+    }, FRAME_MS);
+  }
+  function stopPlay() {
+    if (!playInterval) return;
+    clearInterval(playInterval);
+    playInterval = null;
+    playBtn.setAttribute('aria-label', 'Lancer la lecture');
+    playBtn.innerHTML = playIconHTML(false);
+  }
+
+  playBtn.addEventListener('click', () => {
+    if (playInterval) stopPlay(); else startPlay();
+  });
+  resetBtn.addEventListener('click', () => {
+    stopPlay();
+    setProgress(0);
+  });
+  speedBtn.addEventListener('click', () => {
+    speedIdx = (speedIdx + 1) % SPEEDS.length;
+    speedBtn.textContent = SPEEDS[speedIdx] + '×';
+    // si en cours de lecture, on relance avec nouvelle vitesse
+    if (playInterval) { stopPlay(); startPlay(); }
+  });
+
+  setProgress(1);
+}
+
+function timelineCutoffMs(){
+  const d = state.data;
+  const t0 = new Date(d.campagne.date_debut).getTime();
+  const t1 = new Date(d.campagne.date_fin).getTime();
+  return t0 + (t1 - t0) * state.timelineProgress;
+}
+
+/* ════ Modal ════ */
+function openSubmitModal(){
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('modal-form').style.display = 'block';
+  document.getElementById('modal-success').classList.remove('show');
+  document.body.classList.add('modal-open');
+}
+function closeSubmitModal(){
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.classList.remove('modal-open');
+}
+function submitLead(){
+  const payload = {
+    org: document.getElementById('f-org').value.trim(),
+    contact: document.getElementById('f-contact').value.trim(),
+    email: document.getElementById('f-email').value.trim(),
+    urls: document.getElementById('f-urls').value.trim(),
+    context: document.getElementById('f-context').value.trim(),
+    ts: new Date().toISOString()
+  };
+  if (!payload.org || !payload.contact || !payload.email) {
+    alert('Organisation, contact et email sont requis.');
+    return;
+  }
+  try { localStorage.setItem('debunkage_pending_submission', JSON.stringify(payload)); } catch (e) {}
+  console.log('[debunkage] soumission', payload);
+  document.getElementById('modal-form').style.display = 'none';
+  document.getElementById('modal-success').classList.add('show');
+}
+const _modalOverlay = document.getElementById('modal-overlay');
+if (_modalOverlay) _modalOverlay.addEventListener('click', (e) => {
+  if (e.target.id === 'modal-overlay') closeSubmitModal();
+});
+
+/* ════ Helpers ════ */
+function escapeHtml(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function fmtDate(d){
+  const mois = ['jan','fév','mars','avr','mai','juin','juil','août','sept','oct','nov','déc'];
+  return `${d.getUTCDate()} ${mois[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+function fmtDateTime(d){
+  return `${fmtDate(d)} · ${String(d.getUTCHours()).padStart(2,'0')}h${String(d.getUTCMinutes()).padStart(2,'0')} UTC`;
+}
+function fmtPeriod(a, b){
+  return `${fmtDate(new Date(a))} → ${fmtDate(new Date(b))}`;
+}
+function daysBetween(a, b){
+  return Math.round((new Date(b) - new Date(a)) / 86400000);
+}
+
+// Expose les handlers utilises par onclick (modal)
+window.openSubmitModal = openSubmitModal;
+window.closeSubmitModal = closeSubmitModal;
+window.submitLead = submitLead;
+
+init().catch(err => {
+  console.error('[debunkage] init failed', err);
+  const ml = document.getElementById('map-loader');
+  if (ml) ml.textContent = 'Erreur de chargement, recharger la page';
+});
+
+}); // end _whenMapboxReady
+})();
+</script>
+
+</body>
+</html>

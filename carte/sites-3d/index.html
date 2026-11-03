@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<script src="/shared/i18n.js?v=20261020c"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sites 3D · Infrastructures visées · Algor Acces</title>
+<!-- Gate premium : overlay bloquant tant que session + plan premium absents. -->
+<script>window.addEventListener('algorAuthReady', function () { window.__algorAuthGranted = true; });</script>
+<script type="module" src="../../shared/site-auth.js?v=20261020a"></script>
+
+<link rel="stylesheet" href="/shared/home/fonts.css?v=20260707a" />
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.24.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.24.0/mapbox-gl.js"></script>
+<style>
+  :root{
+    --violet:#6B3FA0; --violet-mid:#5650C6; --blue:#2E84D4;
+    --grad:linear-gradient(95deg,#6B3FA0,#5650C6 55%,#2E84D4);
+    --ink:#1F1437; --tx:#4A4460; --muted:#9089AA;
+    --dmg:#C45A3C; --destroyed:#B22828;
+    --panel:#fff; --ln:rgba(123,90,189,0.18); --ln-soft:rgba(123,90,189,0.10);
+    --shadow:0 8px 26px -8px rgba(46,24,87,0.20);
+    --jakarta:'Plus Jakarta Sans',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#eef0f4;color:var(--tx);font-family:var(--jakarta);overflow:hidden}
+  #map{position:absolute;inset:0}
+  /* Fond studio du mode maquette (le canvas Mapbox devient transparent
+     quand le fond de carte est masqué) */
+  #map.maq{background:radial-gradient(1300px 850px at 50% 42%,#FBFAF6 0%,#EFEBF4 55%,#E3DDEC 100%)}
+
+  #header{position:absolute;top:0;left:0;right:0;height:60px;z-index:8;display:flex;align-items:center;gap:14px;padding:0 18px;pointer-events:none}
+  #header .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;flex:none;pointer-events:auto}
+  #header .brand img{height:30px;border-radius:7px}
+  #page-title{margin:0;font:800 18px/1 var(--jakarta);letter-spacing:-.01em;color:var(--ink)}
+  #header .sub{font:600 8px/1 var(--jakarta);letter-spacing:.16em;text-transform:uppercase;color:var(--violet);margin-top:5px}
+  #header .spacer{flex:1}
+  .hbtn{pointer-events:auto;background:#fff;border:1px solid var(--ln);color:var(--violet);cursor:pointer;
+    font:700 9.5px/1 var(--jakarta);letter-spacing:.12em;text-transform:uppercase;padding:10px 14px;border-radius:11px;box-shadow:var(--shadow);transition:background .15s,color .15s}
+  .hbtn:hover{background:rgba(107,63,160,.07)}
+  .hbtn.on{background:var(--grad);border:none;color:#fff;box-shadow:0 8px 22px -7px rgba(86,80,198,.6)}
+
+  #panel{position:absolute;top:70px;left:18px;bottom:18px;width:312px;z-index:7;display:flex;flex-direction:column;pointer-events:none}
+  .card{background:var(--panel);border:1px solid var(--ln);border-radius:15px;box-shadow:var(--shadow);pointer-events:auto}
+  #sites{flex:0 1 auto;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+  #sites h3{margin:0;padding:13px 15px 10px;font:700 9px/1 var(--jakarta);letter-spacing:.15em;text-transform:uppercase;color:var(--violet);border-bottom:1px solid var(--ln-soft)}
+  #site-list{flex:1;overflow-y:auto;padding:6px;scrollbar-width:thin}
+  .grp{padding:9px 10px 3px;font:700 8.5px/1 var(--jakarta);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .site{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:none;border:none;cursor:pointer;padding:9px 10px;border-radius:11px;transition:background .13s;font-family:var(--jakarta)}
+  .site:hover{background:rgba(107,63,160,.07)}
+  .site.on{background:rgba(107,63,160,.10)}
+  .dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .site-name{flex:1;font:600 12.5px/1.3 var(--jakarta);color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .site-st{font:700 8px/1 var(--jakarta);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .site-prio{font:800 7.5px/1 var(--jakarta);letter-spacing:.11em;text-transform:uppercase;flex:none;
+    padding:4px 7px;border-radius:6px;background:rgba(123,90,189,.06);white-space:nowrap}
+  .grp-prio{color:var(--violet);border-bottom:2px solid var(--violet);margin:0 8px 2px;padding-left:2px}
+
+  #detail{display:none;flex:0 1 auto;min-height:0;flex-direction:column;overflow:hidden}
+  #detail .d-head{padding:13px 15px 12px;border-bottom:1px solid var(--ln-soft)}
+  #d-back{background:none;border:none;cursor:pointer;color:var(--violet);font:700 9px/1 var(--jakarta);letter-spacing:.12em;text-transform:uppercase;padding:0 0 9px;display:flex;align-items:center;gap:5px}
+  #d-name{margin:0;font:800 15px/1.3 var(--jakarta);color:var(--ink)}
+  #d-meta{margin-top:5px;font:600 10.5px/1.5 var(--jakarta);color:var(--muted)}
+  .badges{display:flex;gap:5px;margin-top:9px;flex-wrap:wrap}
+  .bdg{font:700 8px/1 var(--jakarta);letter-spacing:.11em;text-transform:uppercase;padding:5px 8px;border-radius:6px}
+  .bdg-detruit{color:#fff;background:var(--destroyed)}
+  .bdg-endommage{color:#fff;background:var(--dmg)}
+  .bdg-osint{color:#1B5486;background:rgba(46,132,212,.12)}
+  .bdg-humint{color:#4A2C6E;background:rgba(107,63,160,.10)}
+  .bdg-count{color:var(--tx);background:#F4F2F8}
+  #d-views{display:flex;gap:4px;margin-top:10px}
+  .vbtn{flex:1;border:1px solid var(--ln);background:#fff;cursor:pointer;padding:7px 2px;border-radius:9px;
+    font:700 8.5px/1.2 var(--jakarta);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);transition:all .15s}
+  .vbtn:hover{color:var(--violet);border-color:var(--violet)}
+  .vbtn.on{background:var(--grad);border:none;color:#fff}
+
+  #gestures{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);z-index:7;
+    background:#fff;border:1px solid var(--ln);border-radius:11px;box-shadow:var(--shadow);
+    padding:9px 15px;font:600 10.5px/1 var(--jakarta);color:var(--tx);
+    opacity:0;pointer-events:none;transition:opacity .5s}
+  #gestures.show{opacity:1}
+
+  #d-struct{padding:0 13px;border-bottom:1px solid var(--ln-soft)}
+  #d-struct:empty{display:none}
+  .d-sub{margin:11px 0 7px;font:700 8.5px/1 var(--jakarta);letter-spacing:.12em;text-transform:uppercase;color:var(--violet)}
+  .stat-row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;font:600 11.5px/1.3 var(--jakarta);color:var(--tx);border-bottom:1px solid var(--ln-soft)}
+  .stat-row:last-child{border-bottom:none;padding-bottom:11px}
+  .stat-row b{font:800 12px/1 var(--jakarta);color:var(--ink)}
+
+  #d-events{flex:1;overflow-y:auto;padding:10px 13px;scrollbar-width:thin}
+  .ev{border-left:3px solid var(--violet);padding:2px 0 2px 10px;margin-bottom:13px}
+  .ev.corr{border-left-color:var(--blue)}
+  .ev-top{font:700 11.5px/1.3 var(--jakarta);color:var(--ink)}
+  .ev-meta{font:600 9.5px/1.4 var(--jakarta);color:var(--muted);margin:2px 0 4px}
+  .ev-desc{font:500 11px/1.55 var(--jakarta);color:var(--tx)}
+
+  #legend{position:absolute;right:18px;bottom:18px;z-index:7;padding:12px 14px 13px}
+  #legend h4{margin:0 0 8px;font:700 8.5px/1 var(--jakarta);letter-spacing:.14em;text-transform:uppercase;color:var(--violet)}
+  #legend .lrow{display:flex;align-items:center;gap:8px;font:600 10.5px/1.9 var(--jakarta);color:var(--tx)}
+  #legend .sw{width:11px;height:11px;border-radius:3px;flex:none}
+
+  #loader{position:absolute;inset:0;z-index:12;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;background:#F4F2F8;transition:opacity .6s}
+  #loader.off{opacity:0;pointer-events:none}
+  #loader .ring{width:38px;height:38px;border-radius:50%;border:3px solid rgba(107,63,160,.15);border-top-color:var(--violet);animation:spin .9s linear infinite}
+  #loader span{font:700 10px/1 var(--jakarta);letter-spacing:.18em;text-transform:uppercase;color:var(--violet)}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .mapboxgl-popup-content{font-family:var(--jakarta);border-radius:13px;box-shadow:0 16px 40px -10px rgba(46,24,87,.34);border:1px solid var(--ln);padding:11px 14px 12px;min-width:170px}
+  .mapboxgl-popup-close-button{font-size:15px;color:var(--muted);right:5px;top:3px}
+  .bp-name{font:800 12.5px/1.3 var(--jakarta);color:var(--ink)}
+  .bp-meta{font:600 10px/1.5 var(--jakarta);color:var(--muted);margin-top:2px}
+  .bp-dmg{display:inline-block;margin-top:6px;font:700 8px/1 var(--jakarta);letter-spacing:.1em;text-transform:uppercase;padding:4px 7px;border-radius:5px}
+
+  @media (max-width:840px){
+    #panel{width:250px}
+    #legend{display:none}
+    #page-title{font-size:15px}
+  }
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+<div id="loader"><div class="ring"></div><span>Chargement des sites</span></div>
+
+<header id="header">
+  <a class="brand" href="/" title="Retour à l'accueil">
+    <img src="/sahel/algor_int_logo.jpg" alt="Algor Int" onerror="this.style.display='none'">
+    <div>
+      <h1 id="page-title">Sites · modélisation 3D</h1>
+      <div class="sub">Infrastructures visées · emprises réelles</div>
+    </div>
+  </a>
+  <div class="spacer"></div>
+</header>
+
+<aside id="panel">
+  <div class="card" id="sites">
+    <h3>Sites visés · <span id="site-count">0</span></h3>
+    <div id="site-list"></div>
+  </div>
+  <div class="card" id="detail">
+    <div class="d-head">
+      <button id="d-back">&#8592; Tous les sites</button>
+      <h2 id="d-name"></h2>
+      <div id="d-meta"></div>
+      <div class="badges" id="d-badges"></div>
+      <div id="d-views">
+        <button class="vbtn on" data-v="site">Vue site</button>
+        <button class="vbtn" data-v="air">Aérienne</button>
+        <button class="vbtn" data-v="ras">Immersion</button>
+        <button class="vbtn" data-v="orbit">Orbite</button>
+      </div>
+    </div>
+    <div id="d-struct"></div>
+    <div id="d-events"></div>
+  </div>
+</aside>
+
+<div id="gestures">Glisser : déplacer &nbsp;·&nbsp; Molette : zoomer &nbsp;·&nbsp; Ctrl + glisser : incliner et pivoter</div>
+
+<div class="card" id="legend">
+  <h4>État des bâtiments</h4>
+  <div class="lrow"><span class="sw" style="background:#B22828"></span>Détruit</div>
+  <div class="lrow"><span class="sw" style="background:#C45A3C"></span>Endommagé</div>
+  <div class="lrow"><span class="sw" style="background:#E7E1D5;border:1px solid #C9C3B5"></span>Intact (contexte)</div>
+  <div class="lrow"><span class="sw" style="background:none;border:2px dashed #6B3FA0;border-radius:3px"></span>Périmètre du site</div>
+  <p style="margin:8px 0 0;font:500 9px/1.5 var(--jakarta);color:var(--muted)">Emprises : OpenStreetMap · Imagerie : Esri/Maxar<br>Renseignement : Algor Int</p>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  mapboxgl.accessToken = 'pk.eyJ1IjoiYXo2OTMiLCJhIjoiY21uMGlhY2ZyMGx6bDJycjAxYWZjbWt5eiJ9.SQqOLLgLwWKnUGMztrSArg';
+
+  var DMG_COLOR = { detruit: '#B22828', endommage: '#C45A3C', intact: '#E7E1D5' };
+  var HOME = { center: [6.5, 10.6], zoom: 4.6, pitch: 0, bearing: 0 };
+  var SITES = [];
+  var state = { site: null, is3d: true, mode: 'carte', orbiting: false };
+  var map = null, mapReady = false, dataReady = false;
+
+  /* La carte n'est créée que lorsque son conteneur a une taille réelle :
+     un init dans un viewport replié (iframe masquée, onglet en préchargement)
+     fige un canvas dégénéré dont Mapbox ne se remet pas. */
+  function createMap() {
+    map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/light-v11',
+      center: HOME.center, zoom: HOME.zoom, pitch: 0, bearing: 0,
+      maxPitch: 85, antialias: true
+    });
+    map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'top-right');
+
+    map.on('style.load', function () {
+      /* Brume légère (ambiance d'origine conservée) : juste assez pour aérer le
+         lointain sans assombrir la scène. */
+      map.setFog({
+        color: 'rgb(244,242,248)', 'high-color': 'rgb(210,200,235)',
+        'horizon-blend': 0.06, 'space-color': 'rgb(233,230,242)', 'star-intensity': 0
+      });
+      /* Éclairage doux avec ombres portées nettes : donne du volume et sépare
+         les bâtiments, sans dramatiser l'ambiance. */
+      if (map.setLights) map.setLights([
+        { id: 'ambient', type: 'ambient', properties: { color: '#ffffff', intensity: 0.5 } },
+        { id: 'sun', type: 'directional', properties: {
+            color: '#fff6ea', intensity: 0.85, direction: [216, 42],
+            'cast-shadows': true, 'shadow-intensity': 0.7 } }
+      ]);
+    });
+
+    map.on('error', function (e) { console.warn('[map]', e && e.error && e.error.message); });
+    map.on('load', function () { mapReady = true; boot(); });
+    window.algorMap = map;   /* accès outillage (captures, debug) */
+  }
+  (function waitForSize() {
+    var el = document.getElementById('map');
+    if (el.clientWidth >= 120 && el.clientHeight >= 120) { createMap(); return; }
+    if (typeof ResizeObserver !== 'undefined') {
+      var ro = new ResizeObserver(function () {
+        if (el.clientWidth >= 120 && el.clientHeight >= 120) { ro.disconnect(); createMap(); }
+      });
+      ro.observe(el);
+    } else {
+      var t = setInterval(function () {
+        if (el.clientWidth >= 120 && el.clientHeight >= 120) { clearInterval(t); createMap(); }
+      }, 300);
+    }
+  })();
+
+  /* Sites et renseignement liés : bucket privé zones (premium), jamais un fichier statique public */
+  new Promise(function (ok) { if (window.algorAuth && window.algorAuth.loadZoneFile) return ok(); window.addEventListener('algorAuthReady', ok, { once: true }); })
+    .then(function () { return window.algorAuth.loadZoneFile('carte/zones-3d.json'); })
+    .then(function (j) {
+      SITES = j.zones || []; dataReady = true;
+      buildList();                                  /* l'interface n'attend pas la carte */
+      document.getElementById('loader').classList.add('off');
+      boot();
+    })
+    .catch(function (e) {
+      document.querySelector('#loader span').textContent = 'Données indisponibles';
+      console.error(e);
+    });
+
+  function boot() {
+    if (!mapReady || !dataReady) return;
+    map.resize();
+    addLayers();
+  }
+
+  /* ─────────── Sources et couches ─────────── */
+  function addLayers() {
+    /* Fond satellite Esri/Maxar (souvent plus net que Mapbox en zone rurale
+       africaine), masqué par défaut, activé automatiquement au zoom site. */
+    map.addSource('sat', { type: 'raster',
+      tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+      // maxzoom 16 : au-delà, Mapbox agrandit la dernière tuile disponible au
+      // lieu de demander des tuiles Esri inexistantes en zone rurale (ce qui
+      // affichait « Map data not yet available »).
+      tileSize: 256, maxzoom: 16,
+      attribution: 'Imagerie © Esri, Maxar, Earthstar Geographics' });
+    map.addLayer({ id: 'sat', type: 'raster', source: 'sat',
+      layout: { visibility: 'none' },
+      /* Léger gain de netteté sur l'imagerie, sans changer sa tonalité. */
+      paint: { 'raster-opacity': 1, 'raster-contrast': 0.06, 'raster-fade-duration': 250 } },
+      firstSymbolId());
+
+    /* Bâtiments OSM de la ville (contexte, via le style light) */
+    map.addLayer({
+      id: 'city-3d', type: 'fill-extrusion', source: 'composite', 'source-layer': 'building',
+      minzoom: 13,
+      filter: ['==', ['get', 'extrude'], 'true'],
+      paint: {
+        'fill-extrusion-color': '#EFE9DC',
+        'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 13, 0, 14.2, ['get', 'height']],
+        'fill-extrusion-base': ['case', ['>=', ['get', 'min_height'], 0], ['get', 'min_height'], 0],
+        'fill-extrusion-opacity': 1,
+        'fill-extrusion-vertical-gradient': true,
+        'fill-extrusion-edge-radius': 0.35,
+        'fill-extrusion-ambient-occlusion-intensity': 0.4,
+        'fill-extrusion-ambient-occlusion-radius': 3.5,
+        'fill-extrusion-height-transition': { duration: 900, delay: 0 }
+      }
+    });
+
+    /* Structures des sites (emprises curées, couleur = dommage) */
+    var feats = [], perims = [], centers = [], hits = [];
+    SITES.forEach(function (s, si) {
+      (s.structures || []).forEach(function (b) {
+        var dmg = b.damage || 'intact';
+        feats.push({ type: 'Feature', id: feats.length,
+          properties: { si: si, name: b.name || 'Bâtiment', fn: b.function || '', damage: dmg,
+                        h: b.height || 6, key: b.key ? 1 : 0 },
+          geometry: { type: 'Polygon', coordinates: b.footprint } });
+        /* Étiquette uniquement sur les bâtiments RÉELLEMENT identifiés (type OSM
+           ou nom propre), pas sur les boîtes anonymes : la carte reste lisible
+           et seul le renseignement précis est nommé. */
+        var named = b.name && b.name !== 'Bâtiment';
+        if (named && b.footprint && b.footprint[0]) {
+          var ring = b.footprint[0], cx = 0, cy = 0;
+          ring.forEach(function (pt) { cx += pt[0]; cy += pt[1]; });
+          hits.push({ type: 'Feature',
+            properties: { name: b.name, damage: dmg, key: b.key ? 1 : 0 },
+            geometry: { type: 'Point', coordinates: [cx / ring.length, cy / ring.length] } });
+        }
+      });
+      (s.perimeter ? [s.perimeter] : []).forEach(function (p) {
+        perims.push({ type: 'Feature', properties: { si: si }, geometry: { type: 'Polygon', coordinates: p } });
+      });
+      centers.push({ type: 'Feature',
+        properties: { si: si, name: s.name, status: s.status || 'endommage', pays: s.pays },
+        geometry: { type: 'Point', coordinates: s.center } });
+    });
+
+    map.addSource('structures', { type: 'geojson', data: { type: 'FeatureCollection', features: feats } });
+    map.addSource('perims', { type: 'geojson', data: { type: 'FeatureCollection', features: perims } });
+    map.addSource('centers', { type: 'geojson', data: { type: 'FeatureCollection', features: centers } });
+    map.addSource('hits', { type: 'geojson', data: { type: 'FeatureCollection', features: hits } });
+    map.addSource('focus', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    map.addSource('target', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+
+    /* Halo de focus au sol autour du bâtiment visé : anneau discret, statique */
+    map.addLayer({
+      id: 'focus-fill', type: 'fill', source: 'focus',
+      paint: { 'fill-color': '#6B3FA0', 'fill-opacity': 0.07 }
+    });
+    map.addLayer({
+      id: 'focus-line', type: 'line', source: 'focus',
+      paint: { 'line-color': '#6B3FA0', 'line-width': 1.6, 'line-opacity': 0.55 }
+    });
+
+    map.addLayer({
+      id: 'perims-fill', type: 'fill', source: 'perims', minzoom: 12,
+      paint: { 'fill-color': '#6B3FA0', 'fill-opacity': 0.05 }
+    });
+    map.addLayer({
+      id: 'perims', type: 'line', source: 'perims', minzoom: 12,
+      paint: { 'line-color': '#6B3FA0', 'line-width': 2.5, 'line-dasharray': [2.2, 1.6], 'line-opacity': 0.9 }
+    });
+    map.addLayer({
+      id: 'structures-3d', type: 'fill-extrusion', source: 'structures', minzoom: 12,
+      paint: {
+        'fill-extrusion-color': ['match', ['get', 'damage'],
+          'detruit', DMG_COLOR.detruit, 'endommage', DMG_COLOR.endommage, DMG_COLOR.intact],
+        'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 11.5, 0, 13, ['get', 'h']],
+        'fill-extrusion-base': 0,
+        'fill-extrusion-opacity': 1,
+        'fill-extrusion-vertical-gradient': true,
+        'fill-extrusion-edge-radius': 0.4,
+        'fill-extrusion-ambient-occlusion-intensity': 0.5,
+        'fill-extrusion-ambient-occlusion-radius': 4,
+        /* Les bâtiments touchés restent saturés même à l'ombre ; le bâtiment
+           survolé s'illumine (feature-state hover) */
+        'fill-extrusion-emissive-strength': ['case',
+          ['boolean', ['feature-state', 'hover'], false], 0.55,
+          ['case', ['==', ['get', 'damage'], 'intact'], 0, 0.4]],
+        'fill-extrusion-height-transition': { duration: 900, delay: 0 }
+      }
+    });
+
+    /* ── Traitement PREMIUM du bâtiment visé ──
+       Contour net au sol + aura verticale translucide lumineuse qui s'élève
+       au-dessus de la cible : elle se détache en volume, pas juste en couleur. */
+    map.addLayer({
+      id: 'target-outline', type: 'line', source: 'target',
+      paint: {
+        'line-color': '#2E84D4', 'line-width': ['interpolate', ['linear'], ['zoom'], 14, 1.5, 17, 3.5],
+        'line-opacity': 0.9, 'line-blur': 0.4
+      }
+    });
+    map.addLayer({
+      id: 'target-glow', type: 'fill-extrusion', source: 'target',
+      paint: {
+        'fill-extrusion-color': ['match', ['get', 'damage'], 'detruit', '#E8564C', '#F08A3C'],
+        'fill-extrusion-base': ['get', 'h'],
+        /* léger surplomb lumineux au-dessus du toit, pas une colonne */
+        'fill-extrusion-height': ['+', ['get', 'h'], 3],
+        'fill-extrusion-opacity': 0.2,
+        'fill-extrusion-emissive-strength': 0.9,
+        'fill-extrusion-height-transition': { duration: 600, delay: 0 }
+      }
+    });
+
+    /* Courbes de niveau réelles (terrain-v2) : le relief en filigrane,
+       visible uniquement en mode maquette */
+    map.addLayer({
+      id: 'maq-contours', type: 'line', source: 'composite', 'source-layer': 'contour',
+      minzoom: 11, layout: { visibility: 'none' },
+      paint: { 'line-color': '#D6CDBB', 'line-width': 0.7, 'line-opacity': 0.55 }
+    });
+    map.addLayer({
+      id: 'hits', type: 'symbol', source: 'hits', minzoom: 13.5,
+      layout: {
+        'text-field': ['get', 'name'],
+        'text-size': ['case', ['==', ['get', 'key'], 1], 13, 11],
+        'text-anchor': 'bottom', 'text-offset': [0, -0.7],
+        'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'], 'text-max-width': 11,
+        'text-allow-overlap': false, 'symbol-sort-key': ['-', 0, ['get', 'key']]
+      },
+      paint: {
+        'text-color': ['match', ['get', 'damage'], 'detruit', '#8f1f1f', 'endommage', '#8F3F29', '#3a2a5e'],
+        'text-halo-color': '#ffffff', 'text-halo-width': 1.8
+      }
+    });
+
+    /* Marqueurs de sites (vue d'ensemble) */
+    map.addLayer({
+      id: 'centers', type: 'circle', source: 'centers', maxzoom: 13,
+      paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 4, 5.5, 10, 8],
+        'circle-color': ['match', ['get', 'status'], 'detruit', DMG_COLOR.detruit, DMG_COLOR.endommage],
+        'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff'
+      }
+    });
+    map.addLayer({
+      id: 'centers-lb', type: 'symbol', source: 'centers', minzoom: 6, maxzoom: 13,
+      layout: {
+        'text-field': ['get', 'name'], 'text-size': 10.5, 'text-anchor': 'top', 'text-offset': [0, 0.8],
+        'text-font': ['DIN Pro Medium', 'Arial Unicode MS Regular'], 'text-max-width': 14
+      },
+      paint: { 'text-color': '#1F1437', 'text-halo-color': '#F4F2F8', 'text-halo-width': 1.6 }
+    });
+
+    map.on('click', 'centers', function (e) { selectSite(e.features[0].properties.si); });
+    map.on('click', 'structures-3d', function (e) {
+      var p = e.features[0].properties;
+      var isGeneric = p.name === 'Bâtiment';
+      new mapboxgl.Popup({ offset: 8 }).setLngLat(e.lngLat).setHTML(
+        '<div class="bp-name">' + esc(p.name) + '</div>' +
+        (!isGeneric && p.fn && p.fn !== p.name && p.fn !== 'Aéroport' ? '<div class="bp-meta">' + esc(p.fn) + ' · source OSM</div>' : '') +
+        '<span class="bp-dmg" style="background:' + DMG_COLOR[p.damage] + ';color:' + (p.damage === 'intact' ? '#4A4460' : '#fff') + '">' +
+        ({ detruit: 'Détruit', endommage: 'Endommagé', intact: 'Intact' })[p.damage] + '</span>'
+      ).addTo(map);
+    });
+    ['centers', 'structures-3d'].forEach(function (l) {
+      map.on('mouseenter', l, function () { map.getCanvas().style.cursor = 'pointer'; });
+      map.on('mouseleave', l, function () { map.getCanvas().style.cursor = ''; });
+    });
+
+    /* Survol : le bâtiment sous le curseur s'illumine */
+    var hoverId = null;
+    map.on('mousemove', 'structures-3d', function (e) {
+      var id = e.features[0].id;
+      if (hoverId !== null && hoverId !== id) map.setFeatureState({ source: 'structures', id: hoverId }, { hover: false });
+      hoverId = id;
+      map.setFeatureState({ source: 'structures', id: id }, { hover: true });
+    });
+    map.on('mouseleave', 'structures-3d', function () {
+      if (hoverId !== null) map.setFeatureState({ source: 'structures', id: hoverId }, { hover: false });
+      hoverId = null;
+    });
+
+    map.on('dragstart', stopOrbit);
+    map.on('rotatestart', function (e) { if (e.originalEvent) stopOrbit(); });
+    if (state.mode !== 'carte') setMode(state.mode);   /* un site a été choisi avant que la carte soit prête */
+    updateCenters();
+    autoEnterFromParam();   /* pays reçu depuis /carte/ → on plonge direct dans son site principal */
+  }
+
+  // Ouverture d'un site précis choisi dans le popup Infras 3D de /carte/
+  // (paramètre ?site=<id>). Sans ce paramètre, on reste sur la liste (pas de
+  // saut automatique sur un point).
+  function autoEnterFromParam() {
+    var m = /[?&]site=([^&]+)/.exec(location.search);
+    if (!m) return;
+    var want = decodeURIComponent(m[1]);
+    var idx = null;
+    SITES.forEach(function (s, i) { if (s.id === want) idx = i; });
+    if (idx != null) selectSite(idx);
+  }
+
+  function firstSymbolId() {
+    var layers = map.getStyle().layers;
+    for (var i = 0; i < layers.length; i++) if (layers[i].type === 'symbol') return layers[i].id;
+    return undefined;
+  }
+
+  /* ─────────── Panneau ─────────── */
+  /* ─── Score décisionnel : quoi regarder en premier ───
+     gravité (détruit>endommagé) + récence (dernier incident) + répétition
+     (nb d'incidents) + corroboration OSINT. 100% sur les données réelles. */
+  var REFDATE = null;
+  function computeScores() {
+    var maxd = '';
+    SITES.forEach(function (s) { (s.events || []).forEach(function (e) { if (e.date && e.date > maxd) maxd = e.date; }); });
+    REFDATE = maxd ? new Date(maxd) : null;
+    SITES.forEach(function (s) {
+      var evs = s.events || [];
+      var grav = s.status === 'detruit' ? 3 : (s.status === 'endommage' ? 2 : 1);
+      var rep = Math.min(evs.length, 5);
+      var corr = evs.some(function (e) { return e.corrobore; }) ? 2 : 0;
+      var last = evs.map(function (e) { return e.date; }).filter(Boolean).sort().pop();
+      var rec = 0;
+      if (last && REFDATE) {
+        var days = (REFDATE - new Date(last)) / 864e5;
+        rec = days < 7 ? 4 : days < 30 ? 3 : days < 90 ? 2 : 1;
+      }
+      s._score = grav * 3 + rec + rep + corr;
+    });
+    /* Seuils par percentile : prioritaire = top ~18%, élevé = ~42% suivants */
+    var sorted = SITES.map(function (s) { return s._score; }).sort(function (a, b) { return b - a; });
+    var n = sorted.length;
+    var pHi = sorted[Math.floor(n * 0.18)] || 0, pMid = sorted[Math.floor(n * 0.60)] || 0;
+    SITES.forEach(function (s) {
+      s._tier = s._score >= pHi ? 'PRIORITAIRE' : s._score >= pMid ? 'ÉLEVÉ' : 'MODÉRÉ';
+    });
+  }
+  function tierColor(t) { return t === 'PRIORITAIRE' ? DMG_COLOR.detruit : t === 'ÉLEVÉ' ? DMG_COLOR.endommage : '#9089AA'; }
+
+  function siteRow(i) {
+    var s = SITES[i];
+    var b = document.createElement('button');
+    b.className = 'site';
+    b.innerHTML =
+      '<span class="dot" style="background:' + (s.status === 'detruit' ? DMG_COLOR.detruit : DMG_COLOR.endommage) + '"></span>' +
+      '<span class="site-name">' + esc(s.name.replace(/\s*[—-]\s*/g, ' · ')) + '</span>' +
+      '<span class="site-prio" style="color:' + tierColor(s._tier) + '">' + s._tier + '</span>';
+    b.addEventListener('click', function () { selectSite(i); });
+    return b;
+  }
+
+  function buildList() {
+    computeScores();
+    document.getElementById('site-count').textContent = SITES.length;
+    var host = document.getElementById('site-list');
+    host.innerHTML = '';
+    var idxs = SITES.map(function (_, i) { return i; });
+
+    /* Section PRIORITÉ : les sites à traiter en premier, tous pays confondus */
+    var top = idxs.slice().sort(function (a, b) { return SITES[b]._score - SITES[a]._score; }).slice(0, 6);
+    var gh = document.createElement('div');
+    gh.className = 'grp grp-prio'; gh.textContent = 'Priorité · à traiter en premier';
+    host.appendChild(gh);
+    top.forEach(function (i) { host.appendChild(siteRow(i)); });
+
+    /* Groupes par pays, triés par score décroissant */
+    var byPays = {};
+    idxs.forEach(function (i) { (byPays[SITES[i].pays] = byPays[SITES[i].pays] || []).push(i); });
+    Object.keys(byPays).sort().forEach(function (pays) {
+      var g = document.createElement('div');
+      g.className = 'grp'; g.textContent = pays; g.setAttribute('data-pays', pays);
+      host.appendChild(g);
+      byPays[pays].sort(function (a, b) { return SITES[b]._score - SITES[a]._score; })
+        .forEach(function (i) { host.appendChild(siteRow(i)); });
+    });
+    focusFromParam();
+  }
+
+  // Pays reçu depuis la carte /carte/ (chip Infras 3D) : on amène le groupe du
+  // pays en tête et on l'accentue brièvement, pour arriver au bon endroit.
+  function focusFromParam() {
+    var m = /[?&]pays=([^&]+)/.exec(location.search);
+    if (!m) return;
+    var want = decodeURIComponent(m[1]).toLowerCase();
+    var host = document.getElementById('site-list');
+    var grp = Array.prototype.slice.call(host.querySelectorAll('.grp')).find(function (g) {
+      return (g.getAttribute('data-pays') || '').toLowerCase().indexOf(want) === 0;
+    });
+    if (!grp) return;
+    grp.scrollIntoView({ block: 'start' });
+    grp.style.color = 'var(--violet)';
+  }
+
+  function selectSite(i) {
+    var s = SITES[i];
+    if (!s) return;
+    state.site = i;
+    setMode('sat');   /* au niveau site : satellite réel + bâtiments denses (jamais de vide) */
+    updateCenters();  /* le marqueur du site disparaît une fois plongé */
+    setFocus(s);      /* mise en valeur du seul bâtiment visé */
+    document.querySelectorAll('.vbtn').forEach(function (b) { b.classList.toggle('on', b.dataset.v === 'site'); });
+    showGestures();
+
+    /* Plongée cinématique sur le site, puis on rend la main : navigation libre
+       (glisser = déplacer, Ctrl/clic droit + glisser = pivoter et incliner,
+       molette = zoomer). Pas d'orbite auto qui bloquerait les déplacements ;
+       l'orbite reste disponible à la demande via le bouton « Orbite ». */
+    if (map) {
+      stopOrbit();
+      map.flyTo({
+        center: s.center, zoom: s.zoom || 16.8,
+        pitch: state.is3d ? (s.pitch || 60) : 0,
+        bearing: s.bearing || 0,
+        duration: 3000, curve: 1.35, essential: true,
+        /* juste une décélération douce en fin de course, cadrage inchangé */
+        easing: function (t) { return 1 - Math.pow(1 - t, 3); }
+      });
+    }
+
+    document.getElementById('sites').style.display = 'none';
+    var d = document.getElementById('detail');
+    d.style.display = 'flex';
+    document.getElementById('d-name').textContent = s.name.replace(/\s*[—-]\s*/g, ' · ');
+    document.getElementById('d-meta').textContent = s.pays + ' · ' + (s.osm ? 'emprises OSM réelles' : 'emprise approchée');
+    document.getElementById('d-badges').innerHTML =
+      '<span class="bdg ' + (s.status === 'detruit' ? 'bdg-detruit' : 'bdg-endommage') + '">' + (s.status === 'detruit' ? 'Site détruit' : 'Site touché') + '</span>';
+    /* Récapitulatif des structures réellement identifiées (types OSM).
+       genericCat = la fonction « catégorie du site » (ex. Aéroport), à ne pas
+       confondre avec une vraie fonction de bâtiment. */
+    var genericCat = null;
+    (s.structures || []).forEach(function (b) { if (!b.osm_type && b.function) genericCat = b.function; });
+    var kinds = {};
+    (s.structures || []).forEach(function (b) {
+      if (!b.name || b.name === 'Bâtiment') return;
+      var realFn = b.function && b.function !== genericCat && b.function.length < 24;
+      var k = realFn ? b.function : b.name;   /* fonction précise sinon nom propre */
+      if (k && k !== genericCat) kinds[k] = (kinds[k] || 0) + 1;
+    });
+    var kk = Object.keys(kinds).sort(function (a, b) { return kinds[b] - kinds[a]; });
+    document.getElementById('d-struct').innerHTML = kk.length
+      ? '<p class="d-sub">Structures identifiées · source OSM</p>' + kk.map(function (k) {
+          return '<div class="stat-row"><span>' + esc(k) + '</span><b>' + kinds[k] + '</b></div>'; }).join('')
+      : '';
+
+    var evHost = document.getElementById('d-events');
+    evHost.innerHTML = (s.events || []).map(function (e) {
+      return '<div class="ev">' +
+        '<div class="ev-top">' + esc(e.type || 'Événement') + '</div>' +
+        '<div class="ev-meta">' + frDate(e.date) + ' · acteur ' + esc(e.actor || '?') + '</div>' +
+        '<div class="ev-desc">' + esc(e.description || '') + '</div></div>';
+    }).join('') || '<div class="ev-desc" style="padding:4px">Aucun événement détaillé.</div>';
+  }
+
+  document.getElementById('d-back').addEventListener('click', function () {
+    state.site = null;
+    setMode('carte');  /* retour vue d'ensemble : fond clair lisible */
+    updateCenters();
+    clearFocus();
+    document.getElementById('detail').style.display = 'none';
+    document.getElementById('sites').style.display = 'flex';
+    if (map) map.flyTo(Object.assign({ duration: 2200, essential: true }, HOME));
+  });
+
+  /* Trois fonds : carte (style clair), satellite (imagerie seule sous les
+     volumes, aplats vectoriels masqués), maquette (RIEN d'autre que les
+     données Algor Int : dalle + volumes sur fond studio, orbite lente). */
+  var OWN_LAYERS = { sat: 1, 'city-3d': 1, 'structures-3d': 1, 'perims': 1, 'perims-fill': 1, hits: 1, centers: 1, 'centers-lb': 1, 'maq-contours': 1, 'focus-fill': 1, 'focus-line': 1, 'target-outline': 1, 'target-glow': 1 };
+
+  /* Cercle géographique (rayon en mètres) pour le halo de focus */
+  function ringPoly(center, radiusM) {
+    var lng = center[0], lat = center[1];
+    var dx = radiusM / (111320 * Math.cos(lat * Math.PI / 180)), dy = radiusM / 110540, r = [];
+    for (var i = 0; i <= 48; i++) { var a = i / 48 * 6.2832; r.push([lng + dx * Math.cos(a), lat + dy * Math.sin(a)]); }
+    return { type: 'Feature', geometry: { type: 'Polygon', coordinates: [r] }, properties: {} };
+  }
+  function setFocus(site) {
+    if (!map || !map.getSource('focus')) return;
+    /* UN SEUL bâtiment mis en valeur : le bâtiment clé (celui qui a été visé).
+       Priorité au flag key ; à défaut, le bâtiment touché le plus central. */
+    var structs = site.structures || [];
+    var hit = structs.filter(function (b) { return b.key; })[0];
+    if (!hit) {
+      var c0 = site.center;
+      var damaged = structs.filter(function (b) { return b.damage && b.damage !== 'intact' && b.footprint && b.footprint[0]; });
+      hit = damaged.sort(function (a, b) {
+        return dist2(cenOf(a), c0) - dist2(cenOf(b), c0);
+      })[0];
+    }
+    var cen = site.center, targetFeats = [];
+    if (hit && hit.footprint && hit.footprint[0]) {
+      cen = cenOf(hit);
+      targetFeats.push({ type: 'Feature',
+        properties: { h: hit.height || 8, damage: hit.damage || 'endommage' },
+        geometry: { type: 'Polygon', coordinates: hit.footprint } });
+    }
+    map.getSource('focus').setData(ringPoly(cen, 48));
+    if (map.getSource('target')) map.getSource('target').setData({ type: 'FeatureCollection', features: targetFeats });
+  }
+  function cenOf(b) { var r = b.footprint[0], x = 0, y = 0; r.forEach(function (p) { x += p[0]; y += p[1]; }); return [x / r.length, y / r.length]; }
+  function dist2(a, b) { var dx = a[0] - b[0], dy = a[1] - b[1]; return dx * dx + dy * dy; }
+  function clearFocus() {
+    if (map && map.getSource('focus')) map.getSource('focus').setData({ type: 'FeatureCollection', features: [] });
+    if (map && map.getSource('target')) map.getSource('target').setData({ type: 'FeatureCollection', features: [] });
+  }
+  /* Décor maquette : la VRAIE géographie restylée en rendu « clay ».
+     Sol sable uniforme, routes réelles en rubans blancs, eau réelle en bleu
+     mat, relief conservé, zéro étiquette. Rien d'inventé : seul le style
+     change, les paints d'origine sont sauvegardés puis restaurés. */
+  var MAQ_SAVED = null;
+  function applyMaqBase(on) {
+    if (on) {
+      if (MAQ_SAVED) return;
+      MAQ_SAVED = {};
+      map.getStyle().layers.forEach(function (l) {
+        if (OWN_LAYERS[l.id]) return;
+        var sl = l['source-layer'] || '';
+        var save = { vis: map.getLayoutProperty(l.id, 'visibility') || 'visible', paints: [] };
+        function repaint(prop, val) {
+          save.paints.push([prop, map.getPaintProperty(l.id, prop)]);
+          map.setPaintProperty(l.id, prop, val);
+        }
+        if (l.type === 'background') {
+          repaint('background-color', '#E9E3D8');
+        } else if (l.type === 'fill' && /water/.test(sl + ' ' + l.id)) {
+          repaint('fill-color', '#B9C9DD');
+        } else if (sl === 'aeroway') {
+          /* pistes et taxiways réels : béton clair, le détail clé des aéroports */
+          if (l.type === 'fill') repaint('fill-color', '#D9D3C6');
+          else if (l.type === 'line') repaint('line-color', '#D9D3C6');
+          else map.setLayoutProperty(l.id, 'visibility', 'none');
+        } else if (l.type === 'fill' && sl === 'landuse') {
+          repaint('fill-color', '#E2DBCC');
+          repaint('fill-opacity', 0.5);
+        } else if (l.type === 'line' && sl === 'waterway') {
+          repaint('line-color', '#B9C9DD');
+        } else if (l.type === 'line' && sl === 'road') {
+          repaint('line-color', '#FBFAF6');
+        } else if (l.type === 'hillshade') {
+          /* relief conservé tel quel */
+        } else {
+          map.setLayoutProperty(l.id, 'visibility', 'none');
+        }
+        MAQ_SAVED[l.id] = save;
+      });
+    } else if (MAQ_SAVED) {
+      Object.keys(MAQ_SAVED).forEach(function (id) {
+        if (!map.getLayer(id)) return;
+        var s = MAQ_SAVED[id];
+        map.setLayoutProperty(id, 'visibility', s.vis);
+        (s.paints || []).forEach(function (p) { map.setPaintProperty(id, p[0], p[1]); });
+      });
+      MAQ_SAVED = null;
+    }
+  }
+
+  /* Étiquettes lisibles sur satellite : encre foncée + halo blanc, couleurs
+     d'origine sauvegardées puis restaurées en quittant le mode. */
+  var LBL_SAVED = null;
+  function applySatLabels(on) {
+    if (on) {
+      if (LBL_SAVED) return;
+      LBL_SAVED = {};
+      map.getStyle().layers.forEach(function (l) {
+        if (l.type !== 'symbol' || OWN_LAYERS[l.id]) return;
+        var s = {
+          color: map.getPaintProperty(l.id, 'text-color'),
+          halo: map.getPaintProperty(l.id, 'text-halo-color'),
+          hw: map.getPaintProperty(l.id, 'text-halo-width')
+        };
+        try {
+          map.setPaintProperty(l.id, 'text-color', '#1F1437');
+          map.setPaintProperty(l.id, 'text-halo-color', 'rgba(255,255,255,0.95)');
+          map.setPaintProperty(l.id, 'text-halo-width', 1.6);
+          LBL_SAVED[l.id] = s;
+        } catch (e) { /* couche sans texte */ }
+      });
+    } else if (LBL_SAVED) {
+      Object.keys(LBL_SAVED).forEach(function (id) {
+        if (!map.getLayer(id)) return;
+        var s = LBL_SAVED[id];
+        map.setPaintProperty(id, 'text-color', s.color);
+        map.setPaintProperty(id, 'text-halo-color', s.halo);
+        map.setPaintProperty(id, 'text-halo-width', s.hw);
+      });
+      LBL_SAVED = null;
+    }
+  }
+
+  function setMode(mode) {
+    state.mode = mode;
+    if (mode !== 'maq') stopOrbit();
+    if (!map || !mapReady || !map.getLayer('sat')) return;
+    /* Retour à l'état de base du style, puis application du mode cible */
+    applyMaqBase(false);
+    map.getStyle().layers.forEach(function (l) {
+      if (!OWN_LAYERS[l.id]) map.setLayoutProperty(l.id, 'visibility', 'visible');
+    });
+    map.setLayoutProperty('sat', 'visibility', mode === 'sat' ? 'visible' : 'none');
+    applySatLabels(false);   /* toujours restaurer avant d'appliquer le mode cible */
+    if (mode === 'sat') {
+      map.getStyle().layers.forEach(function (l) {
+        if (OWN_LAYERS[l.id]) return;
+        map.setLayoutProperty(l.id, 'visibility', l.type === 'symbol' ? 'visible' : 'none');
+      });
+      applySatLabels(true);
+    } else if (mode === 'maq') {
+      applyMaqBase(true);
+    }
+    /* Maquette : la ville entière reste en volumes clay très clairs, le site
+       curé ressort par la couleur ; l'échelle urbaine donne le réalisme */
+    map.setLayoutProperty('city-3d', 'visibility', 'visible');
+    map.setPaintProperty('city-3d', 'fill-extrusion-color', mode === 'maq' ? '#F3EEE4' : '#EFE9DC');
+    map.setLayoutProperty('maq-contours', 'visibility', mode === 'maq' ? 'visible' : 'none');
+    /* Le périmètre devient une dalle pleine sous les volumes */
+    map.setPaintProperty('perims-fill', 'fill-color', mode === 'maq' ? '#F1EDF5' : '#6B3FA0');
+    map.setPaintProperty('perims-fill', 'fill-opacity', mode === 'maq' ? 0.9 : 0.05);
+    map.setPaintProperty('perims', 'line-dasharray', mode === 'maq' ? [1, 0] : [2.2, 1.6]);
+    map.setPaintProperty('perims', 'line-width', mode === 'maq' ? 3 : 2.5);
+  }
+
+  /* Perspectives : bascule fluide entre points de vue sur le site courant */
+  function goView(kind) {
+    document.querySelectorAll('.vbtn').forEach(function (b) { b.classList.toggle('on', b.dataset.v === kind); });
+    if (state.site == null || !map || !mapReady) return;
+    var s = SITES[state.site];
+    stopOrbit();
+    var z = s.zoom || 16.8;
+    if (kind === 'orbit') {
+      map.easeTo({ pitch: 62, duration: 900, essential: true });
+      map.once('moveend', startOrbit);
+    } else if (kind === 'air') {
+      map.flyTo({ center: s.center, zoom: z + 0.2, pitch: 0, bearing: 0, duration: 1600, essential: true });
+    } else if (kind === 'ras') {
+      map.flyTo({ center: s.center, zoom: z + 0.9, pitch: 76, bearing: (s.bearing || 0) + 35, duration: 1900, essential: true });
+    } else {
+      map.flyTo({ center: s.center, zoom: z, pitch: s.pitch || 60, bearing: s.bearing || 0, duration: 1600, essential: true });
+    }
+  }
+  document.querySelectorAll('.vbtn').forEach(function (b) {
+    b.addEventListener('click', function () { goView(b.dataset.v); });
+  });
+
+  var gesturesTimer = null;
+  function showGestures() {
+    var g = document.getElementById('gestures');
+    g.classList.add('show');
+    clearTimeout(gesturesTimer);
+    gesturesTimer = setTimeout(function () { g.classList.remove('show'); }, 9000);
+  }
+
+  /* Marqueurs de sites : visibles seulement en vue d'ensemble */
+  function updateCenters() {
+    if (!map || !mapReady || !map.getLayer('centers')) return;
+    var vis = state.site == null ? 'visible' : 'none';
+    map.setLayoutProperty('centers', 'visibility', vis);
+    map.setLayoutProperty('centers-lb', 'visibility', vis);
+  }
+
+  /* Orbite lente autour du site : l'effet maquette qu'on fait tourner */
+  function startOrbit() {
+    if (state.orbiting) return;
+    state.orbiting = true;
+    (function frame() {
+      if (!state.orbiting || !map) return;
+      map.setBearing(map.getBearing() + 0.045);
+      requestAnimationFrame(frame);
+    })();
+  }
+  function stopOrbit() { state.orbiting = false; }
+
+  /* ─────────── Utilitaires ─────────── */
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function frDate(iso) {
+    if (!iso) return '';
+    var ms = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+    var p = String(iso).split('-');
+    return p.length === 3 ? parseInt(p[2], 10) + ' ' + ms[parseInt(p[1], 10) - 1] + ' ' + p[0] : iso;
+  }
+})();
+</script>
+</body>
+</html>

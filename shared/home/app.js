@@ -1,0 +1,466 @@
+(function () {
+/* global React, ReactDOM, HomeView, ConsoleView, ConsoleGate, ComptesView, ArchivesView, VeilleView, RapportsView, PlatformView */
+
+const {
+  useState,
+  useEffect,
+  useRef
+} = React;
+
+// Portee du CSS de l'accueil v4 (DA 09-2026, mouvement) : attribut pose sur <html>
+// par l'app de l'accueil uniquement, les rubriques statiques ne sont pas concernees.
+document.documentElement.setAttribute('data-home-v4', '');
+
+// Statut « equipe » : true (admin/editor), false (client/anon), null (en cours).
+// Sert a verrouiller la Console interne et ses sous-vues. La vraie protection
+// des donnees reste cote serveur (RLS Supabase) ; ceci cache l'UI aux clients.
+function useStaff() {
+  const [staff, setStaff] = useState(null);
+  useEffect(() => {
+    let on = true,
+      tries = 0;
+    async function check() {
+      const c = window.algorAuth && window.algorAuth.supabase;
+      if (!c) {
+        if (on && tries++ < 20) setTimeout(check, 250);
+        return;
+      }
+      try {
+        const {
+          data: s
+        } = await c.auth.getSession();
+        const uid = s && s.session && s.session.user && s.session.user.id;
+        if (!uid) {
+          if (on) setStaff(false);
+          return;
+        }
+        const r = await c.from('profiles').select('role').eq('id', uid).single();
+        const role = r.data && r.data.role;
+        if (on) setStaff(role === 'admin' || role === 'editor');
+      } catch (e) {
+        if (on) setStaff(false);
+      }
+    }
+    check();
+    const recheck = () => {
+      tries = 0;
+      check();
+    };
+    window.addEventListener('algorAuthStateChanged', recheck);
+    window.addEventListener('algorAuthReady', recheck);
+    return () => {
+      on = false;
+      window.removeEventListener('algorAuthStateChanged', recheck);
+      window.removeEventListener('algorAuthReady', recheck);
+    };
+  }, []);
+  return staff;
+}
+
+// Statut « premium » du compte connecté : plan premium ou rôle équipe
+// (admin/editor), soit l'accès réel aux 6 théâtres. Alimente le badge
+// Premium du header. Même mécanique de détection que useStaff.
+function usePremium() {
+  const [premium, setPremium] = useState(false);
+  useEffect(() => {
+    let on = true,
+      tries = 0;
+    async function check() {
+      const c = window.algorAuth && window.algorAuth.supabase;
+      if (!c) {
+        if (on && tries++ < 20) setTimeout(check, 250);
+        return;
+      }
+      try {
+        const {
+          data: s
+        } = await c.auth.getSession();
+        const uid = s && s.session && s.session.user && s.session.user.id;
+        if (!uid) {
+          if (on) setPremium(false);
+          return;
+        }
+        const r = await c.from('profiles').select('role, plan').eq('id', uid).single();
+        const p = r.data || {};
+        if (on) setPremium(p.plan === 'premium' || p.role === 'admin' || p.role === 'editor');
+      } catch (e) {
+        if (on) setPremium(false);
+      }
+    }
+    check();
+    const recheck = () => {
+      tries = 0;
+      check();
+    };
+    window.addEventListener('algorAuthStateChanged', recheck);
+    window.addEventListener('algorAuthReady', recheck);
+    return () => {
+      on = false;
+      window.removeEventListener('algorAuthStateChanged', recheck);
+      window.removeEventListener('algorAuthReady', recheck);
+    };
+  }, []);
+  return premium;
+}
+
+// Icône « renseignement » : œil de surveillance dans un cadre de visée.
+function IntelIcon({
+  className
+}) {
+  return /*#__PURE__*/React.createElement("svg", {
+    className: className,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "2",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("path", {
+    d: "M3 7V5a2 2 0 0 1 2-2h2"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M17 3h2a2 2 0 0 1 2 2v2"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M21 17v2a2 2 0 0 1-2 2h-2"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M7 21H5a2 2 0 0 1-2-2v-2"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "12",
+    cy: "12",
+    r: "1"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M18.944 12.33a1 1 0 0 0 0-.66 7.5 7.5 0 0 0-13.888 0 1 1 0 0 0 0 .66 7.5 7.5 0 0 0 13.888 0"
+  }));
+}
+function PopCheck() {
+  return /*#__PURE__*/React.createElement("svg", {
+    className: "cta-pop__check",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "3",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("polyline", {
+    points: "20 6 9 17 4 12"
+  }));
+}
+function App() {
+  // Ancres : #comptes ouvre directement la vue Comptes (lien des notifs
+  // d'inscription), #console ouvre la Console. Retour depuis /cloud/, /admin/...
+  const [view, setView] = useState(window.location.hash === '#comptes' ? 'comptes' : window.location.hash === '#rapports' ? 'rapports' : window.location.hash === '#console' ? 'console' : 'home');
+  const [clock, setClock] = useState('--:--');
+  const staff = useStaff();
+  const premium = usePremium();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [authLoggedIn, setAuthLoggedIn] = useState(!!(window.algorAuthState && window.algorAuthState.loggedIn));
+
+  // Co-branding : le logo est rattaché au COMPTE (profiles.logo) pour suivre le
+  // client partout, sur tout appareil. localStorage = cache d'affichage instantané.
+  const [clientLogo, setClientLogo] = useState(() => {
+    try {
+      return localStorage.getItem('algor-client-logo') || '';
+    } catch (e) {
+      return '';
+    }
+  });
+  const logoInputRef = useRef(null);
+  function sbClient() {
+    return window.algorAuth && window.algorAuth.supabase || null;
+  }
+  async function sbUserId() {
+    const c = sbClient();
+    if (!c) return null;
+    try {
+      const r = await c.auth.getSession();
+      return r.data && r.data.session && r.data.session.user ? r.data.session.user.id : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function applyLogoLocal(url) {
+    setClientLogo(url || '');
+    try {
+      if (url) localStorage.setItem('algor-client-logo', url);else localStorage.removeItem('algor-client-logo');
+    } catch (e) {}
+  }
+  async function saveLogo(url) {
+    applyLogoLocal(url);
+    const c = sbClient();
+    const uid = await sbUserId();
+    if (c && uid) {
+      try {
+        await c.from('profiles').update({
+          logo: url || null
+        }).eq('id', uid);
+      } catch (e) {}
+    }
+  }
+  // Source de vérité = le compte : on charge profiles.logo dès qu'une session existe.
+  useEffect(function () {
+    let on = true;
+    async function load() {
+      const c = sbClient();
+      if (!c) return;
+      const uid = await sbUserId();
+      if (!uid || !on) return;
+      try {
+        const r = await c.from('profiles').select('logo').eq('id', uid).single();
+        if (on && r.data) applyLogoLocal(r.data.logo || '');
+      } catch (e) {}
+    }
+    load();
+    window.addEventListener('algorAuthReady', load);
+    window.addEventListener('algorAuthStateChanged', load);
+    return function () {
+      on = false;
+      window.removeEventListener('algorAuthReady', load);
+      window.removeEventListener('algorAuthStateChanged', load);
+    };
+  }, []);
+  function downscaleLogo(dataUrl, isSvg, cb) {
+    if (isSvg) {
+      cb(dataUrl);
+      return;
+    } // SVG : on garde le vectoriel tel quel
+    const img = new Image();
+    img.onload = function () {
+      const maxH = 320,
+        scale = Math.min(1, maxH / (img.height || maxH));
+      const w = Math.max(1, Math.round(img.width * scale)),
+        h = Math.max(1, Math.round(img.height * scale));
+      const cv = document.createElement('canvas');
+      cv.width = w;
+      cv.height = h;
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      let out;
+      try {
+        out = cv.toDataURL('image/png');
+      } catch (e) {
+        out = dataUrl;
+      }
+      if (out.length > 220000) {
+        try {
+          const j = cv.toDataURL('image/jpeg', 0.85);
+          if (j.length < out.length) out = j;
+        } catch (e) {}
+      }
+      cb(out);
+    };
+    img.onerror = function () {
+      cb(dataUrl);
+    };
+    img.src = dataUrl;
+  }
+  function onLogoPick(e) {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!f) return;
+    if (!/^image\//.test(f.type)) {
+      alert('Choisissez un fichier image (PNG, JPG, SVG…).');
+      return;
+    }
+    if (f.size > 4 * 1024 * 1024) {
+      alert('Image trop lourde : 4 Mo maximum.');
+      return;
+    }
+    const r = new FileReader();
+    r.onload = function () {
+      downscaleLogo(r.result, f.type === 'image/svg+xml', function (small) {
+        saveLogo(small);
+      });
+    };
+    r.readAsDataURL(f);
+  }
+  function resetLogo() {
+    saveLogo('');
+  }
+
+  // Reflète l'état de session sur le bouton « Connexion » (texte « Connecté »
+  // si une session est active). site-auth.js dispatch l'événement.
+  useEffect(() => {
+    const h = e => setAuthLoggedIn(!!(e.detail && e.detail.loggedIn));
+    window.addEventListener('algorAuthStateChanged', h);
+    return () => window.removeEventListener('algorAuthStateChanged', h);
+  }, []);
+
+  // Header transparent et clair tant que l'on est au-dessus du hero sombre
+  // de l'accueil (puis retour au header blanc habituel en defilant).
+  useEffect(() => {
+    const root = document.documentElement;
+    function sync() {
+      // Ciel étoilé clair (14/09) : le hero n'est plus sombre, le header reste blanc.
+      const hero = view === 'home' ? document.querySelector('.hero--night:not(.hero--sky)') : null;
+      const over = root.hasAttribute('data-sky-dark') || !!hero && window.scrollY < hero.offsetHeight - 72;
+      if (over) root.setAttribute('data-hero-dark', '');else root.removeAttribute('data-hero-dark');
+    }
+    sync();
+    const id = setTimeout(sync, 50);
+    window.addEventListener('scroll', sync, {
+      passive: true
+    });
+    window.addEventListener('resize', sync);
+    return () => {
+      clearTimeout(id);
+      window.removeEventListener('scroll', sync);
+      window.removeEventListener('resize', sync);
+      root.removeAttribute('data-hero-dark');
+    };
+  }, [view]);
+
+  // Lock theme + accent (no Tweaks panel in production).
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.documentElement.setAttribute('data-accent', 'violet');
+    if (window.location.hash) {
+      history.replaceState(null, '', window.location.pathname);
+    }
+  }, []);
+
+  // Live clock (Paris)
+  useEffect(() => {
+    const fmt = () => {
+      const d = new Date();
+      const opts = {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: 'Europe/Paris'
+      };
+      setClock(d.toLocaleTimeString('fr-FR', opts));
+    };
+    fmt();
+    const id = setInterval(fmt, 30 * 1000);
+    return () => clearInterval(id);
+  }, []);
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("header", {
+    className: 'app-header' + (menuOpen ? ' is-open' : '')
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "app-header__inner"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "brand",
+    onClick: () => setView('home')
+  }, clientLogo ? /*#__PURE__*/React.createElement("img", {
+    className: "brand__logo",
+    src: clientLogo,
+    alt: "Logo entreprise"
+  }) : /*#__PURE__*/React.createElement("div", {
+    className: "brand__mark"
+  }), !clientLogo && /*#__PURE__*/React.createElement("div", {
+    className: "brand__body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "brand__name"
+  }, "Algor ", /*#__PURE__*/React.createElement("span", null, "Acces")), /*#__PURE__*/React.createElement("div", {
+    className: "brand__tag"
+  }, "La plateforme de cartographie d'Algor Int"))), premium && /*#__PURE__*/React.createElement("span", {
+    className: "premium-chip",
+    "aria-label": "Compte premium"
+  }, /*#__PURE__*/React.createElement(IntelIcon, null), " Premium"), /*#__PURE__*/React.createElement("nav", {
+    className: "site-nav",
+    "aria-label": "Rubriques"
+  }, /*#__PURE__*/React.createElement("a", {
+    href: "/plateforme/"
+  }, "Plateforme"), /*#__PURE__*/React.createElement("a", {
+    href: "/veille/",
+    className: premium ? 'site-nav__premium' : undefined
+  }, "Veille"), /*#__PURE__*/React.createElement("a", {
+    href: "/debunkage/"
+  }, "D\xE9bunkage"), /*#__PURE__*/React.createElement("a", {
+    href: "/methodologie/"
+  }, "M\xE9thodologie"), /*#__PURE__*/React.createElement("a", {
+    href: "/offres/"
+  }, "Offres"), /*#__PURE__*/React.createElement("a", {
+    href: "/theatres/"
+  }, "Th\xE9\xE2tres"), /*#__PURE__*/React.createElement("a", {
+    href: "/a-propos/"
+  }, "\xC0 propos"), /*#__PURE__*/React.createElement("a", {
+    href: "/contact/"
+  }, "Contact")), /*#__PURE__*/React.createElement("div", {
+    className: "app-header__right"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lang-slot"
+  }), authLoggedIn && /*#__PURE__*/React.createElement("span", {
+    className: "logo-tool"
+  }, /*#__PURE__*/React.createElement("input", {
+    ref: logoInputRef,
+    type: "file",
+    accept: "image/*",
+    onChange: onLogoPick,
+    hidden: true
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "logo-import",
+    onClick: () => logoInputRef.current && logoInputRef.current.click(),
+    "aria-label": "T\xE9l\xE9charger le logo de votre entreprise",
+    "data-tip": "T\xE9l\xE9charger le logo de votre entreprise"
+  }, /*#__PURE__*/React.createElement("svg", {
+    width: "17",
+    height: "17",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "2",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("path", {
+    d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M17 8l-5-5-5 5"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M12 3v12"
+  }))), clientLogo && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "logo-reset",
+    onClick: resetLogo,
+    title: "R\xE9tablir le logo Algor Acces"
+  }, "R\xE9tablir")), premium ? /*#__PURE__*/React.createElement("a", {
+    className: "premium-badge",
+    href: "#",
+    "data-algor-login": true,
+    title: "Compte premium : acc\xE8s complet aux 6 th\xE9\xE2tres"
+  }, /*#__PURE__*/React.createElement(IntelIcon, {
+    className: "premium-badge__icon"
+  }), " Premium") : /*#__PURE__*/React.createElement("a", {
+    className: 'site-login' + (authLoggedIn ? ' is-logged' : ''),
+    href: "#",
+    "data-algor-login": true
+  }, authLoggedIn ? 'Connecté' : 'Connexion'), premium ? /*#__PURE__*/React.createElement("a", {
+    className: "site-cta",
+    href: "/theatres/"
+  }, "Acc\xE9der aux th\xE9\xE2tres") : /*#__PURE__*/React.createElement("a", {
+    className: "site-cta",
+    href: "/offres/"
+  }, "Voir les offres")), /*#__PURE__*/React.createElement("button", {
+    className: "site-burger",
+    "aria-label": "Menu",
+    "aria-expanded": menuOpen,
+    onClick: () => setMenuOpen(o => !o)
+  }, /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", null)))), view === 'home' && /*#__PURE__*/React.createElement(HomeView, {
+    onEnter: () => setView('platform'),
+    onConsole: () => setView('console'),
+    clock: clock
+  }), ['console', 'comptes', 'archives', 'veille', 'rapports'].includes(view) && staff !== true && /*#__PURE__*/React.createElement(ConsoleGate, {
+    checking: staff === null,
+    onBack: () => setView('home')
+  }), view === 'console' && staff === true && /*#__PURE__*/React.createElement(ConsoleView, {
+    onBack: () => setView('home'),
+    onArchives: () => setView('archives'),
+    onVeille: () => setView('veille'),
+    onComptes: () => setView('comptes'),
+    onRapports: () => setView('rapports')
+  }), view === 'comptes' && staff === true && /*#__PURE__*/React.createElement(ComptesView, {
+    onBack: () => setView('console')
+  }), view === 'archives' && staff === true && /*#__PURE__*/React.createElement(ArchivesView, {
+    onBack: () => setView('console')
+  }), view === 'veille' && staff === true && /*#__PURE__*/React.createElement(VeilleView, {
+    onBack: () => setView('console')
+  }), view === 'rapports' && staff === true && /*#__PURE__*/React.createElement(RapportsView, {
+    onBack: () => setView('console')
+  }), view === 'platform' && /*#__PURE__*/React.createElement(PlatformView, {
+    onBack: () => setView('home')
+  }));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(App, null));
+})();
