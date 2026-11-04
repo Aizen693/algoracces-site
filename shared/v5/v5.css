@@ -87,18 +87,18 @@ img, video, canvas { display: block; max-width: 100%; }
 /* Cloche de veille (chrome.js) */
 .sq .sq__cloche { position: relative; }
 .sq .sq__cloche.is-on { background: var(--band); }
-.sq__pastille { position: absolute; top: 5px; right: 4px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: #B4323F; color: #FFF; font: 500 10px/16px var(--mono); text-align: center; }
+.sq__pastille { position: absolute; top: 5px; right: 4px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: #B4323F; color: #FFF; font: 500 10px/16px var(--sans); text-align: center; }
 .cloche { position: fixed; z-index: 70; top: 86px; right: var(--gutter); width: min(420px, calc(100vw - 32px)); max-height: min(70vh, 620px); display: flex; flex-direction: column; background: var(--paper); color: var(--ink); border: 1px solid var(--ink); border-radius: 6px; box-shadow: 0 24px 60px -24px rgba(0,0,0,.45); }
 .cloche[hidden] { display: none; }
 .cloche__tete { display: grid; gap: 4px; padding: 16px 18px 0; border-bottom: 1px solid var(--line); }
 .cloche__l1 { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .cloche__titre { font-size: 17px; font-weight: 500; letter-spacing: -0.01em; }
-.cloche__nl { font: 500 11px var(--mono); letter-spacing: .04em; text-transform: uppercase; color: var(--ink); }
+.cloche__nl { font: 500 12px var(--sans); letter-spacing: .04em; text-transform: uppercase; color: var(--ink); }
 .cloche__nl::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 7px; border-radius: 50%; background: var(--ink); vertical-align: 1px; }
-.cloche__s { font: 400 12px var(--mono); color: var(--muted); }
+.cloche__s { font: 400 13px var(--sans); color: var(--muted); }
 .cloche__filtres { display: flex; gap: 18px; margin-top: 10px; }
 .cloche__filtres[hidden] { display: none; }
-.cloche__filtres button { display: inline-flex; align-items: center; gap: 7px; padding: 8px 0 9px; margin-bottom: -1px; border: 0; border-bottom: 1px solid transparent; background: none; color: var(--muted); font: 400 12px var(--mono); cursor: pointer; }
+.cloche__filtres button { display: inline-flex; align-items: center; gap: 7px; padding: 8px 0 9px; margin-bottom: -1px; border: 0; border-bottom: 1px solid transparent; background: none; color: var(--muted); font: 400 13px var(--sans); cursor: pointer; }
 .cloche__filtres button:hover:not(:disabled) { color: var(--ink); }
 .cloche__filtres button[aria-pressed="true"] { color: var(--ink); border-bottom-color: var(--ink); }
 .cloche__filtres button:disabled { opacity: .4; cursor: default; }
@@ -109,13 +109,13 @@ img, video, canvas { display: block; max-width: 100%; }
 .cloche__sv--critique { background: #B4323F; }
 .cloche__liste { overflow-y: auto; overscroll-behavior: contain; }
 .cloche__jour ol { list-style: none; margin: 0; padding: 0; }
-.cloche__jt { position: sticky; top: 0; z-index: 1; display: flex; justify-content: space-between; margin: 0; padding: 9px 18px 8px; background: var(--paper); border-bottom: 1px solid var(--line); font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink); }
+.cloche__jt { position: sticky; top: 0; z-index: 1; display: flex; justify-content: space-between; margin: 0; padding: 9px 18px 8px; background: var(--paper); border-bottom: 1px solid var(--line); font: 500 12px var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--ink); }
 .cloche__jt span + span { font-weight: 400; color: var(--muted); }
 .cloche__jour + .cloche__jour .cloche__jt { border-top: 1px solid var(--line); }
 .cloche__jour li + li { border-top: 1px solid var(--line); }
 .cloche__note { position: relative; display: block; padding: 12px 18px 13px; color: inherit; text-decoration: none; }
 .cloche__note:hover, .cloche__note:focus-visible { background: var(--band); outline: none; }
-.cloche__meta { display: flex; align-items: center; gap: 8px; min-width: 0; font: 400 12px var(--mono); color: var(--muted); }
+.cloche__meta { display: flex; align-items: center; gap: 8px; min-width: 0; font: 400 13px var(--sans); color: var(--muted); }
 .cloche__ou { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .cloche__lieu::before { content: ' · '; }
 .cloche__droite { margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 10px; }
