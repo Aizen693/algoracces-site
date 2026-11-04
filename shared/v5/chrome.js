@@ -339,10 +339,29 @@
   }
   window.V5.compteVeille = compteVeille;
 
+  /* Panneau de la cloche (refait le 04/11/2026) : notes groupées par jour, gravité en repère
+     discret (carré de couleur, libellé seulement pour le critique), théâtre et lieu en métadonnée,
+     une ligne de résumé public, lu et non lu distingués, filtre par gravité, états vides soignés.
+     Le fil ne porte que la date du jour : pas d'heure, donc pas de « il y a 2 h ».
+     Lu / non lu : date vue la plus récente (algor-veille-seen, clé historique) + identifiants
+     déjà vus ce jour-là (algor-veille-lus), pour qu'une note arrivée le même jour reste neuve. */
   function cloche() {
     var sq = d.querySelector('.nav .sq');
     if (!sq || sq.querySelector('.sq__cloche')) return;
-    var lire = function () { try { return localStorage.getItem('algor-veille-seen') || ''; } catch (e) { return ''; } };
+    var stock = {
+      lire: function (k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } },
+      ecrire: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+    };
+    var etatLu = function () {
+      // Sans liste d'identifiants (navigateur venu avant le 04/11), le jour vu compte comme lu en entier.
+      var vu = stock.lire('algor-veille-seen'), brut = stock.lire('algor-veille-lus'), ids = null;
+      if (brut) { ids = {}; try { (JSON.parse(brut) || []).forEach(function (x) { ids[x] = 1; }); } catch (e) {} }
+      return { vu: vu, ids: ids };
+    };
+    var estNeuf = function (it, e) {
+      var dt = String(it.date || '').slice(0, 10);
+      return dt > e.vu || (!!e.ids && dt === e.vu && !e.ids[it.id || it.titre]);
+    };
     var btn = d.createElement('button');
     btn.type = 'button'; btn.className = 'sq__cloche'; btn.setAttribute('aria-label', 'Fil de veille');
     btn.setAttribute('aria-expanded', 'false'); btn.setAttribute('aria-controls', 'cloche-panneau');
@@ -351,34 +370,105 @@
     sq.insertBefore(btn, rech && rech.parentNode === sq ? rech : null);
     var pan = d.createElement('aside');
     pan.id = 'cloche-panneau'; pan.className = 'cloche'; pan.setAttribute('aria-label', 'Fil de veille'); pan.hidden = true;
-    pan.innerHTML = '<div class="cloche__tete"><span>Fil de veille</span><span class="cloche__s">OSINT · six théâtres</span></div><ol class="cloche__liste" data-lenis-prevent><li class="cloche__vide">Chargement…</li></ol><a class="cloche__pied" href="/veille/?onglet=geo">Toute la veille <span aria-hidden="true">→</span></a>';
+    pan.innerHTML =
+      '<div class="cloche__tete">' +
+        '<div class="cloche__l1"><span class="cloche__titre">Fil de veille</span><span class="cloche__nl" hidden></span></div>' +
+        '<span class="cloche__s">OSINT · six théâtres</span>' +
+        '<div class="cloche__filtres" role="group" aria-label="Filtrer par gravité" hidden></div>' +
+      '</div>' +
+      '<div class="cloche__liste" data-lenis-prevent><p class="cloche__vide">Chargement…</p></div>' +
+      '<a class="cloche__pied" href="/veille/?onglet=geo">Toute la veille <span aria-hidden="true">→</span></a>';
     d.body.appendChild(pan);
-    var items = [], pastille = btn.querySelector('.sq__pastille');
+    var items = [], pastille = btn.querySelector('.sq__pastille'), filtre = 'tout', erreur = false;
     var compter = function () {
-      var vu = lire(), n = items.filter(function (it) { return String(it.date || '') > vu; }).length;
+      var e = etatLu(), n = items.filter(function (it) { return estNeuf(it, e); }).length;
       pastille.hidden = !n; pastille.textContent = n > 9 ? '9+' : String(n);
       btn.setAttribute('aria-label', n ? 'Fil de veille, ' + n + ' note' + (n > 1 ? 's' : '') + ' non lue' + (n > 1 ? 's' : '') : 'Fil de veille');
     };
-    var date = function (s) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s || ''); return m ? (+m[3]) + ' ' + MOIS[+m[2] - 1] : ''; };
-    var remplir = function () {
-      var vu = lire(), ol = pan.querySelector('.cloche__liste');
-      if (!items.length) { ol.innerHTML = '<li class="cloche__vide">' + (prefs ? 'Aucune note ne correspond à votre veille pour le moment.' : 'Aucune note pour le moment.') + '</li>'; return; }
-      ol.innerHTML = items.slice(0, 12).map(function (it) {
-        var sv = SEV[it.severite] || SEV.info, neuf = String(it.date || '') > vu;
-        var lien = it.source === 'radio' ? '/veille/?onglet=radio' : '/veille/?onglet=geo';
-        return '<li><a href="' + lien + '"' + (neuf ? ' class="is-neuf"' : '') + '><span class="cloche__meta"><i style="background:' + sv[1] + '" title="' + sv[0] + '"></i>' +
-          esc(TH[it.theatre] || it.theatre || '') + (it.source === 'radio' ? ' · Radio' : '') + ' · ' + esc(date(it.date)) + (neuf ? '<b>Nouveau</b>' : '') + '</span><span class="cloche__t">' + esc(fr(it.titre)) + '</span></a></li>';
+    var jourIso = function (dec) { var x = new Date(); x.setDate(x.getDate() - dec); return x.getFullYear() + '-' + ('0' + (x.getMonth() + 1)).slice(-2) + '-' + ('0' + x.getDate()).slice(-2); };
+    var jour = function (s) {
+      if (s === jourIso(0)) return 'Aujourd’hui';
+      if (s === jourIso(1)) return 'Hier';
+      var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s || ''); return m ? (+m[3]) + ' ' + MOIS[+m[2] - 1] : '';
+    };
+    var pluriel = function (n, mot) { return n + ' ' + mot + (n > 1 ? 's' : ''); };
+    var vide = function (titre, texte) {
+      return '<div class="cloche__vide"><p class="cloche__vide-t">' + titre + '</p>' + (texte ? '<p>' + texte + '</p>' : '') + '</div>';
+    };
+    var filtres = function (e) {
+      var box = pan.querySelector('.cloche__filtres');
+      var n = { tout: items.length, critique: 0, alerte: 0 };
+      items.forEach(function (it) { if (n[it.severite] != null) n[it.severite]++; });
+      if (!items.length) { box.hidden = true; return; }
+      if (filtre !== 'tout' && !n[filtre]) filtre = 'tout';
+      box.hidden = false;
+      box.innerHTML = [['tout', 'Tout'], ['critique', 'Critique'], ['alerte', 'Alerte']].map(function (f) {
+        return '<button type="button" data-f="' + f[0] + '" aria-pressed="' + (filtre === f[0]) + '"' + (n[f[0]] ? '' : ' disabled') + '>' +
+          (f[0] === 'tout' ? '' : '<i class="cloche__sv cloche__sv--' + f[0] + '" aria-hidden="true"></i>') +
+          '<span>' + f[1] + '</span><span class="cloche__n">' + n[f[0]] + '</span></button>';
+      }).join('');
+      var nl = pan.querySelector('.cloche__nl'), k = items.filter(function (it) { return estNeuf(it, e); }).length;
+      nl.hidden = !k; nl.textContent = k ? pluriel(k, 'nouvelle') : '';
+    };
+    var remplir = function (e) {
+      e = e || etatLu();
+      var box = pan.querySelector('.cloche__liste');
+      filtres(e);
+      if (erreur && !items.length) { box.innerHTML = vide('Fil indisponible', 'Le fil de veille ne répond pas pour le moment. Réessayez dans quelques minutes.'); return; }
+      if (!items.length) {
+        box.innerHTML = prefs
+          ? vide('Rien pour votre veille', 'Aucune note ne correspond à vos critères pour le moment. Élargissez vos théâtres ou vos mots-clés pour en recevoir davantage.')
+          : vide('Aucune note pour le moment.', 'Les notes de nos analystes apparaîtront ici dès leur publication.');
+        return;
+      }
+      var liste = items.filter(function (it) { return filtre === 'tout' || it.severite === filtre; }).slice(0, 30);
+      var groupes = [], cle = null;
+      liste.forEach(function (it) {
+        var j = String(it.date || '').slice(0, 10);
+        if (j !== cle) { groupes.push({ j: j, notes: [] }); cle = j; }
+        groupes[groupes.length - 1].notes.push(it);
+      });
+      box.innerHTML = groupes.map(function (g) {
+        return '<section class="cloche__jour"><h3 class="cloche__jt"><span>' + esc(jour(g.j)) + '</span><span>' + pluriel(g.notes.length, 'note') + '</span></h3><ol>' +
+          g.notes.map(function (it) {
+            var sv = SEV[it.severite] ? it.severite : 'info', neuf = estNeuf(it, e);
+            var radio = it.source === 'radio';
+            var lien = radio ? '/veille/?onglet=radio' : '/veille/?onglet=geo' + (it.id ? '&note=' + encodeURIComponent(it.id) : '');
+            var th = TH[it.theatre] || it.theatre || '', lieu = radio ? 'Radio' : (it.lieu && it.lieu !== th ? it.lieu : '');
+            var resume = fr(it.resume || '');
+            return '<li><a href="' + esc(lien) + '" class="cloche__note' + (neuf ? ' is-neuf' : '') + '">' +
+              '<span class="cloche__meta"><i class="cloche__sv cloche__sv--' + sv + '" title="' + SEV[sv][0] + '"></i>' +
+                '<span class="cloche__ou"><span>' + esc(th) + '</span>' + (lieu ? '<span class="cloche__lieu">' + esc(lieu) + '</span>' : '') + '</span>' +
+                (sv === 'critique' || neuf ? '<span class="cloche__droite">' +
+                  (sv === 'critique' ? '<span class="cloche__crit">Critique</span>' : '') +
+                  (neuf ? '<span class="cloche__neuf" title="Non lue"></span>' : '') + '</span>' : '') +
+              '</span>' +
+              '<span class="cloche__t">' + esc(fr(it.titre)) + '</span>' +
+              (resume ? '<span class="cloche__r">' + esc(resume) + '</span>' : '') +
+            '</a></li>';
+          }).join('') + '</ol></section>';
       }).join('');
     };
-    var ouvert = false;
+    pan.addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('.cloche__filtres button');
+      if (!b || b.disabled) return;
+      filtre = b.getAttribute('data-f'); remplir(ouvertAvec);
+      pan.querySelector('.cloche__liste').scrollTop = 0;
+    });
+    var ouvert = false, ouvertAvec = null;
     var basculer = function (o) {
       ouvert = o; pan.hidden = !o; btn.setAttribute('aria-expanded', String(o)); btn.classList.toggle('is-on', o);
       if (o) {
-        remplir();
-        var latest = items.reduce(function (m, it) { return String(it.date || '') > m ? String(it.date) : m; }, '');
-        if (latest) { try { localStorage.setItem('algor-veille-seen', latest); } catch (e) {} }
+        // L'état lu est figé à l'ouverture : les notes neuves restent marquées tant que le panneau est ouvert.
+        ouvertAvec = etatLu(); remplir(ouvertAvec);
+        var latest = items.reduce(function (m, it) { var x = String(it.date || '').slice(0, 10); return x > m ? x : m; }, '');
+        if (latest) {
+          stock.ecrire('algor-veille-seen', latest);
+          stock.ecrire('algor-veille-lus', JSON.stringify(items.filter(function (it) { return String(it.date || '').slice(0, 10) === latest; })
+            .map(function (it) { return it.id || it.titre; }).slice(0, 300)));
+        }
         pastille.hidden = true;
-      } else compter();
+      } else { ouvertAvec = null; compter(); }
     };
     btn.addEventListener('click', function (e) { e.stopPropagation(); basculer(!ouvert); });
     d.addEventListener('click', function (e) { if (ouvert && !pan.contains(e.target)) basculer(false); });
@@ -386,8 +476,8 @@
     var brut = [], radio = [], prefs = null, connecte = false;
     var appliquer = function () {
       items = brut.concat(radio).filter(function (it) { return it && it.titre && MaVeille.correspond(it, prefs); })
-        .sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); });
-      pan.querySelector('.cloche__tete span').textContent = prefs ? 'Ma veille' : 'Fil de veille';
+        .sort(function (a, b) { return String(b.date).localeCompare(String(a.date)) || (RANG[b.severite] || 0) - (RANG[a.severite] || 0); });
+      pan.querySelector('.cloche__titre').textContent = prefs ? 'Ma veille' : 'Fil de veille';
       pan.querySelector('.cloche__s').textContent = MaVeille.resume(prefs);
       var perso = pan.querySelector('.cloche__perso');
       if (connecte && !perso) {
@@ -395,7 +485,7 @@
         pan.appendChild(perso);
       }
       if (perso) perso.textContent = prefs ? 'Modifier ma veille' : 'Personnaliser ma veille';
-      compter(); if (ouvert) remplir();
+      compter(); if (ouvert) remplir(ouvertAvec);
     };
     var charger = function (liste) { brut = liste || []; appliquer(); };
     compteVeille().then(function (cpt) {
@@ -412,7 +502,7 @@
     else if (d.getElementById('annonce')) d.addEventListener('v5:veille', function (e) { charger(e.detail); });
     else fetch(FEED, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
       .then(function (data) { charger(Array.isArray(data) ? data : data.items); })
-      .catch(function () { charger([]); });
+      .catch(function () { erreur = true; charger([]); });
   }
 
   function init() {
