@@ -18,7 +18,7 @@
   --on-night: #F2F2F4;
   --on-night-2: #A8A9AD;
   --sans: 'Host Grotesk', 'Helvetica Neue', Arial, sans-serif;
-  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --mono: var(--sans); /* 04/11/2026 : plus de Plex Mono sur le site, Host Grotesk partout */
   --gutter: clamp(16px, 2.2vw, 32px);
   --measure: 68ch;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);

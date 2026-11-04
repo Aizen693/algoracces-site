@@ -4370,8 +4370,8 @@ html[data-sky-dark] .hero--night .hero__lede, html[data-sky-dark] .page-hero p {
    Mono pour la donnée. Variante : Familjen Grotesk (?police=familjen).
    Plus Jakarta Sans, Space Grotesk et JetBrains Mono ne sont plus rendues.
    ═══════════════════════════════════════════════════════ */
-html[data-font="host"] { --sans: 'Host Grotesk', system-ui, sans-serif; --display: 'Host Grotesk', system-ui, sans-serif; --mono: 'IBM Plex Mono', ui-monospace, monospace; }
-html[data-font="familjen"] { --sans: 'Familjen Grotesk', system-ui, sans-serif; --display: 'Familjen Grotesk', system-ui, sans-serif; --mono: 'IBM Plex Mono', ui-monospace, monospace; }
+html[data-font="host"] { --sans: 'Host Grotesk', system-ui, sans-serif; --display: 'Host Grotesk', system-ui, sans-serif; --mono: 'Host Grotesk', system-ui, sans-serif; }
+html[data-font="familjen"] { --sans: 'Familjen Grotesk', system-ui, sans-serif; --display: 'Familjen Grotesk', system-ui, sans-serif; --mono: 'Familjen Grotesk', system-ui, sans-serif; }
 html[data-font] body, html[data-font] .vcard__title, html[data-font] .vcard__resume, html[data-font] .vcard__src, html[data-font] .hero__demo, html[data-font] .veille-panel { font-family: var(--sans); }
 html[data-font] body { font-feature-settings: 'ss01' 0, 'tnum' 1; }
 /* Rôles : display / titre de section / titre d'item / corps / label / donnée */

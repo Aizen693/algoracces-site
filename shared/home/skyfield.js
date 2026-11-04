@@ -15,7 +15,7 @@
   var DARK = !/[?&]ciel=clair/.test(window.location.search);
   var root = document.documentElement;
   root.setAttribute('data-sky', '');
-  // Systeme typographique : host (defaut, Host Grotesk + Plex Mono) ou familjen ; ?police=... pour comparer
+  // Systeme typographique : host (defaut, Host Grotesk seule) ou familjen ; ?police=... pour comparer
   var FONT = (window.location.search.match(/[?&]police=([a-z]+)/) || [])[1] || 'host';
   root.setAttribute('data-font', FONT);
   if (DARK) root.setAttribute('data-sky-dark', '');

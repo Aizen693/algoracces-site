@@ -136,7 +136,7 @@
       credit = document.createElement('div');
       credit.id = 'shd-credit';
       credit.style.cssText = 'position:fixed;z-index:6;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:2px 8px;' +
-        'padding:3px 8px;border-radius:2px;background:rgba(15,16,19,.72);color:#e6e6e8;font:400 11px/1.35 "IBM Plex Mono",monospace;pointer-events:none;text-align:center';
+        'padding:3px 8px;border-radius:2px;background:rgba(15,16,19,.72);color:#e6e6e8;font:400 11px/1.35 "Host Grotesk",Arial,sans-serif;pointer-events:none;text-align:center';
       credit.innerHTML = '<img alt="Google" src="https://assets.ion.cesium.com/google-credit.png" style="height:13px;flex:none"><span data-c style="min-width:0"></span><span style="opacity:.7">via Cesium ion</span><span data-d style="flex-basis:100%;display:none;color:#fff"></span>';
       document.body.appendChild(credit);
       window.addEventListener('resize', placerCredit);

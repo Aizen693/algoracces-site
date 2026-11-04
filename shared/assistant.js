@@ -40,7 +40,7 @@
   }
   function isoIlYa(jours) { var d = new Date(Date.now() - jours * 864e5); return d.toISOString().slice(0, 10); }
 
-  /* ─────────── Styles (DA v5 : filets, Host Grotesk, Plex Mono pour les références) ─────────── */
+  /* ─────────── Styles (DA v5 : filets, Host Grotesk partout) ─────────── */
   function styles() {
     var s = document.createElement('style');
     s.textContent =
@@ -49,7 +49,7 @@
       '-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3)}' +
       '#assistant-ri[hidden]{display:none}' +
       '.ar-tete{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line-night,rgba(255,255,255,.12))}' +
-      '.ar-titre{display:flex;align-items:center;gap:8px;font:400 15px/1.2 var(--sans,"Host Grotesk",Arial,sans-serif)}.ar-titre .ico{width:20px;height:20px;flex:none}.ar-sous{margin-top:5px;font:400 11px/1.4 var(--mono,"IBM Plex Mono",monospace);letter-spacing:.04em;color:var(--on-night-2,#A8A9AD)}' +
+      '.ar-titre{display:flex;align-items:center;gap:8px;font:400 15px/1.2 var(--sans,"Host Grotesk",Arial,sans-serif)}.ar-titre .ico{width:20px;height:20px;flex:none}.ar-sous{margin-top:5px;font:400 11px/1.4 var(--mono,"Host Grotesk",Arial,sans-serif);letter-spacing:.04em;color:var(--on-night-2,#A8A9AD)}' +
       '.ar-x{border:0;background:none;color:var(--on-night-2,#A8A9AD);font:400 20px/1 var(--sans,"Host Grotesk",Arial,sans-serif);cursor:pointer;padding:0 4px}.ar-x:hover{color:var(--on-night,#F2F2F4)}' +
       '.ar-filtres{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line-night,rgba(255,255,255,.12))}' +
       '.ar-filtres label{display:block;font:400 10.5px/1 var(--mono,monospace);letter-spacing:.06em;text-transform:uppercase;color:var(--on-night-2,#A8A9AD);margin-bottom:5px}' +

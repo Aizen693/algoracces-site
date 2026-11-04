@@ -11,15 +11,15 @@
      Le chemin /veille/ est listé dans GATED_PREFIXES de site-auth.js, sinon algorAuthReady n'est jamais émis. -->
 <script>window.addEventListener('algorAuthReady', function () { window.__algorAuthGranted = true; });</script>
 <script type="module" src="../shared/site-auth.js?v=20261020a"></script>
-<link rel="stylesheet" href="/shared/home/fonts-display.css?v=20260914c" />
-<link rel="stylesheet" href="/shared/v5/v5.css?v=20261104b" />
+<link rel="stylesheet" href="/shared/home/fonts-display.css?v=20261104c" />
+<link rel="stylesheet" href="/shared/v5/v5.css?v=20261104c" />
 <!-- Carte des attaques (onglet Cyber) : même Mapbox GL que /veille-carte/, chargé mais instancié seulement à l'ouverture de la vue carte -->
 <link href="https://api.mapbox.com/mapbox-gl-js/v3.24.0/mapbox-gl.css" rel="stylesheet">
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.24.0/mapbox-gl.js" defer></script>
 <style>
   /* Veilles, système v5 (sept. 2026) : page opérationnelle sur papier, encre et filets fins.
      La couleur ne sert qu'à coder la donnée : gravité des notes, type d'attaque, état en ligne.
-     Host Grotesk pour le texte et les libellés, Plex Mono réservée aux chiffres (dates, scores, compteurs, CVE). */
+     Host Grotesk pour le texte et les libellés, y compris pour les chiffres (dates, scores, compteurs, CVE). */
   :root {
     --live: #2F9E6E;          /* état en ligne uniquement */
     --alert: #B4323F;         /* gravité critique, score CVSS */
@@ -1602,6 +1602,6 @@
 </script>
 <script src="/shared/v5/chrome.js?v=20261104a"></script>
 <!-- Assistant de renseignement (premium) : bouton flottant. Additif : commenter pour retirer. -->
-<script src="/shared/assistant.js?v=20261104x"></script>
+<script src="/shared/assistant.js?v=20261104c"></script>
 </body>
 </html>

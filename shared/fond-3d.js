@@ -79,7 +79,7 @@
     cont.insertBefore(vue, ctrl || null);
     var credits = document.createElement('div');
     credits.id = 'fond-3d-credits';
-    credits.style.cssText = 'position:absolute;left:372px;bottom:8px;z-index:2;font:400 11px/1.4 "IBM Plex Mono",monospace;color:#e6e6e8;text-shadow:0 1px 2px rgba(0,0,0,.8)';
+    credits.style.cssText = 'position:absolute;left:372px;bottom:8px;z-index:2;font:400 11px/1.4 "Host Grotesk",Arial,sans-serif;color:#e6e6e8;text-shadow:0 1px 2px rgba(0,0,0,.8)';
     vue.appendChild(credits);
     var css = document.getElementById('fond-3d-css') || document.createElement('style');
     css.id = 'fond-3d-css';
