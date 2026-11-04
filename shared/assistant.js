@@ -21,7 +21,11 @@
   var PERIODES = [['', 'Toute la période'], ['30', '30 derniers jours'], ['90', '90 derniers jours'], ['365', '12 derniers mois']];
   var STATUTS = { corrobore: 'HUMINT corroboré', non_corrobore: 'HUMINT non corroboré', osint: 'OSINT', reference: 'Référence', analyse: 'Note d\'analyse' };
   var MOIS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
-  var ICON = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>';
+  // Logo Argos (04/11/2026) : l'œil du gardien et, au dessus, l'éventail des yeux posés sur la queue du paon
+  // (même mythe que la gravure de /argos/, shared/argos-oeil.js). Trait 1,5 px des icônes v5, couleur héritée.
+  var ICON = '<svg class="ico ico-argos" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' +
+    '<path d="M3 15c2.4-3.6 5.4-5.4 9-5.4s6.6 1.8 9 5.4c-2.4 3.6-5.4 5.4-9 5.4S5.4 18.6 3 15z"/><circle cx="12" cy="15" r="2.6"/><circle cx="12" cy="15" r=".9" fill="currentColor"/>' +
+    '<g fill="currentColor" stroke="none"><circle cx="12" cy="4.6" r="1.1"/><circle cx="6.1" cy="6.6" r="1.1"/><circle cx="17.9" cy="6.6" r="1.1"/><circle cx="2.6" cy="10.8" r="1.1"/><circle cx="21.4" cy="10.8" r="1.1"/></g></svg>';
 
   var chip = null, panneau = null, fil = null, champ = null, envoyer = null, selTheatre = null, selPeriode = null, pied = null;
   var echanges = [], enCours = null, repere = null, zoneDuPays = null;
@@ -45,7 +49,7 @@
       '-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3)}' +
       '#assistant-ri[hidden]{display:none}' +
       '.ar-tete{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line-night,rgba(255,255,255,.12))}' +
-      '.ar-titre{font:400 15px/1.2 var(--sans,"Host Grotesk",Arial,sans-serif)}.ar-sous{margin-top:5px;font:400 11px/1.4 var(--mono,"IBM Plex Mono",monospace);letter-spacing:.04em;color:var(--on-night-2,#A8A9AD)}' +
+      '.ar-titre{display:flex;align-items:center;gap:8px;font:400 15px/1.2 var(--sans,"Host Grotesk",Arial,sans-serif)}.ar-titre .ico{width:20px;height:20px;flex:none}.ar-sous{margin-top:5px;font:400 11px/1.4 var(--mono,"IBM Plex Mono",monospace);letter-spacing:.04em;color:var(--on-night-2,#A8A9AD)}' +
       '.ar-x{border:0;background:none;color:var(--on-night-2,#A8A9AD);font:400 20px/1 var(--sans,"Host Grotesk",Arial,sans-serif);cursor:pointer;padding:0 4px}.ar-x:hover{color:var(--on-night,#F2F2F4)}' +
       '.ar-filtres{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line-night,rgba(255,255,255,.12))}' +
       '.ar-filtres label{display:block;font:400 10.5px/1 var(--mono,monospace);letter-spacing:.06em;text-transform:uppercase;color:var(--on-night-2,#A8A9AD);margin-bottom:5px}' +
@@ -89,7 +93,7 @@
     panneau = document.createElement('aside');
     panneau.id = 'assistant-ri'; panneau.hidden = true; panneau.setAttribute('aria-label', 'Argos, assistant de renseignement');
     panneau.innerHTML =
-      '<div class="ar-tete"><div><div class="ar-titre">Argos</div><div class="ar-sous">Assistant de renseignement · réponses sourcées</div></div>' +
+      '<div class="ar-tete"><div><div class="ar-titre">' + ICON + 'Argos</div><div class="ar-sous">Assistant de renseignement · réponses sourcées</div></div>' +
       '<button type="button" class="ar-x" aria-label="Fermer Argos">×</button></div>' +
       '<div class="ar-corps" style="display:flex;flex-direction:column;flex:1;min-height:0"></div>';
     panneau.addEventListener('click', surClic);
