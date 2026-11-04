@@ -112,7 +112,7 @@
       '<div class="ar-fil" aria-live="polite"></div>' +
       '<div class="ar-pied"><form class="ar-saisie"><textarea id="ar-question" rows="2" maxlength="500" placeholder="Posez une question sur le corpus"></textarea>' +
       '<button type="submit">Envoyer</button></form>' +
-      '<div class="ar-info"><span>Seul le corpus fait foi. Vérifiez chaque citation.</span><span class="ar-quota"></span></div></div>';
+      '<div class="ar-info"><span>Réponses rédigées par IA (Mistral) à partir du seul corpus. Vérifiez chaque citation.</span><span class="ar-quota"></span></div></div>';
     fil = corps.querySelector('.ar-fil');
     champ = corps.querySelector('#ar-question');
     envoyer = corps.querySelector('.ar-saisie button');
