@@ -197,6 +197,37 @@
   .popup-sources a{color:var(--ink);text-decoration:none;font:400 12px var(--sans);border:1px solid var(--line);border-radius:2px;padding:3px 7px}
   .popup-sources a:hover{border-color:var(--ink)}
   .popup-sources span{color:var(--muted);font:400 12px var(--sans)}
+  /* ── Localités multi-incidents : symbole + fiche ── */
+  .loc-mark{padding:0;border:0;background:none;cursor:pointer;display:block;border-radius:50%}
+  .loc-mark svg{position:absolute;inset:0;display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.18))}
+  .loc-mark .loc-n{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font:500 11px/1 var(--mono);color:#fff;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .loc-mark:hover svg{filter:drop-shadow(0 2px 6px rgba(0,0,0,.28))}
+  .loc-mark:focus-visible{outline:2px solid #1C1D21;outline-offset:2px}
+  .loc-sub{font:400 12px/1.3 var(--mono);color:var(--muted);margin-top:3px}
+  .loc-sec{font:400 11px/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:12px 0 6px;border-top:1px solid var(--line)}
+  .loc-act{display:flex;align-items:center;gap:8px;padding:3px 0}
+  .loc-act-dot{width:7px;height:7px;border-radius:50%;flex:none}
+  .loc-act-l{font:400 13px var(--sans);color:var(--ink);width:96px;flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .loc-act-track{flex:1;height:3px;background:var(--line);border-radius:1px;overflow:hidden}
+  .loc-act-track span{display:block;height:100%}
+  .loc-act-n{font:400 12px var(--mono);color:var(--ink-2);min-width:22px;text-align:right;font-variant-numeric:tabular-nums}
+  .loc-more{font:400 12px var(--sans);color:var(--muted);padding:2px 0 0 15px}
+  .loc-list{max-height:176px;overflow-y:auto;margin:0 -14px;border-top:1px solid var(--line)}
+  @media(max-height:820px){ .loc-list{max-height:138px} }
+  .loc-ev{display:flex;align-items:center;gap:10px;width:100%;padding:8px 14px;border:0;border-bottom:1px solid var(--line);
+    background:none;cursor:pointer;text-align:left;color:var(--ink);font-family:var(--sans)}
+  .loc-ev:hover{background:var(--hover)}
+  .loc-ev-bar{width:3px;height:26px;border-radius:1px;flex:none}
+  .loc-ev-d{font:400 12px var(--mono);color:var(--ink-2);flex:none;font-variant-numeric:tabular-nums}
+  .loc-ev-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .loc-ev-type{font:400 13px/1.25 var(--sans);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .loc-ev-a{font:400 11px/1 var(--sans);color:var(--muted)}
+  .loc-ev-go{color:var(--muted);flex:none;display:inline-flex}
+  .loc-ev-go .ico,.loc-back .ico{width:14px;height:14px}
+  .loc-back{display:inline-flex;align-items:center;gap:6px;margin:12px 0 0 14px;padding:4px 8px 4px 4px;border:1px solid var(--line);
+    border-radius:2px;background:none;cursor:pointer;font:400 12px var(--sans);color:var(--ink)}
+  .loc-back:hover{background:var(--hover)}
 
   /* ── Panneaux repliables (commun : nouveauté + analyse) ── */
   #news,#analysis{position:absolute;z-index:7;display:none;flex-direction:column;background:var(--panel);
@@ -374,6 +405,7 @@
     #news{top:62px;right:10px;width:min(286px,calc(100vw - 20px));max-height:52vh}
     #timeline{bottom:12px;max-width:calc(100% - 20px);padding:6px 12px 6px 6px;gap:10px}
     .humint-popup{max-width:calc(100vw - 24px) !important}
+    .loc-list{max-height:132px}
   }
 
   /* Compte gratuit sur une carte premium (Sahel, RDC) */
@@ -411,7 +443,7 @@
 <div id="news"></div>
 <div id="analysis"></div>
 
-<script src="../shared/humint-engine.js?v=20261104c"></script>
+<script src="../shared/humint-engine.js?v=20261104n"></script>
 <!-- Jeton « Fond : Carte/Satellite » retiré (28/09, jugé inutile) ; réactiver en décommentant :
 <script src="../shared/basemap-toggle.js?v=20260923a"></script>
 -->

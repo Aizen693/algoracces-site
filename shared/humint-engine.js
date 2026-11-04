@@ -408,6 +408,7 @@
       map.addLayer({ id: 'region-hl-fill', type: 'fill', source: 'region-hl', paint: { 'fill-color': '#1C1D21', 'fill-opacity': 0.06 } }, 'humint-glow');
       map.addLayer({ id: 'region-hl-line', type: 'line', source: 'region-hl', paint: { 'line-color': '#1C1D21', 'line-width': 1.5, 'line-opacity': 0.7 } }, 'humint-glow');
       setupPopups();
+      addStackLayers();
       map.on('zoomend', drawPoints);
       state.mapReady = true;
       tryRender();
@@ -1044,14 +1045,17 @@
   function drawPoints() {
     if (!map || !map.getSource(SRC)) return;
     var shown = state._shown || [];
-    var pos = spreadCoords(shown);
+    // Localités multi-incidents (04/11/2026) : plus de spirale, les points gardent leur
+    // coordonnée source ; ceux d'une même localité sont portés par un symbole (updateStacks).
+    var pos = shown.map(function (f) { return f.coords; }), piles = stackGroups(shown);
     map.getSource(SRC).setData({
       type: 'FeatureCollection',
       features: shown.map(function (f, i) {
         return { type: 'Feature', geometry: { type: 'Point', coordinates: pos[i] },
-          properties: { acteur: f.acteur, type: f.type, iso: f.iso || '', description: f.description, sources: f.sources, corrobore: f.corrobore ? 1 : 0, reference: f.reference ? 1 : 0, _color: actorColor(f.acteur) } };
+          properties: { acteur: f.acteur, type: f.type, iso: f.iso || '', description: f.description, sources: f.sources, corrobore: f.corrobore ? 1 : 0, reference: f.reference ? 1 : 0, _color: actorColor(f.acteur), _pile: piles[stackKey(f.coords)] ? 1 : 0 } };
       }),
     });
+    updateStacks(shown);
   }
 
   /* ─────────── Résumé de la requête (jetons en lecture, ✕ pour retirer) ─────────── */
@@ -1353,6 +1357,174 @@
     var el = $('counter');
     if (el) el.textContent = n ? (n + (n > 1 ? ' renseignements' : ' renseignement')) : '';
   }
+  /* ─────────── Localités multi-incidents (symbole + fiche) ───────────
+   * Les bulletins donnent souvent un même GPS (centre de ville) pour tous les
+   * incidents d'une localité : Bamako, Niamey, Ouagadougou… Plutôt que d'empiler
+   * des points ou d'inventer des positions, on affiche UN symbole par localité :
+   * anneau réparti par acteur (couleurs de la carte), nombre d'incidents au centre.
+   * Au clic : fiche localité (lieu, période, précision, acteurs, chronologie).
+   * Les points à GPS unique gardent exactement leur dessin habituel. */
+  var loc = { markers: [], groups: {}, names: {} };
+  function addStackLayers() {
+    // Les points d'une localité multi-incidents sont portés par le symbole : on les retire des 3 couches.
+    ['humint-glow', 'humint-ring', 'humint-dots'].forEach(function (id) { try { map.setFilter(id, ['!=', ['get', '_pile'], 1]); } catch (e) { /* */ } });
+    if (!loc.zoomWired) { loc.zoomWired = true; map.on('zoomend', drawStacks); }
+  }
+  // Une localité = points à la même coordonnée (arrondie à ~1 m).
+  function stackKey(c) { return (+c[0]).toFixed(5) + ',' + (+c[1]).toFixed(5); }
+  function stackGroups(shown) {
+    var g = {};
+    shown.forEach(function (f) { var k = stackKey(f.coords); (g[k] = g[k] || { key: k, c: f.coords, pays: f.pays, feats: [] }).feats.push(f); });
+    Object.keys(g).forEach(function (k) { if (g[k].feats.length < 2) delete g[k]; });
+    return g;
+  }
+  // Anneau SVG : une part par acteur, proportionnelle au nombre d'incidents.
+  function ringSVG(feats, size) {
+    var counts = {}; feats.forEach(function (f) { counts[f.acteur] = (counts[f.acteur] || 0) + 1; });
+    var keys = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; });
+    var sw = size < 28 ? 3 : 4, r = size / 2 - 2.5, C = 2 * Math.PI * r, off = 0, n = feats.length, arcs = '';
+    keys.forEach(function (k) {
+      var len = C * counts[k] / n;
+      arcs += '<circle cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" fill="none" stroke="' + actorColor(k) + '" stroke-width="' + sw + '"' +
+        ' stroke-dasharray="' + len.toFixed(2) + ' ' + (C - len).toFixed(2) + '" stroke-dashoffset="' + (-off).toFixed(2) + '"/>';
+      off += len;
+    });
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" aria-hidden="true">' +
+      '<circle cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + (r + 2) + '" fill="#1C1D21" stroke="#fff" stroke-width="1.5"/>' +
+      '<g transform="rotate(-90 ' + size / 2 + ' ' + size / 2 + ')">' + arcs + '</g></svg>';
+  }
+  function stackSize(n) { return Math.round(Math.min(46, 18 + 4.2 * Math.sqrt(n - 1))); }
+  function distM(a, b) {
+    var R = 6371000, r = Math.PI / 180, dLa = (b[1] - a[1]) * r, dLo = (b[0] - a[0]) * r;
+    var h = Math.sin(dLa / 2) * Math.sin(dLa / 2) + Math.cos(a[1] * r) * Math.cos(b[1] * r) * Math.sin(dLo / 2) * Math.sin(dLo / 2);
+    return 2 * R * Math.asin(Math.sqrt(h));
+  }
+  function updateStacks(shown) {
+    loc.groups = stackGroups(shown);
+    drawStacks();
+  }
+  // Symboles qui se recouvrent à l'écran (ex. deux GPS « Bamako » à 350 m) : un seul symbole,
+  // posé sur la coordonnée source la plus fournie. Aucune position inventée ; recalculé à chaque zoom.
+  function drawStacks() {
+    loc.markers.forEach(function (m) { m.remove(); }); loc.markers = [];
+    if (!map) return;
+    var list = Object.keys(loc.groups).map(function (k) { return loc.groups[k]; })
+      .sort(function (a, b) { return b.feats.length - a.feats.length; });
+    var amas = [];
+    list.forEach(function (g) {
+      var px = map.project(g.c), sz = stackSize(g.feats.length), hit = null;
+      for (var i = 0; i < amas.length && !hit; i++) {
+        var a = amas[i], dx = a.px.x - px.x, dy = a.px.y - px.y;
+        if (Math.sqrt(dx * dx + dy * dy) < (stackSize(a.feats.length) + sz) / 2) hit = a;
+      }
+      if (hit) { hit.parts.push(g); hit.feats = hit.feats.concat(g.feats); }
+      else amas.push({ key: g.key, c: g.c, pays: g.pays, px: px, parts: [g], feats: g.feats.slice() });
+    });
+    // Les plus gros d'abord : les petits restent visibles par dessus. Surface proportionnelle au nombre.
+    amas.sort(function (a, b) { return b.feats.length - a.feats.length; }).forEach(function (g) {
+      var n = g.feats.length, size = stackSize(n);
+      g.spread = 0; g.parts.forEach(function (p) { g.spread = Math.max(g.spread, distM(g.c, p.c)); });
+      var el = document.createElement('button');
+      el.type = 'button'; el.className = 'loc-mark';
+      el.setAttribute('aria-label', n + ' incidents localisés au centre de cette localité');
+      el.title = n + ' incidents · centre de localité';
+      el.style.width = el.style.height = size + 'px';
+      el.innerHTML = ringSVG(g.feats, size) + '<span class="loc-n"' + (size < 28 ? ' style="font-size:10px"' : '') + '>' + n + '</span>';
+      el.addEventListener('click', function (ev) { ev.stopPropagation(); openLocalite(g); });
+      loc.markers.push(new mapboxgl.Marker({ element: el, anchor: 'center' }).setLngLat(g.c).addTo(map));
+    });
+  }
+  // Nom de la localité : géocodage inverse Mapbox (FR), mis en cache ; repli sur la région administrative.
+  function nomLocalite(g) {
+    if (loc.names[g.key]) return Promise.resolve(loc.names[g.key]);
+    var url = 'https://api.mapbox.com/search/geocode/v6/reverse?longitude=' + g.c[0] + '&latitude=' + g.c[1] +
+      '&types=place&language=fr&limit=1&access_token=' + mapboxgl.accessToken;
+    return fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+      var p = j && j.features && j.features[0] && j.features[0].properties;
+      return (loc.names[g.key] = (p && (p.name_preferred || p.name)) || regionOf(g.c, g.pays) || g.pays);
+    }).catch(function () { return regionOf(g.c, g.pays) || g.pays; });
+  }
+  function locPopup(g, html) {
+    if (loc.popup) loc.popup.remove();
+    // Mobile : les panneaux Analyse et Nouveautés couvrent la carte ; on les replie pour laisser la fiche lisible.
+    var mobile = !!(window.matchMedia && window.matchMedia('(max-width: 680px)').matches);
+    if (mobile) {
+      state.anaOpen = false; state.newsOpen = false;
+      var an = $('analysis'), nw = $('news');
+      if (an) an.classList.remove('ana-open');
+      if (nw) nw.classList.remove('news-open');
+    }
+    // Écran large : fiche à côté du symbole (la localité reste visible), du côté où il y a la place.
+    var opts = { closeButton: true, maxWidth: '360px', className: 'humint-popup loc-popup', offset: 18 };
+    if (!mobile) { var px = map.project(g.c); opts.anchor = px.x < map.getContainer().clientWidth / 2 ? 'left' : 'right'; }
+    loc.popup = new mapboxgl.Popup(opts)
+      .setLngLat(g.c).setHTML(html).addTo(map);
+    var el = loc.popup.getElement();
+    // Fiche entièrement visible : on décale la carte si elle sort du cadre (sous le bandeau, au dessus de la frise).
+    setTimeout(function () {
+      var r = el.getBoundingClientRect(), box = map.getContainer().getBoundingClientRect();
+      var tl = $('timeline'), dy = 0, top = box.top + 12;
+      // Sous le bandeau et sous les panneaux Analyse / Nouveautés qui chevauchent la fiche.
+      ['header', 'news', 'analysis'].forEach(function (id) {
+        var p = $(id); if (!p || !p.offsetParent) return;
+        var q = p.getBoundingClientRect();
+        if (q.right > r.left && q.left < r.right) top = Math.max(top, q.bottom + 12);
+      });
+      var bottom = (tl && tl.offsetParent ? tl.getBoundingClientRect().top : box.bottom) - 12;
+      if (r.bottom > bottom) dy = r.bottom - bottom;
+      if (r.top - dy < top) dy = r.top - top;
+      if (Math.abs(dy) > 2) map.panBy([0, dy], { duration: 350 });
+    }, 0);
+    return el;
+  }
+  function openLocalite(g) {
+    var fs = g.feats.slice().sort(function (a, b) { return (b.iso || '').localeCompare(a.iso || ''); });
+    var dates = fs.map(function (f) { return f.iso; }).filter(Boolean).sort();
+    var d0 = dates[0], d1 = dates[dates.length - 1], periode = '';
+    if (d0) periode = d0 === d1 ? frDate(d0)
+      : (d0.slice(0, 4) === d1.slice(0, 4) ? frDate(d0).replace(/ \d{4}$/, '') : frDate(d0)) + ' au ' + frDate(d1);
+    var nPts = (g.parts || [g]).length, ecart = g.spread >= 1000 ? (g.spread / 1000).toFixed(1).replace('.', ',') + ' km' : Math.round(g.spread / 10) * 10 + ' m';
+    var precisionTxt = nPts > 1
+      ? 'Centre de localité. La source situe ces ' + fs.length + ' incidents sur ' + nPts + ' points distants de ' + ecart + ' au plus, sans position plus fine.'
+      : 'Centre de localité. La source situe ces ' + fs.length + ' incidents au même point, sans position plus fine.';
+    var counts = {}; fs.forEach(function (f) { counts[f.acteur] = (counts[f.acteur] || 0) + 1; });
+    var acteurs = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; });
+    var bars = acteurs.slice(0, 4).map(function (a) {
+      return '<div class="loc-act"><span class="loc-act-dot" style="background:' + actorColor(a) + '"></span>' +
+        '<span class="loc-act-l" title="' + esc(actorFull(a)) + '">' + esc(a) + '</span>' +
+        '<span class="loc-act-track"><span style="width:' + Math.round(100 * counts[a] / fs.length) + '%;background:' + actorColor(a) + '"></span></span>' +
+        '<span class="loc-act-n">' + counts[a] + '</span></div>';
+    }).join('') + (acteurs.length > 4 ? '<div class="loc-more">et ' + (acteurs.length - 4) + ' autres acteurs</div>' : '');
+    var rows = fs.map(function (f, i) {
+      return '<button type="button" class="loc-ev" data-i="' + i + '">' +
+        '<span class="loc-ev-bar" style="background:' + actorColor(f.acteur) + '"></span>' +
+        '<span class="loc-ev-d">' + esc(f.iso ? f.iso.slice(8, 10) + '/' + f.iso.slice(5, 7) + '/' + f.iso.slice(2, 4) : 's.d.') + '</span>' +
+        '<span class="loc-ev-t"><span class="loc-ev-type">' + esc(f.type || 'Typologie non précisée') + '</span><span class="loc-ev-a">' + esc(f.acteur) + '</span></span>' +
+        '<span class="loc-ev-go">' + ICO.right + '</span></button>';
+    }).join('');
+    function liste() {
+      var el = locPopup(g,
+        '<div class="popup-header"><div class="popup-dot-bar" style="background:#1C1D21"></div><div>' +
+          '<div class="popup-actor loc-nom">' + esc(loc.names[g.key] || 'Localité') + '</div>' +
+          '<div class="loc-sub">' + fs.length + ' incidents' + (periode ? ' · ' + esc(periode) : '') + '</div></div></div>' +
+        '<div class="popup-body">' +
+          '<div class="popup-row"><span class="popup-key">Précision</span><span class="popup-val">' + precisionTxt + '</span></div>' +
+          '<div class="loc-sec">Acteurs</div>' + bars +
+          '<div class="loc-sec">Chronologie</div><div class="loc-list">' + rows + '</div>' +
+        '</div>');
+      el.querySelectorAll('.loc-ev').forEach(function (b) {
+        b.onclick = function () { detail(fs[+b.getAttribute('data-i')]); };
+      });
+      if (!loc.names[g.key]) nomLocalite(g).then(function (n) { var t = el.querySelector('.loc-nom'); if (t) t.textContent = n; });
+    }
+    function detail(f) {
+      var el = locPopup(g,
+        '<button type="button" class="loc-back">' + ICO.arrowL + esc(loc.names[g.key] || 'Localité') + ' · ' + fs.length + '</button>' +
+        makePopup({ acteur: f.acteur, type: f.type, iso: f.iso, description: f.description, sources: f.sources, corrobore: f.corrobore, reference: f.reference, _color: actorColor(f.acteur), _precision: 'Centre de localité' }));
+      el.querySelector('.loc-back').onclick = liste;
+    }
+    liste();
+  }
   function setupPopups() {
     map.on('mouseenter', 'humint-dots', function () { map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', 'humint-dots', function () { map.getCanvas().style.cursor = ''; });
@@ -1375,6 +1547,7 @@
     rows += '<div class="popup-row"><span class="popup-key">Statut</span><span class="popup-val"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + sColor + ';margin-right:6px;vertical-align:middle"></span>' + sLabel + '</span></div>';
     if (p.type) rows += '<div class="popup-row"><span class="popup-key">Typologie d\'événement</span><span class="popup-val">' + esc(p.type) + '</span></div>';
     if (p.iso) rows += '<div class="popup-row"><span class="popup-key">Date</span><span class="popup-val popup-mono">' + esc(p.iso) + '</span></div>';
+    if (p._precision) rows += '<div class="popup-row"><span class="popup-key">Précision</span><span class="popup-val">' + esc(p._precision) + '</span></div>';
     if (p.description) rows += '<div class="popup-row popup-desc"><span class="popup-val">' + esc(p.description) + '</span></div>';
     // Carte vue client : aucune source ni origine affichee (HUMINT / OSINT jamais montres).
     return head + '<div class="popup-body">' + rows + '</div>';
