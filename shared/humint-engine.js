@@ -281,8 +281,10 @@
         }
         renderSummary();
         whenAuthorized(function () {
+          var avant = state.entry;
           if (state.entry) state.entry = vue(state.entry);
-          if (visiteur()) renderSummary(); // ajoute le jeton « Aperçu » (plan connu seulement ici)
+          // Visiteur : jeton « Aperçu » ; premium RDC : période et filtres de la carte HUMINT.
+          if (visiteur() || state.entry !== avant) renderSummary(); // ajoute le jeton « Aperçu » (plan connu seulement ici)
           ensureRegions();
           if (state.entry && verrouillee(state.entry)) afficherVerrou();
           else if (state.entry) startLoad();
