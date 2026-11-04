@@ -1078,7 +1078,8 @@
     } else {
       bar.appendChild(facetChip('pays', 'Pays', state.country, true));
       if (visiteur() && !verrouillee(state.entry)) bar.appendChild(apercuChip());
-      bar.appendChild(statutChip(state.entry));
+      // Jeton de statut retiré de /carte/ (04/11/2026, jugé inutile) ; gardé sur la démo où il signale des données fictives.
+      if (/^\/demo\//.test(location.pathname)) bar.appendChild(statutChip(state.entry));
       bar.appendChild(facetChip('date', 'Période', (state.sel.from && state.sel.to) ? (frDate(state.sel.from) + ' – ' + frDate(state.sel.to)) : 'Toute période', !!(state.sel.from && state.sel.to)));
       bar.appendChild(facetChip('actor', 'Acteur', state.sel.actor || 'Tous', !!state.sel.actor));
       bar.appendChild(facetChip('event', "Typologie d'événement", state.sel.event || 'Toutes', !!state.sel.event));
