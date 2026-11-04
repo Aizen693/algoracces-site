@@ -307,7 +307,11 @@
     erreur: { texte: 'Le service ne répond pas pour le moment. Réessayez dans un instant.', bouton: 'Réessayer', action: 'reessayer' },
   };
   function avis(x, cle) { x.avis = AVIS[cle]; x.cleAvis = cle; }
-  function quota(n) { if (pied && typeof n === 'number') pied.textContent = t(n + (n > 1 ? ' questions restantes' : ' question restante') + ' aujourd\'hui'); }
+  function quota(n) {
+    if (!pied) return;
+    if (n === null) pied.textContent = t('Accès équipe : sans plafond');   // admin et editor
+    else if (typeof n === 'number') pied.textContent = t(n + (n > 1 ? ' questions restantes' : ' question restante') + ' aujourd\'hui');
+  }
 
   /* ─────────── Citations ─────────── */
   function extraitDe(cle) {
