@@ -281,6 +281,7 @@
         }
         renderSummary();
         whenAuthorized(function () {
+          if (state.entry) state.entry = vue(state.entry);
           if (visiteur()) renderSummary(); // ajoute le jeton « Aperçu » (plan connu seulement ici)
           ensureRegions();
           if (state.entry && verrouillee(state.entry)) afficherVerrou();
@@ -311,6 +312,9 @@
   }
   /* RDC (04/11/2026) : OSINT quotidien pour les visiteurs et comptes gratuits, HUMINT pour les
    * abonnés premium (file_premium du manifeste). */
+  // Abonné premium : la fiche du manifeste est remplacée par sa variante premium (fichier, mois,
+  // acteurs, typologies de la carte HUMINT). Visiteur et compte gratuit : fiche OSINT inchangée.
+  function vue(e) { return e && e.premium && !compteGratuit() && !visiteur() ? Object.assign({}, e, e.premium, { premium: null }) : e; }
   function fichierDe(e) { return e && e.file_premium && !compteGratuit() && !visiteur() ? e.file_premium : e.file; }
   function compteGratuit() { return window.algorPlan === 'gratuit'; }
   /* Visiteur sans compte (20/10/2026) : aperçu des seules cartes OSINT, un événement sur trois.
@@ -1257,7 +1261,7 @@
   function switchCountry(name) {
     var entry = (state.manifest.countries || []).find(function (c) { return c.name === name; });
     if (!entry || name === state.country) return;
-    state.entry = entry; state.country = name;
+    state.entry = vue(entry); state.country = name;
     state.sel = { from: null, to: null, event: null, actor: null };
     state.dataFor = null; state.all = []; state.layers = new Set(); state._anaSig = null;
     if (map) {
