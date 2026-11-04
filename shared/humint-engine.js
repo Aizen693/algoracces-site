@@ -636,9 +636,11 @@
   }
   function ensureRegions() {
     if (state.regionsReady || state._regionsP) return state._regionsP;
-    state._regionsP = fetch('/carte/regions.geojson?v=20260923a').then(function (r) { return r.json(); }).then(function (gj) {
+    state._regionsP = fetch('/carte/regions.geojson?v=20261104a').then(function (r) { return r.json(); }).then(function (gj) {
       state.regions = (gj.features || []).map(function (f) {
-        return { name: f.properties.name, pays: f.properties.pays, geom: f.geometry, bb: bboxOf(f.geometry.coordinates) };
+        // Nom français quand il existe (nom_fr, 04/11/2026) ; nom d'origine en anglais.
+        var nom = (document.documentElement.lang !== 'en' && f.properties.nom_fr) || f.properties.name;
+        return { name: nom, pays: f.properties.pays, geom: f.geometry, bb: bboxOf(f.geometry.coordinates) };
       });
       state.regionsReady = true;
       state._anaSig = null;
