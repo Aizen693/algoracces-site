@@ -21,6 +21,12 @@
   .ar-list li:last-child { border-bottom: 1px solid var(--line); }
   .ar-capture img { height: auto; background: #18191E; }
   .ar-fin .sec-head { margin-bottom: 36px; }
+  /* Argos aux cent yeux (shared/argos-oeil.js) : gravure animée à droite de l'en-tête, derrière le texte sur mobile. */
+  .ar-hero { overflow: hidden; isolation: isolate; }
+  .ar-hero > h1, .ar-hero > .v5-phero__lede, .ar-hero > .v5-actions { position: relative; z-index: 1; }
+  .argos-oeil { position: absolute; z-index: 0; right: -3vw; top: 50%; transform: translateY(-50%); width: min(56vw, 860px); aspect-ratio: 1.15 / 1; pointer-events: none;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 38%); mask-image: linear-gradient(to right, transparent 0, #000 38%); }
+  @media (max-width: 900px) { .argos-oeil { right: -20vw; width: 125vw; top: 7%; transform: none; opacity: .45; -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 95%); mask-image: linear-gradient(to bottom, #000 55%, transparent 95%); } }
 </style>
 </head>
 <body data-rubrique="argos">
@@ -77,7 +83,8 @@
 <!-- /v5:nav -->
 
 <main>
-  <section class="v5-phero v5-phero--plein" data-nav="dark" data-v5-trame data-trame-anim="balayage" data-hachures="5,0;6,1">
+  <section class="v5-phero v5-phero--plein ar-hero" data-nav="dark" data-v5-trame data-hachures="5,0;6,1">
+    <canvas class="argos-oeil" aria-hidden="true"></canvas>
     <h1>Argos, <span>l'assistant qui cite ses sources</span></h1>
     <p class="v5-phero__lede">Posez une question sur nos théâtres en langage courant. Argos répond à partir du seul corpus d'Algor Acces, renseignement terrain, sources ouvertes et veille, et relie chaque fait à l'extrait qui le porte.</p>
     <div class="v5-actions">
@@ -187,5 +194,6 @@
 
 <script type="module" src="/shared/site-auth.js?v=20261020a"></script>
 <script src="/shared/v5/chrome.js?v=20261001a"></script>
+<script src="/shared/argos-oeil.js?v=20261104a"></script>
 </body>
 </html>
