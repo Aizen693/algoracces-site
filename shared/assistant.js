@@ -173,9 +173,18 @@
 
   // Sous la barre d'en-tête de /carte/ (2 ou 3 lignes selon la largeur).
   function caler() {
+    degagerPastille();
     if (innerWidth <= 720) { panneau.style.top = ''; return; }
     var h = document.getElementById('header');
     panneau.style.top = h ? Math.round(h.getBoundingClientRect().bottom + 12) + 'px' : '';
+  }
+  // La pastille FR | EN flottante de i18n.js occupe le coin bas droit : panneau et bouton se posent au dessus.
+  function degagerPastille() {
+    var p = document.querySelector('.lang-toggle--float');
+    var r = p && p.getClientRects().length ? p.getBoundingClientRect() : null;   // offsetParent vaut null en position fixe
+    var bas = r ? Math.round(innerHeight - r.top + 8) + 'px' : '';
+    if (panneau) panneau.style.bottom = bas;
+    if (chip && chip.id === 'assistant-ri-bouton') chip.style.bottom = bas;
   }
 
   /* ─────────── Fil de discussion ─────────── */
@@ -341,7 +350,8 @@
     styles();
     construirePanneau();
     construireDeclencheur();
-    window.addEventListener('resize', function () { if (!panneau.hidden) caler(); });
+    window.addEventListener('resize', function () { if (!panneau.hidden) caler(); else degagerPastille(); });
+    setTimeout(degagerPastille, 800);   // la pastille est montée par i18n.js après le chargement du dictionnaire
     // L'accès premium peut être confirmé après le montage (overlay de connexion) : on reconstruit le corps.
     window.addEventListener('algorAuthReady', function () { window.__algorAuthGranted = true; if (!panneau.hidden) rendreCorpsSiBesoin(); });
   }
