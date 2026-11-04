@@ -361,6 +361,7 @@
   html .lang-toggle--float{border-radius:2px;background:var(--bar-bg);border-color:rgba(255,255,255,.18);color:var(--on-night);
     font:500 12px/1 var(--sans);letter-spacing:.02em;box-shadow:var(--shadow);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
   html .lang-toggle--float button{border-radius:1px;padding:6px 8px}
+  @media(min-width:681px){ html .lang-toggle--float{right:18px;bottom:20px} } /* aligné sur les panneaux et la frise */
   html .lang-toggle--float button[aria-pressed="true"]{background:var(--on-night);background-image:none;color:var(--ink)}
   html .lang-toggle--float button:focus-visible{outline:2px solid var(--on-night);outline-offset:1px}
 
@@ -444,7 +445,7 @@
 <script src="../shared/humint-engine.js?v=20261104o"></script>
 <!-- Imagerie Satellite HD (shared/satellite-hd.js) volontairement absente : quota Cesium ion / Google
      réservé aux abonnés. -->
-<script src="../shared/carte-layout.js?v=20260916b"></script>
+<script src="../shared/carte-layout.js?v=20261104a"></script>
 
 <!-- Compte premium : la démo reste publique, mais un compte qui a déjà l'accès réel
      voit un lien vers ses théâtres au lieu de l'invitation à s'abonner. -->

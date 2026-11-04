@@ -140,6 +140,9 @@
       credit.innerHTML = '<img alt="Google" src="https://assets.ion.cesium.com/google-credit.png" style="height:13px;flex:none"><span data-c style="min-width:0"></span><span style="opacity:.7">via Cesium ion</span><span data-d style="flex-basis:100%;display:none;color:#fff"></span>';
       document.body.appendChild(credit);
       window.addEventListener('resize', placerCredit);
+      // Suit la frise quand carte-layout.js la recentre ou la décale (panneau d'analyse ouvert ou replié).
+      var tlEl = document.getElementById('timeline');
+      if (tlEl && window.MutationObserver) new MutationObserver(placerCredit).observe(tlEl, { attributes: true, attributeFilter: ['style', 'class'] });
     }
     credit.style.display = v ? 'flex' : 'none';
     if (v) placerCredit();

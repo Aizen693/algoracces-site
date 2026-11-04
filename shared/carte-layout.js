@@ -25,7 +25,8 @@
     var W = window.innerWidth, H = window.innerHeight, mobile = W <= MOBILE;
     var anaOn = shown(ana), newsOn = shown(news), tlOn = shown(tl);
     var lang = document.querySelector('.lang-toggle--float');
-    var langH = lang ? lang.offsetHeight + 14 : 0;
+    // Hauteur réellement occupée en bas par FR / EN (position comprise), quelle que soit la page.
+    var langH = lang ? Math.max(0, H - lang.getBoundingClientRect().top) : 0;
     var ctrl = document.querySelector('.mapboxgl-ctrl-bottom-right');
 
     // ── 1. Barre de jetons : « Nouveauté » reste dans la rangée du haut si les
@@ -48,12 +49,14 @@
         set(tl, 'width', 'auto'); set(tl, 'maxWidth', 'none'); set(tl, 'marginInline', '0');
         set(tl, 'bottom', (langH + GAP) + 'px');
       } else {
-        var minL = anaOn ? ana.getBoundingClientRect().right + 14 : EDGE;
         var maxR = W - 132; // FR / EN + zoom
         set(tl, 'bottom', '20px'); set(tl, 'maxWidth', 'none');
         // Largeur naturelle mesurée hors contrainte (sinon bascule centré/décalé en boucle).
         tl.style.left = '0'; tl.style.right = 'auto'; tl.style.transform = 'none'; tl.style.width = 'max-content';
         var natural = tl.offsetWidth;
+        // On ne s'écarte du panneau d'analyse que s'il descend jusqu'à la frise ; replié en haut, il ne gêne pas.
+        var anaR = anaOn ? ana.getBoundingClientRect() : null;
+        var minL = anaR && anaR.bottom > H - 20 - tl.offsetHeight - GAP ? anaR.right + 14 : EDGE;
         var centred = (W - natural) / 2;
         if (centred >= minL && centred + natural <= maxR) {
           set(tl, 'left', '50%'); set(tl, 'right', 'auto'); set(tl, 'transform', 'translateX(-50%)');
@@ -72,6 +75,7 @@
     if (ctrl) {
       var cb = mobile && tlOn ? (H - tlTop + GAP) : langH + 4;
       set(ctrl, 'bottom', Math.max(0, cb - 10) + 'px'); // le contrôle a déjà 10 px de marge
+      set(ctrl, 'right', mobile ? '' : (EDGE - 10) + 'px'); // même marge droite que les panneaux
     }
     var ctrlTop = ctrl ? ctrl.getBoundingClientRect().top : H - langH;
 
