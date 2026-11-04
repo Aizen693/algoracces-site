@@ -28,6 +28,12 @@
     // Hauteur réellement occupée en bas par FR / EN (position comprise), quelle que soit la page.
     var langH = lang ? Math.max(0, H - lang.getBoundingClientRect().top) : 0;
     var ctrl = document.querySelector('.mapboxgl-ctrl-bottom-right');
+    // Panneau Argos (shared/assistant.js) : colonne de droite, sous la barre et au-dessus du zoom ;
+    // la frise et les crédits restent à sa gauche (04/11/2026). En mobile, assistant.js garde son tiroir bas.
+    var ast = $('assistant-ri');
+    if (ast && !ast.__layoutObs && observers[0]) { ast.__layoutObs = true; observers[0].observe(ast, { attributes: true, attributeFilter: ['hidden', 'style', 'class'] }); }
+    var astOn = !!ast && !ast.hidden && W > 720 && shown(ast);
+    var astLeft = astOn ? W - EDGE - ast.offsetWidth : W;
 
     // ── 1. Barre de jetons : « Nouveauté » reste dans la rangée du haut si les
     //    jetons tiennent sur une ligne à côté ; sinon il descend sous la barre.
@@ -61,7 +67,7 @@
         set(tl, 'width', 'auto'); set(tl, 'maxWidth', 'none'); set(tl, 'marginInline', '0');
         set(tl, 'bottom', (langH + GAP) + 'px');
       } else {
-        var maxR = W - 132; // FR / EN + zoom
+        var maxR = astOn ? Math.min(W - 132, astLeft - 14) : W - 132; // FR / EN + zoom, ou Argos ouvert
         set(tl, 'bottom', '20px'); set(tl, 'maxWidth', 'none');
         // Largeur naturelle mesurée hors contrainte (sinon bascule centré/décalé en boucle).
         tl.style.left = '0'; tl.style.right = 'auto'; tl.style.transform = 'none'; tl.style.width = 'max-content';
@@ -90,6 +96,10 @@
       set(ctrl, 'right', mobile ? '' : (EDGE - 10) + 'px'); // même marge droite que les panneaux
     }
     var ctrlTop = ctrl ? ctrl.getBoundingClientRect().top : H - langH;
+    if (astOn) {
+      set(ast, 'top', (hdr.offsetHeight + GAP) + 'px'); set(ast, 'right', EDGE + 'px');
+      set(ast, 'bottom', Math.round(H - ctrlTop + GAP) + 'px');
+    }
 
     // ── 4. Panneau d'analyse (gauche) : sous la barre, au-dessus du logo Mapbox
     //    (desktop) ou du curseur (mobile).
