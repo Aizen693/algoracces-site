@@ -902,7 +902,7 @@ function Globe() {
 
   // Manifeste pays (données HUMINT) — alimente toutes les étapes du constructeur.
   useEffectGlobe(() => {
-    fetch('/carte/countries.json?v=20260617audit').then(r => r.json()).then(d => setManifest(d.countries || [])).catch(() => {});
+    fetch('https://lwgrjdpuagnvvzmdbyzb.supabase.co/storage/v1/object/public/veille-public/carte/countries.json?v=' + Math.floor(Date.now() / 300000)).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).catch(() => fetch('/carte/countries.json?v=20260617audit').then(r => r.json())).then(d => setManifest(d.countries || [])).catch(() => {});
   }, []);
   function stageOptions(st) {
     const e = sel.entry;

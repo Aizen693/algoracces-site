@@ -201,7 +201,18 @@
     'Nigeria': ['Niger', 'Bénin'],
     'Bénin': ['Niger', 'Burkina Faso', 'Nigeria', 'Togo'],
     'Togo': ['Burkina Faso', 'Bénin'],
-    'RDC': [],
+    'RDC': ['Rwanda', 'Burundi', 'Ouganda'],
+    'Rwanda': ['RDC', 'Burundi', 'Ouganda'],
+    'Burundi': ['RDC', 'Rwanda'],
+    'Ouganda': ['RDC', 'Rwanda'],
+    // Afrique maritime (04/11/2026) : couloirs liés.
+    'Mer Rouge': ['Bab el Mandeb', 'Canal de Suez', "Golfe d'Aden"],
+    'Bab el Mandeb': ['Mer Rouge', "Golfe d'Aden"],
+    "Golfe d'Aden": ['Bab el Mandeb', 'Somalie', 'Mer Rouge'],
+    'Somalie': ["Golfe d'Aden", 'Océan Indien'],
+    'Océan Indien': ['Somalie', "Détroit d'Ormuz"],
+    "Détroit d'Ormuz": ['Océan Indien'],
+    'Canal de Suez': ['Mer Rouge'],
     // Moyen-Orient : voisins et théâtres d'interaction directe (frappes croisées, détroits).
     'Israël': ['Territoires palestiniens', 'Liban', 'Syrie', 'Jordanie', 'Iran'],
     'Territoires palestiniens': ['Israël', 'Jordanie'],
@@ -259,8 +270,7 @@
   //   /carte/?pays=Mali&date=2026-01&event=Attaque&actor=GSIM
   function boot() {
     var q = new URLSearchParams(location.search);
-    fetch('/carte/countries.json?v=' + Date.now())
-      .then(function (r) { return r.json(); })
+    chargerPublic('countries.json', '/carte/countries.json')
       .then(function (data) {
         state.manifest = data;
         var wanted = q.get('pays');
@@ -285,15 +295,31 @@
    * window.algorPlan est posé par site-auth.js ('premium' ou 'gratuit'). Sahel et RDC
    * (remontées terrain) restent premium : la RLS du bucket refuse de toute façon leur
    * lecture à un compte gratuit, ce verrou évite seulement un chargement qui échouerait. */
-  var CARTES_GRATUITES = ['/moyen-orient/reference-2026.geojson', '/asie-sud/reference-2026.geojson', '/madagascar/reference-2026.geojson'];
+  var CARTES_GRATUITES = ['/moyen-orient/reference-2026.geojson', '/asie-sud/reference-2026.geojson', '/madagascar/reference-2026.geojson',
+    '/rdc/reference-2026.geojson', '/afrique-maritime/reference-2026.geojson'];
+  /* Mise à jour quotidienne (04/11/2026) : le VPS republie chaque matin le manifeste des pays et les
+   * aperçus visiteurs dans le bucket public veille-public/carte/ (vps/veille-carte-osint). Le site les
+   * lit en direct ; repli sur les copies statiques du dépôt si le bucket ne répond pas. La démo
+   * (/demo/) intercepte les chemins statiques : elle les garde. */
+  var CARTE_PUBLIQUE = 'https://lwgrjdpuagnvvzmdbyzb.supabase.co/storage/v1/object/public/veille-public/carte/';
+  function chargerPublic(nom, statique) {
+    var repli = function () { return fetch(statique + '?v=' + Date.now()).then(function (r) { return r.json(); }); };
+    if (/^\/demo\//.test(location.pathname)) return repli();
+    return fetch(CARTE_PUBLIQUE + nom + '?v=' + Math.floor(Date.now() / 300000))
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .catch(function (e) { console.warn('[humint] carte publique indisponible, repli statique', e && e.message); return repli(); });
+  }
+  /* RDC (04/11/2026) : OSINT quotidien pour les visiteurs et comptes gratuits, HUMINT pour les
+   * abonnés premium (file_premium du manifeste). */
+  function fichierDe(e) { return e && e.file_premium && !compteGratuit() && !visiteur() ? e.file_premium : e.file; }
   function compteGratuit() { return window.algorPlan === 'gratuit'; }
   /* Visiteur sans compte (20/10/2026) : aperçu des seules cartes OSINT, un événement sur trois.
    * Il lit les fichiers PUBLICS carte/apercu/<theatre>.geojson (scripts/build-apercu-osint.mjs),
    * jamais le bucket : l'échantillon est fait à la source, pas filtré dans le navigateur. */
   function visiteur() { return window.algorPlan === 'visiteur'; }
-  function fichierApercu(file) { return '/carte/apercu/' + String(file).split('/')[1] + '.geojson'; }
+  function fichierApercu(file) { return String(file).split('/')[1] + '.geojson'; }
   function verrouillee(e) { return (compteGratuit() || visiteur()) && !!e && CARTES_GRATUITES.indexOf(e.file) < 0; }
-  var LIENS_OSINT = '<div class="cv-liens"><a href="/carte/?pays=Liban">Moyen-Orient</a><a href="/carte/?pays=Pakistan">Asie du Sud</a><a href="/carte/?pays=Madagascar">Madagascar</a></div>';
+  var LIENS_OSINT = '<div class="cv-liens"><a href="/carte/?pays=Liban">Moyen-Orient</a><a href="/carte/?pays=Pakistan">Asie du Sud</a><a href="/carte/?pays=Madagascar">Madagascar</a><a href="/carte/?pays=RDC">RDC</a><a href="/carte/?pays=Golfe%20de%20Guin%C3%A9e">Afrique maritime</a></div>';
   function afficherVerrou() {
     if ($('carte-verrou')) return;
     var el = document.createElement('div');
@@ -388,7 +414,7 @@
   // Source = base HUMINT LIVE du bucket privé Supabase (premium, MAJ hebdo via
   // l'admin). Repli sur le fichier statique du repo pour le dev / hors session.
   function fetchZone(path) {
-    if (visiteur()) return fetch(fichierApercu(path) + '?v=' + Date.now()).then(function (r) { return r.json(); });
+    if (visiteur()) return chargerPublic('apercu/' + fichierApercu(path), '/carte/apercu/' + fichierApercu(path));
     if (window.algorAuth && window.algorAuth.loadZoneFile && window.ZONE_PRIVATE) {
       var live = Promise.race([
         window.algorAuth.loadZoneFile(path),
@@ -406,7 +432,7 @@
     if (state.dataFor === state.country) { tryRender(); return; }
     showLoader(true);
     var target = state.country;
-    fetchZone(state.entry.file)
+    fetchZone(fichierDe(state.entry))
       .then(function (gj) {
         if (state.country !== target) return;
         var feats = (gj.features || []).map(normFeature).filter(Boolean);
@@ -1074,7 +1100,8 @@
 
   function statutChip(e) {
     var el = document.createElement('span');
-    var ref = e && e.statut === 'reference';
+    // RDC premium (04/11/2026) : l'abonné voit la carte HUMINT référencée, pas l'OSINT du jour.
+    var ref = e && (e.statut === 'reference' || fichierDe(e) !== e.file);
     // osint (06/10/2026) : cartes gratuites alimentées chaque jour par la veille en sources ouvertes.
     var osint = e && e.statut === 'osint';
     el.className = 'chip chip-statut' + (ref ? ' chip-statut-ref' : '');

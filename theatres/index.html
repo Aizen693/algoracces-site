@@ -131,10 +131,10 @@
     <p class="v5-lecture" aria-hidden="true"><span>Curseur</span> <b id="lecture-lat">16,00 N</b> <b id="lecture-lon">000,00 E</b></p>
     <h1 class="hors-ecran">Les six théâtres suivis par Algor Acces</h1>
     <p class="v5-phero__lede">Du Sahel à l'Asie du Sud, Algor Acces couvre six théâtres choisis pour leur intensité et leur complexité. Chacun s'ouvre sur la même carte, filtrable par pays, période, typologie d'événement et acteur.</p>
-    <p class="v5-phero__lede v5-phero__statut"><span class="statut-l"><span class="statut-dot" aria-hidden="true"></span>Moyen-Orient, Asie du Sud et Madagascar : sources ouvertes, actualisées chaque jour, ouvertes à tous.</span><span class="statut-l"><span class="statut-dot statut-dot--ref" aria-hidden="true"></span>Sahel, actualisé chaque semaine, et RDC : nos remontées terrain, réservées aux abonnés.</span></p>
+    <p class="v5-phero__lede v5-phero__statut"><span class="statut-l"><span class="statut-dot" aria-hidden="true"></span>Moyen-Orient, Asie du Sud, Madagascar, RDC et Afrique maritime : sources ouvertes, actualisées chaque jour, ouvertes à tous.</span><span class="statut-l"><span class="statut-dot statut-dot--ref" aria-hidden="true"></span>Sahel, actualisé chaque semaine, et RDC terrain : nos remontées terrain, réservées aux abonnés.</span></p>
     <div class="phero-libre">
       <p>Ouvrir une carte, sans compte</p>
-      <div class="phero-libre__liens"><a class="outil__opt" href="/carte/?pays=Liban">Moyen-Orient</a><a class="outil__opt" href="/carte/?pays=Pakistan">Asie du Sud</a><a class="outil__opt" href="/carte/?pays=Madagascar">Madagascar</a></div>
+      <div class="phero-libre__liens"><a class="outil__opt" href="/carte/?pays=Liban">Moyen-Orient</a><a class="outil__opt" href="/carte/?pays=Pakistan">Asie du Sud</a><a class="outil__opt" href="/carte/?pays=Madagascar">Madagascar</a><a class="outil__opt" href="/carte/?pays=RDC">RDC</a><a class="outil__opt" href="/carte/?pays=Mer%20Rouge">Afrique maritime</a></div>
       <p class="phero-libre__note">Aperçu d'un événement sur trois. La carte complète s'ouvre avec un compte gratuit.</p>
     </div>
     <form class="phero-demo" id="outil" action="/demo/" data-etat="attente">
@@ -223,11 +223,11 @@
           <p class="v5-etape__c">Premium · actualisé chaque semaine à partir de nos bulletins terrain.</p>
           <a class="btn-link" href="/carte/?pays=Burkina%20Faso">Ouvrir la carte<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 12h16M14 6l6 6-6 6"/></svg></a>
         </li>
-        <li class="v5-etape" data-etape="2" data-lat="-2.0" data-lon="29.0" data-per="12.2025 → 04.2026" data-cal="04" data-n="03">
+        <li class="v5-etape" data-etape="2" data-lat="-2.0" data-lon="29.0" data-per="Chaque jour" data-cal="04" data-n="03">
           <p class="v5-etape__k">Théâtre 03 / 06</p>
           <h3>RDC, Grands Lacs</h3>
           <p>L'Est congolais sous pression : offensive du M23, multiplication des groupes armés, implications régionales et économie minière de guerre. Suivi des mouvements M23, Wazalendo et FARDC.</p>
-          <p class="v5-etape__c">Premium · remontées terrain référencées 2026.</p>
+          <p class="v5-etape__c">Aperçu sans compte, carte complète avec un compte gratuit · sources ouvertes, actualisé chaque jour. Abonnés premium : nos remontées terrain.</p>
           <a class="btn-link" href="/carte/?pays=RDC">Ouvrir la carte<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 12h16M14 6l6 6-6 6"/></svg></a>
         </li>
         <li class="v5-etape" data-etape="3" data-lat="-19.0" data-lon="47.0" data-per="Chaque jour" data-cal="04" data-n="04">
@@ -241,7 +241,8 @@
           <p class="v5-etape__k">Théâtre 05 / 06</p>
           <h3>Afrique maritime</h3>
           <p>Les routes et les détroits : piraterie dans le golfe de Guinée, attaques en mer Rouge, sûreté des grands passages stratégiques et présence navale concurrente.</p>
-          <p class="v5-etape__c">Calques : flux, ports, piraterie, hubs, présences navales, AIS temps réel.</p>
+          <p class="v5-etape__c">Incidents en mer : aperçu sans compte, carte complète avec un compte gratuit · sources ouvertes, actualisé chaque jour. Théâtre : flux, ports, hubs, présences navales, AIS temps réel.</p>
+          <a class="btn-link" href="/carte/?pays=Mer%20Rouge">Ouvrir la carte<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 12h16M14 6l6 6-6 6"/></svg></a>
           <a class="btn-link" href="/afrique/">Ouvrir le théâtre<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 12h16M14 6l6 6-6 6"/></svg></a>
         </li>
         <li class="v5-etape" data-etape="5" data-lat="30.0" data-lon="74.0" data-per="Chaque jour" data-cal="04" data-n="06">
@@ -334,8 +335,11 @@
   function options() {
     var e = sel.entree, k = ETAPES[etape];
     if (k === 'pays') return pays.map(function (c) {
-      return { v: c.name, l: c.name, n: c.count, th: c.theatre || 'Sahel', g: c.statut === 'reference' ? 'Données référencées 2026 · ' + (c.theatre || '') : 'Sahel · actualisé chaque semaine', ref: c.statut === 'reference' };
-    }).sort(function (a, b) { return (a.ref - b.ref) || a.g.localeCompare(b.g, 'fr') || b.n - a.n; });
+      // Trois statuts du manifeste : Sahel actualisé chaque semaine, théâtres en sources ouvertes (un groupe par théâtre), RDC référencée.
+      var th = c.theatre || 'Sahel', rang = c.statut === 'reference' ? 2 : c.statut === 'osint' ? 1 : 0;
+      var g = rang === 2 ? 'Données référencées 2026 · ' + th : rang === 1 ? th + ' · sources ouvertes, actualisé chaque jour' : th + ' · actualisé chaque semaine';
+      return { v: c.name, l: c.name, n: c.count, th: th, g: g, rang: rang, ref: c.statut === 'reference' };
+    }).sort(function (a, b) { return (a.rang - b.rang) || a.g.localeCompare(b.g, 'fr') || b.n - a.n; });
     if (!e) return [];
     if (k === 'date') return (e.months || []).map(function (m) { return { v: m.key, l: m.label }; });
     return (k === 'event' ? e.events : e.actors || []).map(function (x) { return { v: x, l: x }; });
@@ -399,9 +403,12 @@
   function passerAbonne() {
     if (abonne) return; abonne = true;
     f.querySelector('button[type=submit]').setAttribute('aria-label', t('Valider'));
-    // Manifeste public du site (pas le bucket : ici la page n'est pas réservée, l'accès
-    // premium n'est jamais confirmé et la lecture du bucket attendrait sans fin).
-    fetch('/carte/countries.json?v=' + Date.now()).then(function (r) { return r.json(); }).then(function (d) { pays = d.countries || []; rendre(); }).catch(function () {});
+    // Manifeste public, republié chaque matin par le VPS dans veille-public/carte/ (04/11/2026),
+    // repli sur la copie statique du site. Jamais le bucket privé : l'accès premium n'est pas confirmé ici.
+    var statique = function () { return fetch('/carte/countries.json?v=' + Date.now()).then(function (r) { return r.json(); }); };
+    fetch('https://lwgrjdpuagnvvzmdbyzb.supabase.co/storage/v1/object/public/veille-public/carte/countries.json?v=' + Math.floor(Date.now() / 300000))
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).catch(statique)
+      .then(function (d) { pays = d.countries || []; rendre(); }).catch(function () {});
     rendre();
   }
   function sync() {
