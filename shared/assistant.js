@@ -77,6 +77,8 @@
       '.ar-saisie{display:grid;grid-template-columns:1fr auto;gap:8px}' +
       '.ar-saisie textarea{min-height:40px;max-height:120px;resize:vertical;padding:9px 10px;border:1px solid var(--line-night,rgba(255,255,255,.2));border-radius:2px;background:rgba(255,255,255,.04);color:inherit;font:400 14px/1.4 var(--sans,"Host Grotesk",Arial,sans-serif)}' +
       '.ar-saisie textarea::placeholder{color:var(--on-night-2,#A8A9AD)}' +
+      // Curseur blanc : v5.css met caret-color à l'encre sur tout le site, invisible sur ce fond de nuit.
+      '.ar-saisie textarea{caret-color:var(--on-night,#F2F2F4)}.ar-saisie textarea:focus{outline:none;border-color:rgba(255,255,255,.55);background:rgba(255,255,255,.07)}' +
       '.ar-saisie button{height:40px;padding:0 14px;border:0;border-radius:2px;background:var(--on-night,#F2F2F4);color:#1C1D21;font:500 13px var(--sans,"Host Grotesk",Arial,sans-serif);cursor:pointer}.ar-saisie button:disabled{opacity:.45;cursor:default}' +
       '.ar-info{display:flex;justify-content:space-between;gap:10px;margin-top:8px;font:400 10.5px/1.4 var(--mono,monospace);color:var(--on-night-2,#A8A9AD)}' +
       '.ar-verrou{margin:auto 0;padding:24px 16px;text-align:left}.ar-verrou p{margin:0 0 12px;font:400 14px/1.5 var(--sans,"Host Grotesk",Arial,sans-serif);color:var(--on-night-2,#A8A9AD)}' +
