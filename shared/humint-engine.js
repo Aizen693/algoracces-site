@@ -1119,9 +1119,9 @@
     var osint = e && e.statut === 'osint';
     el.className = 'chip chip-statut' + (ref ? ' chip-statut-ref' : '');
     el.innerHTML = '<span class="chip-statut-dot" aria-hidden="true"></span><span class="chip-val">' +
-      (ref ? 'Données référencées · ' + esc(periodeDe(e)) : osint ? 'Sources ouvertes · actualisé chaque jour' : 'Actualisé chaque semaine') + '</span>';
+      (ref ? 'Données référencées · ' + esc(periodeDe(e)) : osint ? 'Sources ouvertes · mis à jour chaque semaine' : 'Actualisé chaque semaine') + '</span>';
     el.title = ref ? 'Événements référencés sur ce théâtre en 2026, sans mise à jour hebdomadaire.'
-      : osint ? 'Événements tirés de sources publiques, chacun vérifié sur son article, ajoutés chaque jour.'
+      : osint ? 'Événements tirés de sources publiques, chacun vérifié sur son article, ajoutés chaque semaine.'
       : 'Alimenté chaque semaine par les remontées terrain.';
     return el;
   }
@@ -1182,7 +1182,7 @@
   function openEditor(key, anchor) {
     if (key === 'pays') {
       var all = state.manifest.countries || [];
-      function grp(c) { return c.statut === 'reference' ? (c.theatre || 'Autres') + ' · données référencées 2026' : c.statut === 'osint' ? (c.theatre || 'Autres') + ' · sources ouvertes, actualisé chaque jour' : (c.theatre || 'Sahel') + ' · actualisé chaque semaine'; }
+      function grp(c) { return c.statut === 'reference' ? (c.theatre || 'Autres') + ' · données référencées 2026' : c.statut === 'osint' ? (c.theatre || 'Autres') + ' · sources ouvertes, mis à jour chaque semaine' : (c.theatre || 'Sahel') + ' · actualisé chaque semaine'; }
       // Liste verrouillée sur le théâtre courant : pays, calques, acteurs et typologies
       // restent ceux du théâtre. Aucune bascule vers un autre théâtre depuis la carte.
       var cur = state.entry && state.entry.file;
