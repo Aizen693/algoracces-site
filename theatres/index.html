@@ -369,7 +369,7 @@
   function retirer(i) { var s2 = { entree: i > 0 ? sel.entree : null }; for (var n = 1; n < i; n++) s2[ETAPES[n]] = sel[ETAPES[n]]; sel = s2; etape = i; rendre(); inp.focus(); }
   function rendre() {
     var k = ETAPES[etape];
-    lbl.textContent = t(LBL[k]); inp.placeholder = t(PH[k]); inp.required = k === 'pays';
+    lbl.textContent = t(LBL[k]); var ms = (k === 'date' && sel.entree && sel.entree.months) || []; inp.placeholder = ms.length ? ms[ms.length - 1].label : t(PH[k]); inp.required = k === 'pays';
     var lib = { date: function (v) { var m = (sel.entree.months || []).find(function (x) { return x.key === v; }); return m ? m.label : v; } };
     jet.innerHTML = ETAPES.map(function (x, i) {
       if (i >= etape) return '';
@@ -377,7 +377,9 @@
       return '<button type="button" class="outil__jeton" data-i="' + i + '" aria-label="' + esc(t('Retirer')) + ' ' + esc(v) + '">' + esc(lib[x] ? lib[x](v) : v) + '<span aria-hidden="true">×</span></button>';
     }).join('');
     // Pays : tout le Sahel, puis les autres théâtres groupés (sans saisie, on masque les pays à un seul point).
-    var q = norm(inp.value), l = options().filter(function (o) { return trouve(o, q); }).filter(function (o) { return k !== 'pays' || q || !o.ref || o.n > 1; }).slice(0, k === 'pays' ? 40 : 8), h = '', grp = null;
+    var q = norm(inp.value), l = options().filter(function (o) { return trouve(o, q); }).filter(function (o) { return k !== 'pays' || q || !o.ref || o.n > 1; }), h = '', grp = null;
+    // Périodes : les 6 mois les plus récents (la liste suit d'elle même chaque mois publié) ; la saisie retrouve les plus anciens.
+    l = k === 'date' ? l.sort(function (a, b) { return a.v < b.v ? -1 : a.v > b.v ? 1 : 0; }).slice(-6) : l.slice(0, k === 'pays' ? 40 : 8);
     if (k !== 'pays') h += '<button type="button" class="outil__opt outil__opt--passer" data-v="__tous">' + esc(t(TOUS[k])) + '</button>';
     h += l.map(function (o) {
       var gh = '';
