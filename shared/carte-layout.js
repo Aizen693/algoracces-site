@@ -31,13 +31,25 @@
 
     // ── 1. Barre de jetons : « Nouveauté » reste dans la rangée du haut si les
     //    jetons tiennent sur une ligne à côté ; sinon il descend sous la barre.
-    var newsInRow = false;
+    // Jetons : police normale si la rangée tient sur une ligne, sinon compacte ; sur une ligne,
+    // ils s'étirent jusqu'au bord de la barre (classes chips-compact / hbar-plein, cf. carte/index.html).
+    var hbar = bar && bar.closest('.hbar');
+    function uneLigne() { var c = bar && bar.firstElementChild; return !c || bar.offsetHeight <= c.offsetHeight + 6; }
+    function ajuster() {
+      if (!bar || mobile) return uneLigne();
+      bar.classList.remove('chips-compact');
+      if (uneLigne()) return true;
+      bar.classList.add('chips-compact');
+      return uneLigne();
+    }
+    var newsInRow = false, ligne;
+    if (hbar) hbar.classList.remove('hbar-plein');
     if (!mobile && newsOn) {
       set(hdr, 'paddingRight', (news.offsetWidth + EDGE + 14) + 'px');
-      var chip = bar && bar.firstElementChild;
-      newsInRow = !chip || bar.offsetHeight <= chip.offsetHeight + 6;
+      newsInRow = ligne = ajuster();
     }
-    if (!newsInRow) set(hdr, 'paddingRight', mobile ? '' : EDGE + 'px');
+    if (!newsInRow) { set(hdr, 'paddingRight', mobile ? '' : EDGE + 'px'); ligne = ajuster(); }
+    if (hbar && !mobile && ligne) hbar.classList.add('hbar-plein');
     var top = hdr.offsetHeight + GAP;
 
     // ── 2. Curseur temporel (bas) : centré s'il a la place, sinon décalé à

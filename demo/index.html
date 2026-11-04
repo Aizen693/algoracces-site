@@ -369,13 +369,22 @@
      tenir sur une ligne à côté de la marque. */
   @media(min-width:681px){ #tl-label{flex:none} }
   @media(min-width:681px) and (max-width:1280px){
-    #chipbar{gap:5px}
     .hbar{gap:10px}
-    .chip{height:36px;padding:0 8px 0 10px;gap:6px}
-    .chip-key{font-size:12px}
-    .chip-val{font-size:14px}
     #header .brand span{display:none}
     #header .brand{padding-right:10px}
+  }
+  /* Taille des jetons décidée par carte-layout.js (04/11/2026) : police normale si la rangée
+     tient sur une ligne, compacte sinon ; sur une ligne, les jetons s'étirent jusqu'au bord
+     de la barre (plus de vide à droite). */
+  @media(min-width:681px){
+    #chipbar.chips-compact{gap:5px}
+    .chips-compact .chip{height:36px;padding:0 8px 0 10px;gap:6px}
+    .chips-compact .chip-key{font-size:12px}
+    .chips-compact .chip-val{font-size:14px}
+    .hbar.hbar-plein{flex:1 1 auto}
+    .hbar-plein #chipbar{flex:1 1 auto}
+    .hbar-plein .chip{flex:1 1 auto}
+    .hbar-plein .chip-caret,.hbar-plein .chip .ico:last-child{margin-left:auto}
   }
 
   @media(max-width:680px){
@@ -445,7 +454,7 @@
 <script src="../shared/humint-engine.js?v=20261104o"></script>
 <!-- Imagerie Satellite HD (shared/satellite-hd.js) volontairement absente : quota Cesium ion / Google
      réservé aux abonnés. -->
-<script src="../shared/carte-layout.js?v=20261104a"></script>
+<script src="../shared/carte-layout.js?v=20261104b"></script>
 
 <!-- Compte premium : la démo reste publique, mais un compte qui a déjà l'accès réel
      voit un lien vers ses théâtres au lieu de l'invitation à s'abonner. -->
