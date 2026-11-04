@@ -1,4 +1,4 @@
-/* assistant.js : panneau « Assistant de renseignement » (premium) pour /carte/ et /veille/ (04/11/2026).
+/* assistant.js : panneau « Argos », assistant de renseignement (premium) pour /carte/ et /veille/ (04/11/2026).
  *
  * Module IIFE autonome et ADDITIF : n'édite aucun autre script. Il pose un jeton « Assistant » dans la barre
  * de jetons de /carte/ (#chipbar), sinon un bouton flottant, et ouvre un panneau latéral qui interroge la
@@ -87,10 +87,10 @@
   /* ─────────── Construction ─────────── */
   function construirePanneau() {
     panneau = document.createElement('aside');
-    panneau.id = 'assistant-ri'; panneau.hidden = true; panneau.setAttribute('aria-label', 'Assistant de renseignement');
+    panneau.id = 'assistant-ri'; panneau.hidden = true; panneau.setAttribute('aria-label', 'Argos, assistant de renseignement');
     panneau.innerHTML =
-      '<div class="ar-tete"><div><div class="ar-titre">Assistant de renseignement</div><div class="ar-sous">Corpus Algor Acces · réponses sourcées</div></div>' +
-      '<button type="button" class="ar-x" aria-label="Fermer l\'assistant">×</button></div>' +
+      '<div class="ar-tete"><div><div class="ar-titre">Argos</div><div class="ar-sous">Assistant de renseignement · réponses sourcées</div></div>' +
+      '<button type="button" class="ar-x" aria-label="Fermer Argos">×</button></div>' +
       '<div class="ar-corps" style="display:flex;flex-direction:column;flex:1;min-height:0"></div>';
     panneau.addEventListener('click', surClic);
     document.body.appendChild(panneau);
@@ -100,7 +100,7 @@
   function rendreCorps() {
     var corps = panneau.querySelector('.ar-corps');
     if (!premium()) {
-      corps.innerHTML = '<div class="ar-verrou"><p>L\'assistant interroge le corpus HUMINT et OSINT d\'Algor Acces et cite chaque fait. Il est réservé aux abonnés premium.</p>' +
+      corps.innerHTML = '<div class="ar-verrou"><p>Argos interroge le corpus HUMINT et OSINT d\'Algor Acces et cite chaque fait. Il est réservé aux abonnés premium.</p>' +
         '<a href="/offres/">Voir les offres</a></div>';
       return;
     }
@@ -143,7 +143,7 @@
     if (bar) {
       chip = document.createElement('button');
       chip.type = 'button'; chip.id = 'chip-assistant'; chip.className = 'chip chip-edit';
-      chip.innerHTML = '<span class="chip-key">Assistant</span><span class="chip-val">Corpus</span><span class="chip-caret">' + ICON + '</span>';
+      chip.innerHTML = '<span class="chip-key">Assistant</span><span class="chip-val">Argos</span><span class="chip-caret">' + ICON + '</span>';
       chip.addEventListener('click', function (e) { e.stopPropagation(); basculer(); });
       var place = function () { if (chip.parentNode !== bar) bar.appendChild(chip); };
       new MutationObserver(place).observe(bar, { childList: true });
@@ -151,7 +151,7 @@
     } else {
       chip = document.createElement('button');
       chip.type = 'button'; chip.id = 'assistant-ri-bouton';
-      chip.innerHTML = ICON + '<span>Assistant</span>';
+      chip.innerHTML = ICON + '<span>Argos</span>';
       chip.addEventListener('click', basculer);
       document.body.appendChild(chip);
     }
@@ -193,7 +193,7 @@
   function rendreFil() {
     if (!fil) return;
     if (!echanges.length) {
-      fil.innerHTML = '<div class="ar-vide">L\'assistant répond à partir des seuls extraits du corpus, sur le théâtre et la période choisis, et cite chaque fait. Les renseignements non recoupés par une source ouverte sont signalés comme non corroborés.' +
+      fil.innerHTML = '<div class="ar-vide">Argos répond à partir des seuls extraits du corpus, sur le théâtre et la période choisis, et cite chaque fait. Les renseignements non recoupés par une source ouverte sont signalés comme non corroborés.' +
         '<ul>' + EXEMPLES.map(function (q) { return '<li><button type="button" class="ar-exemple">' + esc(q) + '</button></li>'; }).join('') + '</ul></div>';
       return;
     }
@@ -301,13 +301,13 @@
 
   var AVIS = {
     session: { texte: 'Votre session a expiré. Reconnectez-vous pour continuer.', bouton: 'Se reconnecter', action: 'login' },
-    premium: { texte: 'L\'assistant est réservé aux abonnés premium.', bouton: 'Voir les offres', action: 'offres' },
-    quota: { texte: 'Quota du jour atteint. L\'assistant sera de nouveau disponible demain.' },
+    premium: { texte: 'Argos est réservé aux abonnés premium.', bouton: 'Voir les offres', action: 'offres' },
+    quota: { texte: 'Quota du jour atteint. Argos sera de nouveau disponible demain.' },
     rafale: { texte: 'Trop de questions en peu de temps. Réessayez dans une minute.' },
     erreur: { texte: 'Le service ne répond pas pour le moment. Réessayez dans un instant.', bouton: 'Réessayer', action: 'reessayer' },
   };
   function avis(x, cle) { x.avis = AVIS[cle]; x.cleAvis = cle; }
-  function quota(n) { if (pied && typeof n === 'number') pied.textContent = t(n + ' questions restantes aujourd\'hui'); }
+  function quota(n) { if (pied && typeof n === 'number') pied.textContent = t(n + (n > 1 ? ' questions restantes' : ' question restante') + ' aujourd\'hui'); }
 
   /* ─────────── Citations ─────────── */
   function extraitDe(cle) {
