@@ -160,10 +160,7 @@
     var pays = window.HumintMap.getCountry();
     if (!pays) return;
     var poser = function () { var z = zoneDuPays && zoneDuPays[pays]; if (z && selTheatre.querySelector('option[value="' + z + '"]')) selTheatre.value = z; };
-    if (zoneDuPays) { poser(); return; }
-    fetch('/carte/countries.json').then(function (r) { return r.json(); }).then(function (d) {
-      zoneDuPays = {}; (d.countries || []).forEach(function (c) { zoneDuPays[c.name] = c.zone; }); poser();
-    }).catch(function () { /* présélection facultative */ });
+    chargerPays(poser);
   }
 
   function construireDeclencheur() {
@@ -241,7 +238,7 @@
     h += '<div class="ar-r"' + (fixe ? '' : ' data-i18n-skip') + '>' + paragraphes(x.texte, i) + '</div>';
     if (x.fin && x.fin.cites.length && x.extraits) {
       var cites = x.extraits.filter(function (e) { return x.fin.cites.indexOf(e.ref) >= 0; });
-      h += '<div class="ar-sources"><h4>Sources citées</h4><p class="ar-aide">Cliquez sur un nom de source pour ouvrir l\'article d\'origine dans un nouvel onglet.</p>' +
+      h += '<div class="ar-sources"><h4>Sources citées</h4><p class="ar-aide">Chaque lien ouvre la fiche rédigée sur Algor Acces dans un nouvel onglet.</p>' +
         cites.map(function (e) { return rendreSource(e, i); }).join('') + '</div>';
     } else if (!x.fin) h += '<div class="ar-attente">…</div>';
     return h;
@@ -253,7 +250,24 @@
     var l = String(e.lieu || '').replace(new RegExp('^' + String(e.pays || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*[-,:]\\s*', 'i'), '');
     return (!l || l === e.pays ? [e.pays] : [l, e.pays]).filter(Boolean).join(', ');
   }
-  function lienSur(u) { return /^https?:\/\//i.test(String(u || '')); }
+  // Pays de l'extrait qui a une carte sur /carte/ (countries.json), accents et casse ignorés.
+  function sansAccent(x) { return String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim(); }
+  function paysCarte(e) {
+    if (!zoneDuPays) return null;
+    var noms = Object.keys(zoneDuPays), cands = String([e.pays, e.lieu].filter(Boolean).join('|')).split(/\s*(?:\||\/|,|\(|\s-\s|:)\s*/);
+    for (var k = 0; k < cands.length; k++) {
+      var c = sansAccent(cands[k]);
+      for (var j = 0; j < noms.length; j++) if (c && sansAccent(noms[j]) === c) return noms[j];
+    }
+    return null;
+  }
+  function chargerPays(suite) {
+    if (zoneDuPays) { if (suite) suite(); return; }
+    fetch('/carte/countries.json').then(function (r) { return r.json(); }).then(function (d) {
+      zoneDuPays = {}; (d.countries || []).forEach(function (c) { zoneDuPays[c.name] = c.zone; });
+      if (suite) suite();
+    }).catch(function () { /* liens de carte facultatifs */ });
+  }
   function rendreSource(e, i) {
     var lieu = lieuDe(e);
     var humint = e.categorie === 'humint';
@@ -261,16 +275,16 @@
     var titre = e.titre || [e.type, lieu].filter(Boolean).join(', ') || 'Extrait sans titre';
     var meta = [esc(dateFr(e)), '<span' + (e.statut === 'non_corrobore' ? ' class="nc"' : '') + '>' + esc(STATUTS[e.statut] || e.statut) + '</span>'];
     if (lieu && e.titre) meta.push('<span data-i18n-skip>' + esc(lieu) + '</span>');
-    var liens = (e.sources || []).map(function (s) {
-      return lienSur(s.url)
-        ? '<a class="ar-lien" href="' + esc(s.url) + '" target="_blank" rel="noopener noreferrer" title="' + esc(s.url) + '"><span data-i18n-skip>' + esc(s.nom) + '</span>' + FLECHE + '</a>'
-        : '<span class="ar-lien ar-lien--muet" data-i18n-skip>' + esc(s.nom) + '</span>';
-    });
-    // Note d'analyse : lien vers la note complète dans /veille/.
-    if (e.categorie === 'note' && e.ref) liens.push('<a class="ar-lien" href="/veille/?note=' + encodeURIComponent(e.ref) + '" target="_blank" rel="noopener">Lire la note' + FLECHE + '</a>');
-    var bas = liens.length ? '<div class="ar-liens">' + liens.join('') + '</div>'
-      : '<small>' + (humint ? 'Source humaine protégée : aucun lien public.' : 'Pas de lien public pour cet extrait.') + '</small>';
-    var carte = e.lat != null && e.lon != null ? ' · <button type="button" class="ar-voir" data-e="' + i + ':' + e.n + '">' + (surCarte() ? 'Voir sur la carte' : 'Ouvrir sur la carte') + '</button>' : '';
+    // Lien vers la page rédigée sur algoracces.fr : fiche (note, rapport cyber, journal radio) donnée par le
+    // serveur, sinon la carte du pays quand ce pays a une carte. Jamais la source externe.
+    var lien = '';
+    if (e.fiche && /^\/[a-z]/.test(e.fiche.url)) lien = '<a class="ar-lien" href="' + esc(e.fiche.url) + '" target="_blank" rel="noopener">' + esc(e.fiche.libelle) + FLECHE + '</a>';
+    else {
+      var pc = paysCarte(e);
+      if (pc && !(surCarte() && e.lat != null)) lien = '<a class="ar-lien" href="/carte/?pays=' + encodeURIComponent(pc) + '" target="_blank" rel="noopener">Voir sur la carte ' + esc(pc) + FLECHE + '</a>';
+    }
+    var bas = lien ? '<div class="ar-liens">' + lien + '</div>' : (humint ? '<small>Source humaine protégée.</small>' : '');
+    var carte = surCarte() && e.lat != null && e.lon != null ? ' · <button type="button" class="ar-voir" data-e="' + i + ':' + e.n + '">Voir sur la carte</button>' : '';
     return '<div class="ar-src" id="ar-src-' + i + '-' + e.n + '"><span class="n">[' + e.n + ']</span><span>' +
       '<b data-i18n-skip>' + esc(titre) + '</b><small>' + meta.join(' · ') + carte + '</small>' + bas + '</span></div>';
   }
@@ -407,6 +421,7 @@
     styles();
     construirePanneau();
     construireDeclencheur();
+    chargerPays(function () { if (fil && echanges.length) rendreFil(); });
     window.addEventListener('resize', function () { if (!panneau.hidden) caler(); else degagerPastille(); });
     // /veille/ : changer d'onglet (Géopolitique, Cyber, Radio) recale le théâtre proposé.
     document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('#onglets .tab')) setTimeout(theatreParDefaut, 0); });
