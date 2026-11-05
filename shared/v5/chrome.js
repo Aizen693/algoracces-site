@@ -471,7 +471,12 @@
       } else { ouvertAvec = null; compter(); }
     };
     btn.addEventListener('click', function (e) { e.stopPropagation(); basculer(!ouvert); });
-    d.addEventListener('click', function (e) { if (ouvert && !pan.contains(e.target)) basculer(false); });
+    // Clic en dehors : on lit le chemin du clic (figé au moment du clic). Un filtre redessine sa barre et le
+    // bouton cliqué n'est alors plus dans le document : pan.contains(e.target) fermait le panneau à tort.
+    d.addEventListener('click', function (e) {
+      var chemin = e.composedPath ? e.composedPath() : [];
+      if (ouvert && chemin.indexOf(pan) < 0 && !pan.contains(e.target)) basculer(false);
+    });
     d.addEventListener('keydown', function (e) { if (ouvert && e.key === 'Escape') { basculer(false); btn.focus(); } });
     var brut = [], radio = [], prefs = null, connecte = false;
     var appliquer = function () {
