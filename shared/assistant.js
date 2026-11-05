@@ -68,10 +68,17 @@
       '.ar-avis button{margin-top:8px;height:30px;padding:0 12px;border:1px solid var(--line-night,rgba(255,255,255,.2));border-radius:2px;background:none;color:var(--on-night,#F2F2F4);font:400 13px var(--sans,"Host Grotesk",Arial,sans-serif);cursor:pointer}' +
       '.ar-sources{margin:10px 0 4px;border-top:1px solid var(--line-night,rgba(255,255,255,.12))}' +
       '.ar-sources h4{margin:10px 0 6px;font:400 10.5px/1 var(--mono,monospace);letter-spacing:.06em;text-transform:uppercase;color:var(--on-night-2,#A8A9AD)}' +
-      '.ar-src{width:100%;display:grid;grid-template-columns:26px 1fr;gap:8px;padding:6px 4px;border:0;border-radius:2px;background:none;color:inherit;text-align:left;cursor:pointer;font:inherit}' +
-      '.ar-src:hover,.ar-src.sel{background:rgba(255,255,255,.07)}' +
+      '.ar-sources .ar-aide{margin:-2px 0 8px;font:400 12px/1.4 var(--sans,"Host Grotesk",Arial,sans-serif);color:var(--on-night-2,#A8A9AD)}' +
+      '.ar-src{display:grid;grid-template-columns:26px 1fr;gap:8px;padding:8px 4px;border-radius:2px;scroll-margin:12px}' +
+      '.ar-src.sel{background:rgba(255,255,255,.07)}' +
       '.ar-src .n{font:400 11.5px/1.6 var(--mono,monospace);color:var(--on-night-2,#A8A9AD)}' +
-      '.ar-src b{display:block;font:400 13px/1.35 var(--sans,"Host Grotesk",Arial,sans-serif)}.ar-src small{display:block;margin-top:2px;font:400 11px/1.4 var(--mono,monospace);color:var(--on-night-2,#A8A9AD);word-break:break-all}' +
+      '.ar-src b{display:block;font:400 13px/1.35 var(--sans,"Host Grotesk",Arial,sans-serif)}.ar-src small{display:block;margin-top:3px;font:400 11px/1.4 var(--sans,"Host Grotesk",Arial,sans-serif);color:var(--on-night-2,#A8A9AD)}' +
+      '.ar-liens{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}' +
+      '.ar-lien{display:inline-flex;align-items:center;gap:5px;max-width:100%;height:26px;padding:0 9px;border:1px solid var(--line-night,rgba(255,255,255,.2));border-radius:2px;color:var(--on-night,#F2F2F4);font:400 12px var(--sans,"Host Grotesk",Arial,sans-serif);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+      '.ar-lien:hover{background:var(--on-night,#F2F2F4);color:#1C1D21;border-color:var(--on-night,#F2F2F4)}' +
+      '.ar-lien svg{width:11px;height:11px;flex:none}' +
+      '.ar-lien--muet{border-style:dashed;color:var(--on-night-2,#A8A9AD);pointer-events:none}' +
+      '.ar-voir{margin-left:2px;padding:0;border:0;background:none;color:var(--on-night-2,#A8A9AD);font:inherit;text-decoration:underline;text-underline-offset:2px;cursor:pointer}.ar-voir:hover{color:var(--on-night,#F2F2F4)}' +
       '.ar-src .nc{color:#E8A23A}' +
       '.ar-pied{padding:10px 16px 12px;border-top:1px solid var(--line-night,rgba(255,255,255,.12))}' +
       '.ar-saisie{display:grid;grid-template-columns:1fr auto;gap:8px}' +
@@ -126,15 +133,30 @@
     selPeriode = corps.querySelector('#ar-periode');
     pied = corps.querySelector('.ar-quota');
     champ.placeholder = t(champ.placeholder);   // attribut créé après le passage de i18n.js
+    selTheatre.addEventListener('change', function () { selTheatre.dataset.manuel = '1'; });
     corps.querySelector('.ar-saisie').addEventListener('submit', function (e) { e.preventDefault(); poser(champ.value); });
     champ.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); poser(champ.value); } });
     theatreParDefaut();
     rendreFil();
   }
 
-  // Sur /carte/, le théâtre du pays affiché est présélectionné.
+  // Théâtre présélectionné selon la page : onglet Cyber ou Radio de /veille/, page d'un théâtre, ou pays
+  // affiché sur /carte/. Un choix fait à la main dans le panneau n'est jamais écrasé.
+  function theatreDePage() {
+    var p = location.pathname;
+    if (/^\/veille\/?/.test(p)) {
+      var actif = document.querySelector('#onglets .tab.is-active');
+      var o = (actif && actif.dataset.tab) || new URLSearchParams(location.search).get('onglet');
+      return o === 'cyber' ? 'cyber' : o === 'radio' ? 'sahel' : '';
+    }
+    var m = p.match(/^\/(sahel|rdc|moyen-orient|asie-sud|madagascar|afrique)(\/|-|$)/);
+    return m ? m[1] : '';
+  }
   function theatreParDefaut() {
-    if (!selTheatre || !window.HumintMap || !window.HumintMap.getCountry) return;
+    if (!selTheatre || selTheatre.dataset.manuel) return;
+    var page = theatreDePage();
+    if (page || /^\/veille\/?/.test(location.pathname)) { selTheatre.value = page; return; }
+    if (!window.HumintMap || !window.HumintMap.getCountry) return;
     var pays = window.HumintMap.getCountry();
     if (!pays) return;
     var poser = function () { var z = zoneDuPays && zoneDuPays[pays]; if (z && selTheatre.querySelector('option[value="' + z + '"]')) selTheatre.value = z; };
@@ -167,6 +189,7 @@
 
   function ouvrir() {
     rendreCorpsSiBesoin();
+    theatreParDefaut();   // l'onglet de /veille/ a pu changer depuis la dernière ouverture
     panneau.hidden = false;
     chip.setAttribute('aria-pressed', 'true');
     caler();
@@ -218,23 +241,44 @@
     h += '<div class="ar-r"' + (fixe ? '' : ' data-i18n-skip') + '>' + paragraphes(x.texte, i) + '</div>';
     if (x.fin && x.fin.cites.length && x.extraits) {
       var cites = x.extraits.filter(function (e) { return x.fin.cites.indexOf(e.ref) >= 0; });
-      h += '<div class="ar-sources"><h4>Extraits cités</h4>' + cites.map(function (e) {
-        // Le lieu du corpus répète souvent le pays (« Niger », « Burkina Faso - Djibo ») : on ne l'écrit qu'une fois.
-        var l = String(e.lieu || '').replace(new RegExp('^' + String(e.pays || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*[-,:]\\s*', 'i'), '');
-        var lieu = (!l || l === e.pays ? [e.pays] : [l, e.pays]).filter(Boolean).join(', ');
-        return '<button type="button" class="ar-src" data-e="' + i + ':' + e.n + '"><span class="n">[' + e.n + ']</span><span>' +
-          '<b data-i18n-skip>' + esc(lieu || 'Lieu non précisé') + '</b>' +
-          '<small><span>' + esc(dateFr(e)) + '</span> · <span' + (e.statut === 'non_corrobore' ? ' class="nc"' : '') + '>' + esc(STATUTS[e.statut] || e.statut) + '</span>' +
-          (e.type ? ' · <span data-i18n-skip>' + esc(e.type) + '</span>' : '') + '<br><span data-i18n-skip>' + esc(e.ref) + '</span></small></span></button>';
-      }).join('') + '</div>';
+      h += '<div class="ar-sources"><h4>Sources citées</h4><p class="ar-aide">Cliquez sur un nom de source pour ouvrir l\'article d\'origine dans un nouvel onglet.</p>' +
+        cites.map(function (e) { return rendreSource(e, i); }).join('') + '</div>';
     } else if (!x.fin) h += '<div class="ar-attente">…</div>';
     return h;
+  }
+
+  var FLECHE = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M4 2h6v6M10 2 3 9"/></svg>';
+  // Le lieu du corpus répète souvent le pays (« Niger », « Burkina Faso - Djibo ») : on ne l'écrit qu'une fois.
+  function lieuDe(e) {
+    var l = String(e.lieu || '').replace(new RegExp('^' + String(e.pays || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*[-,:]\\s*', 'i'), '');
+    return (!l || l === e.pays ? [e.pays] : [l, e.pays]).filter(Boolean).join(', ');
+  }
+  function lienSur(u) { return /^https?:\/\//i.test(String(u || '')); }
+  function rendreSource(e, i) {
+    var lieu = lieuDe(e);
+    var humint = e.categorie === 'humint';
+    // Titre : le sujet de l'extrait ; à défaut (HUMINT, ancien format) le type et le lieu.
+    var titre = e.titre || [e.type, lieu].filter(Boolean).join(', ') || 'Extrait sans titre';
+    var meta = [esc(dateFr(e)), '<span' + (e.statut === 'non_corrobore' ? ' class="nc"' : '') + '>' + esc(STATUTS[e.statut] || e.statut) + '</span>'];
+    if (lieu && e.titre) meta.push('<span data-i18n-skip>' + esc(lieu) + '</span>');
+    var liens = (e.sources || []).map(function (s) {
+      return lienSur(s.url)
+        ? '<a class="ar-lien" href="' + esc(s.url) + '" target="_blank" rel="noopener noreferrer" title="' + esc(s.url) + '"><span data-i18n-skip>' + esc(s.nom) + '</span>' + FLECHE + '</a>'
+        : '<span class="ar-lien ar-lien--muet" data-i18n-skip>' + esc(s.nom) + '</span>';
+    });
+    // Note d'analyse : lien vers la note complète dans /veille/.
+    if (e.categorie === 'note' && e.ref) liens.push('<a class="ar-lien" href="/veille/?note=' + encodeURIComponent(e.ref) + '" target="_blank" rel="noopener">Lire la note' + FLECHE + '</a>');
+    var bas = liens.length ? '<div class="ar-liens">' + liens.join('') + '</div>'
+      : '<small>' + (humint ? 'Source humaine protégée : aucun lien public.' : 'Pas de lien public pour cet extrait.') + '</small>';
+    var carte = e.lat != null && e.lon != null ? ' · <button type="button" class="ar-voir" data-e="' + i + ':' + e.n + '">' + (surCarte() ? 'Voir sur la carte' : 'Ouvrir sur la carte') + '</button>' : '';
+    return '<div class="ar-src" id="ar-src-' + i + '-' + e.n + '"><span class="n">[' + e.n + ']</span><span>' +
+      '<b data-i18n-skip>' + esc(titre) + '</b><small>' + meta.join(' · ') + carte + '</small>' + bas + '</span></div>';
   }
 
   function paragraphes(texte, i) {
     return texte.trim().split(/\n+/).map(function (p) {
       return '<p>' + esc(p).replace(/\[(\d{1,3}(?:,\s*\d{1,3})*)\]/g, function (_, liste) {
-        return liste.split(/,\s*/).map(function (n) { return '<button type="button" class="ar-cite" data-e="' + i + ':' + n + '" title="Voir l\'extrait ' + n + '">' + n + '</button>'; }).join('');
+        return liste.split(/,\s*/).map(function (n) { return '<button type="button" class="ar-cite" data-e="' + i + ':' + n + '" title="Voir la source ' + n + '">' + n + '</button>'; }).join('');
       }) + '</p>';
     }).join('');
   }
@@ -324,10 +368,13 @@
     var p = String(cle).split(':'), x = echanges[+p[0]];
     return x && x.extraits ? x.extraits.filter(function (e) { return String(e.n) === p[1]; })[0] : null;
   }
-  function montrer(e, cle) {
+  function montrer(e, cle, versCarte) {
     panneau.querySelectorAll('.ar-cite.sel,.ar-src.sel').forEach(function (b) { b.classList.remove('sel'); });
-    panneau.querySelectorAll('[data-e="' + cle + '"]').forEach(function (b) { b.classList.add('sel'); });
+    panneau.querySelectorAll('.ar-cite[data-e="' + cle + '"]').forEach(function (b) { b.classList.add('sel'); });
+    var ligne = document.getElementById('ar-src-' + cle.replace(':', '-'));
+    if (ligne) { ligne.classList.add('sel'); if (!versCarte) ligne.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
     if (e.lat == null || e.lon == null) return;
+    if (!versCarte && !surCarte()) return;
     if (surCarte()) {
       var map = window.HumintMap.getMap();
       if (repere) repere.remove();
@@ -337,7 +384,7 @@
       var ana = document.getElementById('analysis'), g = ana && ana.offsetWidth ? Math.round(ana.getBoundingClientRect().right) + 20 : 40;
       var marge = innerWidth > 720 ? { top: 100, bottom: 80, left: g, right: 440 } : { top: 40, bottom: Math.round(innerHeight * 0.75), left: 20, right: 20 };
       map.flyTo({ center: [e.lon, e.lat], zoom: Math.max(map.getZoom(), 8), padding: marge, duration: 700 });
-    } else if (e.pays) {
+    } else if (e.pays && !/[,/]/.test(e.pays)) {
       window.open('/carte/?pays=' + encodeURIComponent(e.pays), '_blank', 'noopener');
     }
   }
@@ -347,7 +394,7 @@
     if (!b) return;
     if (b.classList.contains('ar-x')) { fermer(); return; }
     if (b.classList.contains('ar-exemple')) { poser(b.textContent); return; }
-    if (b.dataset.e) { var e = extraitDe(b.dataset.e); if (e) montrer(e, b.dataset.e); return; }
+    if (b.dataset.e) { var e = extraitDe(b.dataset.e); if (e) montrer(e, b.dataset.e, b.classList.contains('ar-voir')); return; }
     var a = b.dataset.action;
     if (a === 'login' && window.algorAuth && window.algorAuth.openLogin) window.algorAuth.openLogin();
     else if (a === 'offres') location.href = '/offres/';
@@ -361,6 +408,8 @@
     construirePanneau();
     construireDeclencheur();
     window.addEventListener('resize', function () { if (!panneau.hidden) caler(); else degagerPastille(); });
+    // /veille/ : changer d'onglet (Géopolitique, Cyber, Radio) recale le théâtre proposé.
+    document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('#onglets .tab')) setTimeout(theatreParDefaut, 0); });
     setTimeout(degagerPastille, 800);   // la pastille est montée par i18n.js après le chargement du dictionnaire
     // L'accès premium peut être confirmé après le montage (overlay de connexion) : on reconstruit le corps.
     window.addEventListener('algorAuthReady', function () { window.__algorAuthGranted = true; if (!panneau.hidden) rendreCorpsSiBesoin(); });
