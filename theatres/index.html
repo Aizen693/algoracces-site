@@ -47,9 +47,14 @@
   .outil__opt--suite { border-color: var(--on-night); background: var(--on-night); color: var(--ink); }
   .outil__opt--suite:hover { background: transparent; color: var(--on-night); }
   .outil__opt--passer { border-style: dashed; }
+  /* Pays mis à jour par le dernier lot publié (moins de 7 jours) : point vert en coin ; le groupe Sahel perd alors le sien. */
+  .outil__opt--neuf { position: relative; }
+  .outil__sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .outil__opt--neuf::after { content: ""; position: absolute; top: -4px; right: -4px; width: 8px; height: 8px; border-radius: 50%; background: #2e9e5b; box-shadow: 0 0 0 3px rgba(46,158,91,.18); }
   .outil__groupe { flex-basis: 100%; margin: 10px 0 0; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: #8B8C92; display: flex; align-items: center; gap: 8px; }
   .outil__groupe:first-child { margin-top: 0; }
   .outil__groupe::before, .statut-dot { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #2e9e5b; box-shadow: 0 0 0 3px rgba(46,158,91,.18); }
+  .outil__groupe::before { display: none !important; }
   .outil__groupe--ref::before, .statut-dot--ref { background: #9aa0a6; box-shadow: none; }
   .v5-phero__statut { font-size: 16px; }
   .statut-dot { margin: 0 8px 2px 0; vertical-align: middle; }
@@ -338,11 +343,17 @@
       // Trois statuts du manifeste : Sahel actualisé chaque semaine, théâtres en sources ouvertes (un groupe par théâtre), RDC référencée.
       var th = c.theatre || 'Sahel', rang = c.statut === 'reference' ? 2 : c.statut === 'osint' ? 1 : 0;
       var g = rang === 2 ? 'Données référencées 2026 · ' + th : rang === 1 ? th + ' · sources ouvertes, mis à jour chaque semaine' : th + ' · actualisé chaque semaine';
-      return { v: c.name, l: c.name, n: c.count, th: th, g: g, rang: rang, ref: c.statut === 'reference' };
+      return { v: c.name, l: c.name, n: c.count, th: th, g: g, rang: rang, ref: c.statut === 'reference', neuf: neuf(c) };
     }).sort(function (a, b) { return (a.rang - b.rang) || a.g.localeCompare(b.g, 'fr') || b.n - a.n; });
     if (!e) return [];
     if (k === 'date') return (e.months || []).map(function (m) { return { v: m.key, l: m.label }; });
     return (k === 'event' ? e.events : e.actors || []).map(function (x) { return { v: x, l: x }; });
+  }
+  // Nouveau : le dernier lot publié pour ce pays (champ publie du manifeste) date de moins de 7 jours.
+  function neuf(c) {
+    if (!c.publie || !c.nouveaux) return null;
+    var j = (Date.now() - new Date(c.publie + 'T12:00:00').getTime()) / 864e5;
+    return j <= 7 ? { n: c.nouveaux, d: new Date(c.publie + 'T12:00:00').toLocaleDateString(/^en/.test(document.documentElement.lang) ? 'en-GB' : 'fr-FR', { day: 'numeric', month: 'long' }) } : null;
   }
   // Correspondance tolérante : casse, accents, tirets ; sur le pays ou son théâtre.
   function cle(x) { return norm(x).replace(/[^a-z0-9]+/g, ' ').trim(); }
@@ -384,7 +395,8 @@
     h += l.map(function (o) {
       var gh = '';
       if (o.g && o.g !== grp) { grp = o.g; gh = '<p class="outil__groupe' + (o.ref ? ' outil__groupe--ref' : '') + '">' + esc(t(o.g)) + '</p>'; }
-      return gh + '<button type="button" class="outil__opt" data-v="' + esc(o.v) + '">' + esc(o.l) + (o.n ? ' <b>' + o.n + '</b>' : '') + '</button>';
+      var nf = o.neuf ? t('Nouveau') + ' : ' + o.neuf.n + ' ' + t(o.neuf.n > 1 ? 'événements ajoutés le' : 'événement ajouté le') + ' ' + o.neuf.d : '';
+      return gh + '<button type="button" class="outil__opt' + (nf ? ' outil__opt--neuf' : '') + '" data-v="' + esc(o.v) + '"' + (nf ? ' title="' + esc(nf) + '"' : '') + '>' + esc(o.l) + (o.n ? ' <b>' + o.n + '</b>' : '') + (nf ? '<span class="outil__sr"> · ' + esc(nf) + '</span>' : '') + '</button>';
     }).join('');
     if (etape > 0) h += '<button type="button" class="outil__opt outil__opt--suite" data-ouvrir>' + esc(t('Ouvrir la carte')) + '</button>';
     choix.innerHTML = h; choix.hidden = false;
