@@ -276,7 +276,7 @@
      + panneau des dernières notes. Titres publics uniquement, jamais l'analyse. */
   var FEED = 'https://lwgrjdpuagnvvzmdbyzb.supabase.co/functions/v1/veille-feed/notifications.json';
   var SEV = { info: ['Signal', '#8C8D93'], alerte: ['Alerte', '#C28A2E'], critique: ['Critique', '#B4323F'] };
-  var TH = { sahel: 'Sahel', 'moyen-orient': 'Moyen-Orient', rdc: 'RDC', afrique: 'Afrique Maritime', 'afrique-maritime': 'Afrique Maritime', madagascar: 'Madagascar', 'asie-sud': 'Asie du Sud' };
+  var TH = { sahel: 'Sahel', 'moyen-orient': 'Moyen-Orient', rdc: 'RDC', afrique: 'Afrique Maritime', 'afrique-maritime': 'Afrique Maritime', madagascar: 'Madagascar', 'asie-sud': 'Asie du Sud', cyber: 'Cyber' };
   var MOIS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
   /* Veille personnalisée (23/09/2026) : critères du compte (table veille_preferences,
      RLS chacun sa ligne) appliqués au fil de la cloche. Logique pure, réutilisée par
@@ -287,6 +287,9 @@
   var MaVeille = {
     correspond: function (it, p) {
       if (!p) return true;
+      var src = it.source || 'geo';
+      if (p.sources && p.sources.length && p.sources.indexOf(src) < 0) return false;
+      if (src === 'cyber') return MaVeille.correspondCyber(it, p);
       if (p.theatres && p.theatres.length && p.theatres.indexOf(it.theatre) < 0) return false;
       if ((RANG[it.severite] || 0) < (RANG[p.severite_min] || 0)) return false;
       if (p.mots && p.mots.length) {
@@ -295,12 +298,54 @@
       }
       return true;
     },
+    /* Veille cyber personnalisée (07/11/2026) : pays ciblés et secteurs (au moins un en commun s'il y en a),
+       mots-clés propres au cyber (attaquants, logiciels, CVE, sujets), même seuil de gravité que la géo. */
+    correspondCyber: function (it, p) {
+      if ((RANG[it.severite] || 0) < (RANG[p.severite_min] || 0)) return false;
+      var inter = function (a, b) { return !a || !a.length || (b || []).some(function (x) { return a.indexOf(x) >= 0; }); };
+      if (!inter(p.cyber_pays, it.pays) || !inter(p.cyber_secteurs, it.secteurs)) return false;
+      if (p.cyber_mots && p.cyber_mots.length) {
+        var txt = ' ' + sansAccent(it.q || it.titre).replace(/[^a-z0-9]+/g, ' ') + ' ';
+        return p.cyber_mots.some(function (m) { var k = sansAccent(m).replace(/[^a-z0-9]+/g, ' ').trim(); return k && txt.indexOf(' ' + k) >= 0; });
+      }
+      return true;
+    },
     resume: function (p) {
       if (!p) return 'OSINT · six théâtres';
-      var t = (p.theatres || []).map(function (x) { return TH[x] || x; });
-      var bouts = [t.length ? t.join(', ') : 'six théâtres'];
-      if (p.mots && p.mots.length) bouts.push(p.mots.length + ' mot' + (p.mots.length > 1 ? 's' : '') + '-clé' + (p.mots.length > 1 ? 's' : ''));
+      var src = p.sources || ['geo'], bouts = [];
+      if (src.indexOf('geo') >= 0 || src.indexOf('radio') >= 0) {
+        var t = (p.theatres || []).map(function (x) { return TH[x] || x; });
+        bouts.push(t.length ? t.join(', ') : 'six théâtres');
+        if (p.mots && p.mots.length) bouts.push(p.mots.length + ' mot' + (p.mots.length > 1 ? 's' : '') + '-clé' + (p.mots.length > 1 ? 's' : ''));
+      }
+      if (src.indexOf('cyber') >= 0) bouts.push('cyber');
       return bouts.join(' · ');
+    },
+    /* Rapports cyber (bucket privé zones, premium) en éléments de cloche : fiches OpenCTI (rapports.json)
+       + rapports OTX de l'instantané (snapshot.json) absents d'OpenCTI. Gravité : critique si une CVE
+       exploitée (KEV) ou CVSS ≥ 9 ; alerte si rançongiciel ou attaquant nommé ; signal sinon. */
+    cyber: function (oct, snap) {
+      var out = [], vus = {};
+      var gravite = function (r, acteurs) {
+        if ((r.cves || []).some(function (c) { return c && (c.kev || (c.score || 0) >= 9); })) return 'critique';
+        if (/ransom|ran[çc]on/i.test([].concat(r.types || [], r.etiquettes || [], r.malwares || []).join(' ')) || acteurs.length) return 'alerte';
+        return 'info';
+      };
+      var ajouter = function (r, fiche) {
+        if (!r || !r.titre || !r.date) return;
+        var cle = sansAccent(r.titre_en || r.titre);
+        if (vus[cle] || (r.id && vus[r.id])) return;
+        vus[cle] = 1; if (r.id) vus[r.id] = 1; if (r.otx) vus[r.otx] = 1;
+        var acteurs = r.attaquants || r.acteurs || [];
+        out.push({ id: 'cyber-' + r.id, rid: fiche ? r.id : '', theatre: 'cyber', source: 'cyber', date: String(r.date).slice(0, 10),
+          titre: r.titre, resume: r.resume || '', lieu: (r.pays || []).slice(0, 2).join(', '), severite: gravite(r, acteurs),
+          pays: r.pays || [], secteurs: r.secteurs || [],
+          q: [r.titre, r.titre_en, r.resume].concat(acteurs, r.malwares || [], r.outils || [], r.campagnes || [], r.etiquettes || [], r.types || [],
+            (r.cves || []).map(function (c) { return c.id; }), r.pays || [], r.secteurs || [], r.organisations || []).join(' ') });
+      };
+      ((oct && oct.rapports) || []).forEach(function (r) { ajouter(r, true); });
+      ((snap && snap.rapports) || []).forEach(function (r) { ajouter(r, false); });
+      return out;
     },
     /* Points de la synthèse Radio Sahel (bucket privé, premium) en éléments de cloche :
        gravité « alerte » si un fait de sécurité les fonde, sinon « info ». */
@@ -326,7 +371,7 @@
           var u = r && r.data && r.data.session && r.data.session.user;
           if (!u) return ok(null);
           Promise.all([
-            c.from('veille_preferences').select('theatres, mots, severite_min, sources').eq('user_id', u.id).maybeSingle(),
+            c.from('veille_preferences').select('*').eq('user_id', u.id).maybeSingle(),
             c.from('profiles').select('role, plan').eq('id', u.id).maybeSingle()
           ]).then(function (res) {
             var pr = res[1] && res[1].data;
@@ -432,8 +477,9 @@
         return '<section class="cloche__jour"><h3 class="cloche__jt"><span>' + esc(jour(g.j)) + '</span><span>' + pluriel(g.notes.length, 'note') + '</span></h3><ol>' +
           g.notes.map(function (it) {
             var sv = SEV[it.severite] ? it.severite : 'info', neuf = estNeuf(it, e);
-            var radio = it.source === 'radio';
-            var lien = radio ? '/veille/?onglet=radio' : '/veille/?onglet=geo' + (it.id ? '&note=' + encodeURIComponent(it.id) : '');
+            var radio = it.source === 'radio', cyb = it.source === 'cyber';
+            var lien = radio ? '/veille/?onglet=radio' : cyb ? '/veille/?onglet=cyber' + (it.rid ? '&rapport=' + encodeURIComponent(it.rid) : '')
+              : '/veille/?onglet=geo' + (it.id ? '&note=' + encodeURIComponent(it.id) : '');
             var th = TH[it.theatre] || it.theatre || '', lieu = radio ? 'Radio' : (it.lieu && it.lieu !== th ? it.lieu : '');
             var resume = fr(it.resume || '');
             return '<li><a href="' + esc(lien) + '" class="cloche__note' + (neuf ? ' is-neuf' : '') + '">' +
@@ -478,9 +524,9 @@
       if (ouvert && chemin.indexOf(pan) < 0 && !pan.contains(e.target)) basculer(false);
     });
     d.addEventListener('keydown', function (e) { if (ouvert && e.key === 'Escape') { basculer(false); btn.focus(); } });
-    var brut = [], radio = [], prefs = null, connecte = false;
+    var brut = [], radio = [], cyber = [], prefs = null, connecte = false;
     var appliquer = function () {
-      items = brut.concat(radio).filter(function (it) { return it && it.titre && MaVeille.correspond(it, prefs); })
+      items = brut.concat(radio, cyber).filter(function (it) { return it && it.titre && MaVeille.correspond(it, prefs); })
         .sort(function (a, b) { return String(b.date).localeCompare(String(a.date)) || (RANG[b.severite] || 0) - (RANG[a.severite] || 0); });
       pan.querySelector('.cloche__titre').textContent = prefs ? 'Ma veille' : 'Fil de veille';
       pan.querySelector('.cloche__s').textContent = MaVeille.resume(prefs);
@@ -496,7 +542,17 @@
     compteVeille().then(function (cpt) {
       if (!cpt) return;
       connecte = true; prefs = cpt.prefs; appliquer();
-      if (!cpt.premium || !prefs || (prefs.sources || []).indexOf('radio') < 0) return;
+      if (!cpt.premium || !prefs) return;
+      if ((prefs.sources || []).indexOf('cyber') >= 0) {
+        // Veille cyber : même bucket privé ; 14 derniers jours seulement, pour ne pas noyer la cloche.
+        var lire = function (f) { return cpt.client.storage.from('zones').download('veille-cyber/' + f)
+          .then(function (r) { if (r.error || !r.data) return null; return r.data.text().then(JSON.parse); }).catch(function () { return null; }); };
+        Promise.all([lire('rapports.json'), lire('snapshot.json')]).then(function (res) {
+          var x = new Date(); x.setDate(x.getDate() - 14); var depuis = x.toISOString().slice(0, 10);
+          cyber = MaVeille.cyber(res[0], res[1]).filter(function (it) { return it.date >= depuis; }); appliquer();
+        });
+      }
+      if ((prefs.sources || []).indexOf('radio') < 0) return;
       // Radio Sahel : bucket privé lu avec la session du compte (la RLS refuse sans premium).
       cpt.client.storage.from('zones').download('sahel/radio.json')
         .then(function (r) { if (r.error || !r.data) throw r.error; return r.data.text(); })

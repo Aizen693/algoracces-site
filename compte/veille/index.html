@@ -110,6 +110,12 @@
   .chip[aria-disabled="true"] { color: var(--faint); cursor: not-allowed; }
   .chip[aria-disabled="true"] .chip__box { background: var(--band); }
 
+  /* Veille cyber : trois sous-réglages dans une même rangée */
+  .sous { margin: 30px 0 10px; font-size: 14px; color: var(--muted); }
+  .sous:first-child { margin-top: 3px; }
+  .chips--s .chip { padding: 10px 2px; }
+  .chips--s .chip__n { font-size: 16px; }
+
   @media (max-width: 1100px) { .al-grid { grid-template-columns: 1fr; } .apercu { position: static; } }
   @media (max-width: 520px) { .seg button { font-size: 14px; padding: 11px 4px; } .switch { align-items: flex-start; } }
 </style>
@@ -170,7 +176,7 @@
 <main>
   <section class="v5-phero" data-nav="dark" data-v5-trame data-hachures="7,0">
     <h1>Ma veille</h1>
-    <p class="v5-phero__lede">Choisissez ce que la cloche vous signale : vos théâtres, les acteurs et les lieux que vous suivez, votre seuil de gravité. Le reste du fil reste accessible sur la page Veilles.</p>
+    <p class="v5-phero__lede">Choisissez ce que la cloche vous signale : vos théâtres, les acteurs et les lieux que vous suivez, votre seuil de gravité, et pour les abonnés premium la veille cyber. Le reste du fil reste accessible sur la page Veilles.</p>
     <div class="v5-actions">
       <a class="btn-outline" href="/veille/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M20 12H4M10 6l-6 6 6 6"/></svg>Veilles</a>
     </div>
@@ -229,6 +235,24 @@
                 <p class="aide" id="sources-aide"></p>
               </dd>
             </div>
+            <div id="cyber-reglages" hidden>
+              <dt>Veille cyber</dt>
+              <dd>
+                <p class="sous">Pays ciblés</p>
+                <div class="chips chips--s" id="cy-pays" role="group" aria-label="Pays ciblés"></div>
+                <p class="aide">Les pays les plus visés ces 30 derniers jours. Aucun pays coché : tous.</p>
+                <p class="sous">Secteurs</p>
+                <div class="chips chips--s" id="cy-secteurs" role="group" aria-label="Secteurs visés"></div>
+                <p class="aide">Aucun secteur coché : tous.</p>
+                <p class="sous">Attaquants, logiciels, CVE</p>
+                <form class="mot-saisie" id="cy-mot-form" autocomplete="off">
+                  <input id="cy-mot" type="text" maxlength="60" placeholder="APT28, LockBit, Fortinet, CVE-2026…" aria-label="Ajouter un mot-clé cyber">
+                  <button class="btn-outline" type="submit">Ajouter</button>
+                </form>
+                <div class="mots" id="cy-mots" aria-live="polite"></div>
+                <p class="aide">Un rapport est retenu s’il cite au moins un de vos mots : groupe d’attaquants, logiciel malveillant, éditeur, CVE, sujet. La gravité minimale s’applique aussi : critique pour une faille exploitée ou notée 9 et plus, alerte pour un rançongiciel ou un attaquant nommé.</p>
+              </dd>
+            </div>
           </dl>
 
           <div class="actions">
@@ -270,11 +294,12 @@
 <!-- /v5:foot -->
 
 <script type="module" src="/shared/site-auth.js?v=20261020a"></script>
-<script src="/shared/v5/chrome.js?v=20261105a"></script>
+<script src="/shared/v5/chrome.js?v=20261107a"></script>
 <script type="module">
   const FIL = 'https://lwgrjdpuagnvvzmdbyzb.supabase.co/functions/v1/veille-feed/notifications.json';
   const ZONES = { 'sahel': 'Sahel', 'moyen-orient': 'Moyen-Orient', 'rdc': 'RDC', 'afrique': 'Afrique Maritime', 'madagascar': 'Madagascar', 'asie-sud': 'Asie du Sud' };
-  const SOURCES = { geo: 'Veille géopolitique', radio: 'Radio Sahel' };
+  const SOURCES = { geo: 'Veille géopolitique', radio: 'Radio Sahel', cyber: 'Veille cyber' };
+  const PREMIUM_SEUL = ['radio', 'cyber'];
   const SEV = { info: 'Signal', alerte: 'Alerte', critique: 'Critique' };
   const COCHE = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>';
   const $ = (id) => document.getElementById(id);
@@ -282,8 +307,9 @@
   const fmtD = (iso) => iso ? new Date(iso + 'T00:00:00Z').toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : '';
   const jourIso = (n) => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10);
 
-  let c = null, uid = null, premium = false, notes = [];
-  let etat = { theatres: [], mots: [], severite_min: 'info', sources: ['geo'] };
+  let c = null, uid = null, premium = false, notes = [], cyber = [];
+  const VIDE = () => ({ theatres: [], mots: [], severite_min: 'info', sources: ['geo'], cyber_pays: [], cyber_secteurs: [], cyber_mots: [] });
+  let etat = VIDE();
   const correspond = (it) => (window.V5 && window.V5.maVeille ? window.V5.maVeille.correspond(it, etat) : true);
 
   function montrer(vue) { $('verif').hidden = true; for (const v of ['v-login', 'v-form']) $(v).hidden = v !== vue; }
@@ -296,22 +322,42 @@
     const depuis = jourIso(7), par = {};
     for (const it of notes) if (String(it.date) >= depuis) par[it.theatre] = (par[it.theatre] || 0) + 1;
     puces($('theatres'), Object.entries(ZONES).map(([k, l]) => [k, l, par[k] ? `${par[k]} / 7 j` : '']), etat.theatres);
-    puces($('sources'), Object.entries(SOURCES).map(([k, l]) => [k, l]), etat.sources, premium ? [] : ['radio']);
+    puces($('sources'), Object.entries(SOURCES).map(([k, l]) => [k, l]), etat.sources, premium ? [] : PREMIUM_SEUL);
     $('sources-aide').textContent = premium
-      ? 'Radio Sahel ajoute à la cloche les points de la synthèse radio du jour (Mali, Niger, Burkina Faso).'
-      : 'Radio Sahel est réservée aux abonnés premium.';
-    $('mots').innerHTML = etat.mots.map((m, i) => `<span class="mot"><span data-i18n-skip>${esc(m)}</span><button type="button" data-i="${i}" aria-label="Retirer ${esc(m)}">×</button></span>`).join('');
+      ? 'Radio Sahel ajoute à la cloche les points de la synthèse radio du jour (Mali, Niger, Burkina Faso). Veille cyber y ajoute les rapports de menace des 14 derniers jours, filtrés par les réglages ci-dessous.'
+      : 'Radio Sahel et Veille cyber sont réservées aux abonnés premium.';
+    $('mots').innerHTML = etiquettes(etat.mots);
+    const cyOn = premium && etat.sources.includes('cyber');
+    $('cyber-reglages').hidden = !cyOn;
+    if (cyOn) {
+      const d30 = jourIso(30), recents = cyber.filter((it) => it.date >= d30);
+      const top = (cle, champ, max) => {
+        const n = {}; for (const it of recents) for (const x of it[cle]) n[x] = (n[x] || 0) + 1;
+        const noms = Object.keys(n).sort((a, b) => n[b] - n[a] || a.localeCompare(b, 'fr')).slice(0, max);
+        for (const x of etat[champ]) if (!noms.includes(x)) noms.push(x);
+        return noms.map((x) => [x, x, n[x] ? `${n[x]} / 30 j` : '']);
+      };
+      puces($('cy-pays'), top('pays', 'cyber_pays', 18), etat.cyber_pays);
+      puces($('cy-secteurs'), top('secteurs', 'cyber_secteurs', 12), etat.cyber_secteurs);
+      if (!recents.length) $('cy-pays').innerHTML = '<p class="vide">Rapports cyber indisponibles pour le moment.</p>';
+      $('cy-mots').innerHTML = etiquettes(etat.cyber_mots);
+    }
     for (const b of $('seuil').querySelectorAll('button')) b.setAttribute('aria-checked', String(b.dataset.v === etat.severite_min));
     apercu();
   }
 
+  function etiquettes(liste) {
+    return liste.map((m, i) => `<span class="mot"><span data-i18n-skip>${esc(m)}</span><button type="button" data-i="${i}" aria-label="Retirer ${esc(m)}">×</button></span>`).join('');
+  }
+
   function apercu() {
     const depuis = jourIso(7);
-    const vus = notes.filter((it) => String(it.date) >= depuis && correspond(it)).sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    const vus = notes.concat(premium && etat.sources.includes('cyber') ? cyber : []).filter((it) => String(it.date) >= depuis && correspond(it)).sort((a, b) => String(b.date).localeCompare(String(a.date)));
     $('ap-n').textContent = String(vus.length);
     $('ap-lbl').textContent = vus.length > 1 ? 'notes' : 'note';
     $('ap-rythme').textContent = vus.length ? `Environ ${Math.max(1, Math.round(vus.length / 7))} par jour.` : 'Aucune note ne correspond : élargissez vos théâtres ou vos mots-clés.';
-    $('ap-notes').innerHTML = vus.slice(0, 8).map((it) => `<a class="note" href="/veille/?onglet=geo"><span class="note__m"><span class="sev sev--${esc(it.severite)}">${esc(SEV[it.severite] || 'Signal')}</span><span>${esc(ZONES[it.theatre] || it.theatre)}</span><time>${esc(fmtD(it.date))}</time></span><span class="note__t" data-i18n-skip>${esc(it.titre)}</span></a>`).join('');
+    const lien = (it) => it.source === 'cyber' ? '/veille/?onglet=cyber' + (it.rid ? '&rapport=' + encodeURIComponent(it.rid) : '') : '/veille/?onglet=geo';
+    $('ap-notes').innerHTML = vus.slice(0, 8).map((it) => `<a class="note" href="${esc(lien(it))}"><span class="note__m"><span class="sev sev--${esc(it.severite)}">${esc(SEV[it.severite] || 'Signal')}</span><span>${esc(it.source === 'cyber' ? 'Cyber' + (it.lieu ? ' · ' + it.lieu : '') : (ZONES[it.theatre] || it.theatre))}</span><time>${esc(fmtD(it.date))}</time></span><span class="note__t" data-i18n-skip>${esc(it.titre)}</span></a>`).join('');
   }
 
   function statut(txt, cls) { const s = $('statut'); s.textContent = txt; s.className = 'statut' + (cls ? ' ' + cls : ''); }
@@ -335,11 +381,24 @@
     $('mot').value = ''; statut(''); rendre();
   });
   $('mots').addEventListener('click', (e) => { const b = e.target.closest('button[data-i]'); if (!b) return; etat.mots.splice(Number(b.dataset.i), 1); statut(''); rendre(); });
+  for (const [hote, champ] of [['cy-pays', 'cyber_pays'], ['cy-secteurs', 'cyber_secteurs']]) $(hote).addEventListener('click', (e) => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    const k = b.dataset.k; etat[champ] = etat[champ].includes(k) ? etat[champ].filter((x) => x !== k) : [...etat[champ], k].slice(0, 40);
+    statut(''); rendre();
+  });
+  $('cy-mot-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const bruts = $('cy-mot').value.split(/[,;]/).map((x) => x.trim()).filter((x) => x.length >= 2 && x.length <= 60);
+    for (const m of bruts) if (!etat.cyber_mots.some((x) => x.toLowerCase() === m.toLowerCase()) && etat.cyber_mots.length < 40) etat.cyber_mots.push(m);
+    $('cy-mot').value = ''; statut(''); rendre();
+  });
+  $('cy-mots').addEventListener('click', (e) => { const b = e.target.closest('button[data-i]'); if (!b) return; etat.cyber_mots.splice(Number(b.dataset.i), 1); statut(''); rendre(); });
 
   $('enregistrer').addEventListener('click', async () => {
     $('enregistrer').disabled = true; statut('Enregistrement…');
-    const sources = premium ? etat.sources : etat.sources.filter((s) => s !== 'radio');
-    const { error } = await c.from('veille_preferences').upsert({ user_id: uid, theatres: etat.theatres, mots: etat.mots, severite_min: etat.severite_min, sources: sources.length ? sources : ['geo'] });
+    const sources = premium ? etat.sources : etat.sources.filter((s) => !PREMIUM_SEUL.includes(s));
+    const { error } = await c.from('veille_preferences').upsert({ user_id: uid, theatres: etat.theatres, mots: etat.mots, severite_min: etat.severite_min, sources: sources.length ? sources : ['geo'],
+      cyber_pays: etat.cyber_pays, cyber_secteurs: etat.cyber_secteurs, cyber_mots: etat.cyber_mots });
     $('enregistrer').disabled = false;
     if (error) return statut('L’enregistrement a échoué. Réessayez dans un instant.', 'is-err');
     try { localStorage.removeItem('algor-veille-seen'); } catch (e) {}
@@ -350,7 +409,7 @@
     const { error } = await c.from('veille_preferences').delete().eq('user_id', uid);
     $('reinit').disabled = false;
     if (error) return statut('La réinitialisation a échoué. Réessayez dans un instant.', 'is-err');
-    etat = { theatres: [], mots: [], severite_min: 'info', sources: ['geo'] };
+    etat = VIDE();
     rendre(); statut('La cloche affiche de nouveau le fil complet.', 'is-ok');
   });
 
@@ -362,15 +421,23 @@
   async function reglages(session) {
     uid = session.user.id;
     const [pref, prof, fil] = await Promise.all([
-      c.from('veille_preferences').select('theatres, mots, severite_min, sources').eq('user_id', uid).maybeSingle(),
+      c.from('veille_preferences').select('*').eq('user_id', uid).maybeSingle(),
       c.from('profiles').select('role, plan').eq('id', uid).maybeSingle(),
       fetch(FIL, { cache: 'no-store' }).then((r) => (r.ok ? r.json() : [])).catch(() => [])
     ]);
     const p = prof && prof.data;
     premium = !!p && (p.plan === 'premium' || p.role === 'admin' || p.role === 'editor');
-    if (pref && pref.data) etat = { theatres: pref.data.theatres || [], mots: pref.data.mots || [], severite_min: pref.data.severite_min || 'info', sources: pref.data.sources || ['geo'] };
+    if (pref && pref.data) { const x = pref.data; etat = { theatres: x.theatres || [], mots: x.mots || [], severite_min: x.severite_min || 'info', sources: x.sources || ['geo'],
+      cyber_pays: x.cyber_pays || [], cyber_secteurs: x.cyber_secteurs || [], cyber_mots: x.cyber_mots || [] }; }
     notes = (Array.isArray(fil) ? fil : fil.items || []).filter((it) => it && it.titre);
     montrer('v-form'); rendre();
+    // Rapports cyber (bucket privé, premium) : chargés après l'affichage, pour les listes de pays et de secteurs et l'aperçu.
+    if (premium) {
+      const lire = (f) => c.storage.from('zones').download('veille-cyber/' + f).then((r) => (r.error || !r.data ? null : r.data.text().then(JSON.parse))).catch(() => null);
+      const [oct, snap] = await Promise.all([lire('rapports.json'), lire('snapshot.json')]);
+      cyber = window.V5 && window.V5.maVeille && window.V5.maVeille.cyber ? window.V5.maVeille.cyber(oct, snap) : [];
+      rendre();
+    }
   }
 
   async function demarrer() {
