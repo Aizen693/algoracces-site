@@ -324,6 +324,7 @@
 <script src="/shared/v5/carte-ouverture.js?v=20260922h" defer></script>
 <script type="module" src="/shared/site-auth.js?v=20261020a"></script>
 <script src="/shared/v5/chrome.js?v=20261107a"></script>
+<script src="/shared/typologie-acled.js?v=20261107a"></script>
 <script>
 /* Champ d'ouverture. Visiteur : démo sur n'importe quelle zone (/demo/). Abonné connecté : l'outil pays du site en ligne,
    en quatre étapes (pays suivi, période, typologie, acteur), qui ouvre /carte/ déjà filtrée. ?apercu=1 force la vue abonné. */
@@ -349,7 +350,10 @@
     }).sort(function (a, b) { return (a.rang - b.rang) || a.g.localeCompare(b.g, 'fr') || b.n - a.n; });
     if (!e) return [];
     if (k === 'date') return (e.months || []).map(function (m) { return { v: m.key, l: m.label }; });
-    return (k === 'event' ? e.events : e.actors || []).map(function (x) { return { v: x, l: x }; });
+    // Typologies : grille ACLED, groupées par famille (shared/typologie-acled.js).
+    var T = window.AlgorTypologie;
+    if (k === 'event') return (e.events || []).map(function (x) { return { v: x, l: x, g: T && T.famille(x) }; });
+    return (e.actors || []).map(function (x) { return { v: x, l: x }; });
   }
   // Nouveau : le dernier lot publié pour ce pays (champ publie du manifeste) date de moins de 7 jours.
   function neuf(c) {
@@ -392,7 +396,7 @@
     // Pays : tout le Sahel, puis les autres théâtres groupés (sans saisie, on masque les pays à un seul point).
     var q = norm(inp.value), l = options().filter(function (o) { return trouve(o, q); }).filter(function (o) { return k !== 'pays' || q || !o.ref || o.n > 1; }), h = '', grp = null;
     // Périodes : les 6 mois les plus récents (la liste suit d'elle même chaque mois publié) ; la saisie retrouve les plus anciens.
-    l = k === 'date' ? l.sort(function (a, b) { return a.v < b.v ? -1 : a.v > b.v ? 1 : 0; }).slice(-6) : l.slice(0, k === 'pays' ? 40 : 8);
+    l = k === 'date' ? l.sort(function (a, b) { return a.v < b.v ? -1 : a.v > b.v ? 1 : 0; }).slice(-6) : l.slice(0, k === 'pays' || k === 'event' ? 40 : 8);
     if (k !== 'pays') h += '<button type="button" class="outil__opt outil__opt--passer" data-v="__tous">' + esc(t(TOUS[k])) + '</button>';
     h += l.map(function (o) {
       var gh = '';

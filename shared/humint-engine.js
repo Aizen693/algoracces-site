@@ -103,7 +103,7 @@
     if (/ied|explos|mine|kamikaze|attentat/.test(a)) return '#ef6c00';      // engins explosifs
     if (/enlev|otage|rapt/.test(a)) return '#7b1fa2';                        // enlèvements
     if (/attaque|embuscade|combat|affront|assassin|massacre|execut|tuer|meurtre/.test(a)) return '#d32f2f'; // violence armée
-    if (/arrest|interpel|operation|ratissage|securis|controle/.test(a)) return '#1565c0'; // opérations de sécurité
+    if (/arrest|interpel|operation|ratissage|securis|controle|activite des forces|position etablie|reddition|saisie/.test(a)) return '#1565c0'; // opérations de sécurité
     if (/deplace|refugi|humanit|blocus|famine/.test(a)) return '#f9a825';   // populations
     if (/destruct|incendi|pillage|sabotage|vol\b/.test(a)) return '#795548'; // destructions
     if (/manif|protest|politi|coup|gouvern/.test(a)) return '#00897b';      // politique
@@ -543,7 +543,7 @@
           try { map.flyTo({ center: f.coords, zoom: 9, duration: 700 }); } catch (e) { /* */ }
           new mapboxgl.Popup({ closeButton: true, maxWidth: '320px', className: 'humint-popup' })
             .setLngLat(f.coords)
-            .setHTML(makePopup({ acteur: f.acteur, type: f.type, iso: f.iso, description: f.description, sources: f.sources, corrobore: f.corrobore, reference: f.reference, _color: actorColor(f.acteur) }))
+            .setHTML(makePopup({ acteur: f.acteur, type: f.type, brut: f.typeBrut, iso: f.iso, description: f.description, sources: f.sources, corrobore: f.corrobore, reference: f.reference, _color: actorColor(f.acteur) }))
             .addTo(map);
         }
       };
@@ -755,7 +755,7 @@
             try { map.flyTo({ center: f.coords, zoom: 9, duration: 700 }); } catch (e) { /* */ }
             new mapboxgl.Popup({ closeButton: true, maxWidth: '320px', className: 'humint-popup' })
               .setLngLat(f.coords)
-              .setHTML(makePopup({ acteur: f.acteur, type: f.type, iso: f.iso, description: f.description, sources: f.sources, corrobore: f.corrobore, reference: f.reference, _color: actorColor(f.acteur) }))
+              .setHTML(makePopup({ acteur: f.acteur, type: f.type, brut: f.typeBrut, iso: f.iso, description: f.description, sources: f.sources, corrobore: f.corrobore, reference: f.reference, _color: actorColor(f.acteur) }))
               .addTo(map);
           }
         };
@@ -967,9 +967,13 @@
       pays = pays || parsed.pays; date = date || parsed.date; type = type || parsed.type; detail = parsed.detail || '';
     }
     var iso = toISO(date);
+    // Typologie alignée sur la grille ACLED (shared/typologie-acled.js) ; libellé terrain conservé.
+    var typo = window.AlgorTypologie ? window.AlgorTypologie.classer(type, acteur, p.description || detail)
+      : (type ? { type: canonEvent(type), famille: null, brut: type } : null);
     return {
       pays: normalizePays(pays), ville: villeOf(pays), iso: iso, mkey: monthKey(iso),
-      type: canonEvent(type), acteur: normalizeActor(acteur) || '—',
+      type: typo ? typo.type : null, famille: typo ? typo.famille : null, typeBrut: typo ? typo.brut : null,
+      acteur: normalizeActor(acteur) || '—',
       description: p.description || detail || '', sources: p.sources || '', coords: coords,
       // Statut client : info recoupee (renseignement + OSINT) ou non. Defaut = non corrobore.
       corrobore: !!(p.corrobore === true || /corrobor|recoup/i.test(String(p.statut || ''))),
@@ -985,13 +989,20 @@
   function newsKey(f) {
     return [f.iso, f.type, f.acteur, f.coords && f.coords[0], f.coords && f.coords[1], f.added].join('|');
   }
+  // Filtre typologie : sous-type ACLED, ou ancienne typologie maison (anciens liens ?event=…).
+  function eventOk(f) {
+    var e = state.sel.event;
+    if (!e || f.type === e) return true;
+    var anc = window.AlgorTypologie && !window.AlgorTypologie.famille(e) && window.AlgorTypologie.depuisAncienne(e);
+    return !!(anc && anc.indexOf(f.type) !== -1);
+  }
   function passes(f) {
     if (state.sel.from || state.sel.to) {
       if (!f.iso) return false;
       if (state.sel.from && f.iso < state.sel.from) return false;
       if (state.sel.to && f.iso > state.sel.to) return false;
     }
-    if (state.sel.event && f.type !== state.sel.event) return false;
+    if (!eventOk(f)) return false;
     if (state.sel.actor && f.acteur !== state.sel.actor) return false;
     return true;
   }
@@ -1054,7 +1065,7 @@
       type: 'FeatureCollection',
       features: shown.map(function (f, i) {
         return { type: 'Feature', geometry: { type: 'Point', coordinates: pos[i] },
-          properties: { acteur: f.acteur, type: f.type, iso: f.iso || '', description: f.description, sources: f.sources, corrobore: f.corrobore ? 1 : 0, reference: f.reference ? 1 : 0, _color: actorColor(f.acteur), _pile: piles[stackKey(f.coords)] ? 1 : 0 } };
+          properties: { acteur: f.acteur, type: f.type, brut: f.typeBrut || '', iso: f.iso || '', description: f.description, sources: f.sources, corrobore: f.corrobore ? 1 : 0, reference: f.reference ? 1 : 0, _color: actorColor(f.acteur), _pile: piles[stackKey(f.coords)] ? 1 : 0 } };
       }),
     });
     updateStacks(shown);
@@ -1168,9 +1179,18 @@
         if (state.sel.from && f.iso < state.sel.from) return false;
         if (state.sel.to && f.iso > state.sel.to) return false;
       }
-      if (includeEvent && state.sel.event && f.type !== state.sel.event) return false;
+      if (includeEvent && !eventOk(f)) return false;
       return true;
     });
+  }
+  // Typologies du pays, groupées par famille ACLED (ordre de la grille), puis par effectif.
+  function typesGroupes(rows) {
+    var T = window.AlgorTypologie;
+    var l = distinctCount(rows, 'type');
+    if (!T) return l;
+    var rg = function (o) { var i = T.FAMILLES.indexOf(T.famille(o.v)); return i < 0 ? 99 : i; };
+    return l.map(function (o) { return { v: o.v, n: o.n, g: T.famille(o.v) || 'Autres' }; })
+      .sort(function (a, b) { return (rg(a) - rg(b)) || (b.n - a.n); });
   }
   function distinctCount(rows, field) {
     var m = {};
@@ -1195,7 +1215,7 @@
       var items = mine.map(function (c) { return { v: c.name, n: visiteur() ? nApercu(c) : c.count, g: grp(c) }; });
       return openList(anchor, 'Pays', null, items, state.country, false, function (val) { switchCountry(val); }, true);
     }
-    if (key === 'event') return openList(anchor, "Typologie d'événement", 'Toutes les typologies', distinctCount(rowsFor(false), 'type'), state.sel.event, true, function (val) { state.sel.event = val; applyFacets(); renderSummary(); fitToFiltered(); });
+    if (key === 'event') return openList(anchor, "Typologie d'événement", 'Toutes les typologies', typesGroupes(rowsFor(false)), state.sel.event, true, function (val) { state.sel.event = val; applyFacets(); renderSummary(); fitToFiltered(); });
     if (key === 'actor') return openList(anchor, 'Acteur', 'Tous les acteurs', distinctCount(rowsFor(true), 'acteur'), state.sel.actor, true, function (val) { state.sel.actor = val; applyFacets(); renderSummary(); fitToFiltered(); });
     if (key === 'date') return openCalendar(anchor);
   }
@@ -1523,7 +1543,7 @@
     function detail(f) {
       var el = locPopup(g,
         '<button type="button" class="loc-back">' + ICO.arrowL + esc(loc.names[g.key] || 'Localité') + ' · ' + fs.length + '</button>' +
-        makePopup({ acteur: f.acteur, type: f.type, iso: f.iso, description: f.description, sources: f.sources, corrobore: f.corrobore, reference: f.reference, _color: actorColor(f.acteur), _precision: 'Centre de localité' }));
+        makePopup({ acteur: f.acteur, type: f.type, brut: f.typeBrut, iso: f.iso, description: f.description, sources: f.sources, corrobore: f.corrobore, reference: f.reference, _color: actorColor(f.acteur), _precision: 'Centre de localité' }));
       el.querySelector('.loc-back').onclick = liste;
     }
     liste();
@@ -1548,7 +1568,11 @@
     var sLabel = corr ? 'Corroboré' : 'Non corroboré';
     if (p.reference && !corr) { sColor = '#6b6c72'; sLabel = 'Donnée référencée'; }
     rows += '<div class="popup-row"><span class="popup-key">Statut</span><span class="popup-val"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + sColor + ';margin-right:6px;vertical-align:middle"></span>' + sLabel + '</span></div>';
-    if (p.type) rows += '<div class="popup-row"><span class="popup-key">Typologie d\'événement</span><span class="popup-val">' + esc(p.type) + '</span></div>';
+    if (p.type) {
+      var fam = window.AlgorTypologie ? window.AlgorTypologie.famille(p.type) : null;
+      rows += '<div class="popup-row"><span class="popup-key">Typologie d\'événement</span><span class="popup-val">' + (fam ? esc(fam) + ' · ' : '') + esc(p.type) + '</span></div>';
+      if (p.brut && p.brut !== p.type) rows += '<div class="popup-row"><span class="popup-key">Libellé terrain</span><span class="popup-val">' + esc(p.brut) + '</span></div>';
+    }
     if (p.iso) rows += '<div class="popup-row"><span class="popup-key">Date</span><span class="popup-val popup-mono">' + esc(p.iso) + '</span></div>';
     if (p._precision) rows += '<div class="popup-row"><span class="popup-key">Précision</span><span class="popup-val">' + esc(p._precision) + '</span></div>';
     if (p.description) rows += '<div class="popup-row popup-desc"><span class="popup-val">' + esc(p.description) + '</span></div>';

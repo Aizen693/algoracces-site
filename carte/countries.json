@@ -12,30 +12,22 @@
    "zoom": 5.8,
    "count": 541,
    "events": [
-    "Arrestation",
-    "Arrivée d'un aéronef",
-    "Assassinat",
-    "Attaque",
-    "Bombardement",
-    "Combat / Affrontement",
-    "Convoi",
-    "Décès",
-    "Décision administrative",
-    "Déplacement / Réfugiés",
-    "Destruction",
-    "Embuscade",
-    "Enlèvement / Prise d'otage",
-    "Exercices",
-    "Frappe / Drône",
-    "IED / Explosif",
-    "Information / Divers",
-    "Intempéries",
-    "Menaces / Alerte",
-    "Opération (forces)",
-    "Présence / Mouvement",
-    "Taxes",
-    "Tirs",
-    "Vol / Pillage / Extorsion"
+    "Affrontement armé",
+    "Engin explosif / IED",
+    "Bombardement / artillerie",
+    "Frappe aérienne ou de drone",
+    "Enlèvement / disparition forcée",
+    "Attaque contre des civils",
+    "Pillage / destruction de biens",
+    "Arrestations",
+    "Reddition / défection",
+    "Activité des forces",
+    "Menace / alerte",
+    "Déplacement de population",
+    "Politique et institutionnel",
+    "Environnement",
+    "Information / divers",
+    "Attaque, cible non précisée"
    ],
    "actors": [
     "Civil",
@@ -123,37 +115,22 @@
    "zoom": 5.2,
    "count": 378,
    "events": [
-    "Arrestation",
-    "Arrivée de carburant",
-    "Assassinat",
-    "Attaque",
-    "Combat / Affrontement",
-    "Convoi",
-    "Convoi renfort",
-    "Convoqué",
-    "Découverte d'ossements",
-    "Déplacement / Réfugiés",
-    "Désertion",
-    "Destruction",
-    "Embuscade",
-    "Enlèvement / Prise d'otage",
-    "Exécution",
-    "Exercice",
-    "Frappe / Drône",
-    "IED / Explosif",
-    "Inculpation",
-    "Information / Divers",
-    "Menaces / Alerte",
-    "Opération (forces)",
-    "Ouverture du feu",
-    "Présence / Mouvement",
-    "Rédition",
-    "Renforts",
-    "Saisie",
-    "Transfert de détenus",
-    "VHL piégé",
-    "VHL piégés",
-    "Vol / Pillage / Extorsion"
+    "Affrontement armé",
+    "Engin explosif / IED",
+    "Bombardement / artillerie",
+    "Frappe aérienne ou de drone",
+    "Enlèvement / disparition forcée",
+    "Attaque contre des civils",
+    "Pillage / destruction de biens",
+    "Arrestations",
+    "Reddition / défection",
+    "Saisie d'armes",
+    "Activité des forces",
+    "Menace / alerte",
+    "Déplacement de population",
+    "Politique et institutionnel",
+    "Information / divers",
+    "Attaque, cible non précisée"
    ],
    "actors": [
     "AC",
@@ -259,21 +236,21 @@
    "zoom": 5.4,
    "count": 375,
    "events": [
-    "Arrestation",
-    "Assassinat",
-    "Attaque",
-    "Combat / Affrontement",
-    "Déplacement / Réfugiés",
-    "Destruction",
-    "Embuscade",
-    "Enlèvement / Prise d'otage",
-    "Frappe / Drône",
-    "IED / Explosif",
-    "Information / Divers",
-    "Menaces / Alerte",
-    "Opération (forces)",
-    "Présence / Mouvement",
-    "Vol / Pillage / Extorsion"
+    "Affrontement armé",
+    "Engin explosif / IED",
+    "Bombardement / artillerie",
+    "Frappe aérienne ou de drone",
+    "Enlèvement / disparition forcée",
+    "Attaque contre des civils",
+    "Pillage / destruction de biens",
+    "Arrestations",
+    "Reddition / défection",
+    "Activité des forces",
+    "Menace / alerte",
+    "Déplacement de population",
+    "Politique et institutionnel",
+    "Information / divers",
+    "Attaque, cible non précisée"
    ],
    "actors": [
     "Al Shabaab",
@@ -339,27 +316,21 @@
    "zoom": 5,
    "count": 253,
    "events": [
-    "Arrestation",
-    "Assassinat",
-    "Attaque",
-    "Combat / Affrontement",
-    "Déchéance de nationalité",
-    "Déplacement / Réfugiés",
-    "Destruction",
-    "Embuscade",
-    "Enlèvement / Prise d'otage",
-    "Frappe / Drône",
-    "IED / Explosif",
-    "Information / Divers",
-    "Interdiction de prêches",
-    "Menaces / Alerte",
-    "Opération (forces)",
-    "Présence / Mouvement",
-    "Promulgation de loi",
-    "Réception diplomatique",
-    "Rendition",
-    "Tirs",
-    "Vol / Pillage / Extorsion"
+    "Affrontement armé",
+    "Engin explosif / IED",
+    "Bombardement / artillerie",
+    "Frappe aérienne ou de drone",
+    "Enlèvement / disparition forcée",
+    "Attaque contre des civils",
+    "Pillage / destruction de biens",
+    "Arrestations",
+    "Reddition / défection",
+    "Activité des forces",
+    "Menace / alerte",
+    "Déplacement de population",
+    "Politique et institutionnel",
+    "Information / divers",
+    "Attaque, cible non précisée"
    ],
    "actors": [
     "Boko Haram",
@@ -460,17 +431,18 @@
    "zoom": 6.3,
    "count": 62,
    "events": [
-    "Assassinat",
-    "Attaque",
-    "Combat / Affrontement",
-    "Déplacement / Réfugiés",
-    "Embuscade",
-    "Enlèvement / Prise d'otage",
-    "Frappe / Drône",
-    "Information / Divers",
-    "Menaces / Alerte",
-    "Présence / Mouvement",
-    "Vol / Pillage / Extorsion"
+    "Affrontement armé",
+    "Bombardement / artillerie",
+    "Frappe aérienne ou de drone",
+    "Enlèvement / disparition forcée",
+    "Attaque contre des civils",
+    "Pillage / destruction de biens",
+    "Activité des forces",
+    "Menace / alerte",
+    "Déplacement de population",
+    "Politique et institutionnel",
+    "Information / divers",
+    "Attaque, cible non précisée"
    ],
    "actors": [
     "CIVILS",
@@ -521,14 +493,15 @@
    "zoom": 5.5,
    "count": 51,
    "events": [
-    "Arrestation",
-    "Assassinat",
-    "Attaque",
-    "Combat / Affrontement",
-    "Embuscade",
-    "IED / Explosif",
-    "Information / Divers",
-    "Opération (forces)"
+    "Affrontement armé",
+    "Engin explosif / IED",
+    "Attaque contre des civils",
+    "Arrestations",
+    "Reddition / défection",
+    "Activité des forces",
+    "Politique et institutionnel",
+    "Information / divers",
+    "Attaque, cible non précisée"
    ],
    "actors": [
     "Afghan Taliban",
@@ -602,15 +575,16 @@
    "zoom": 6.2,
    "count": 49,
    "events": [
-    "Arrestation",
-    "Assassinat",
-    "Attaque",
-    "Déplacement / Réfugiés",
-    "Destruction",
-    "Information / Divers",
-    "Opération (forces)",
-    "Présence / Mouvement",
-    "Vol / Pillage / Extorsion"
+    "Affrontement armé",
+    "Attaque contre des civils",
+    "Pillage / destruction de biens",
+    "Arrestations",
+    "Reddition / défection",
+    "Activité des forces",
+    "Déplacement de population",
+    "Politique et institutionnel",
+    "Information / divers",
+    "Attaque, cible non précisée"
    ],
    "actors": [
     "CIVIL INT",
@@ -658,12 +632,13 @@
    "zoom": 5.5,
    "count": 42,
    "events": [
-    "Assassinat",
-    "Attaque",
-    "Combat / Affrontement",
-    "Destruction",
-    "Frappe / Drône",
-    "Opération (forces)"
+    "Affrontement armé",
+    "Bombardement / artillerie",
+    "Frappe aérienne ou de drone",
+    "Attaque contre des civils",
+    "Pillage / destruction de biens",
+    "Activité des forces",
+    "Attaque, cible non précisée"
    ],
    "actors": [
     "Assaillant palestinien",
@@ -716,16 +691,15 @@
    "zoom": 5.5,
    "count": 40,
    "events": [
-    "Arrestation",
-    "Assassinat",
-    "Attaque",
-    "Combat / Affrontement",
-    "Embuscade",
-    "Enlèvement / Prise d'otage",
-    "Menaces / Alerte",
-    "Opération (forces)",
-    "Présence / Mouvement",
-    "Vol / Pillage / Extorsion"
+    "Affrontement armé",
+    "Enlèvement / disparition forcée",
+    "Attaque contre des civils",
+    "Pillage / destruction de biens",
+    "Arrestations",
+    "Reddition / défection",
+    "Activité des forces",
+    "Menace / alerte",
+    "Attaque, cible non précisée"
    ],
    "actors": [
     "Ancien malfaiteur",
@@ -780,12 +754,14 @@
    "zoom": 5.5,
    "count": 31,
    "events": [
-    "Assassinat",
-    "Combat / Affrontement",
-    "Destruction",
-    "Frappe / Drône",
-    "IED / Explosif",
-    "Opération (forces)"
+    "Affrontement armé",
+    "Engin explosif / IED",
+    "Bombardement / artillerie",
+    "Frappe aérienne ou de drone",
+    "Attaque contre des civils",
+    "Pillage / destruction de biens",
+    "Activité des forces",
+    "Attaque, cible non précisée"
    ],
    "actors": [
     "Hezbollah",
@@ -832,14 +808,15 @@
    "zoom": 5.5,
    "count": 21,
    "events": [
-    "Assassinat",
-    "Attaque",
-    "Combat / Affrontement",
-    "Destruction",
-    "Enlèvement / Prise d'otage",
-    "Frappe / Drône",
-    "IED / Explosif",
-    "Opération (forces)"
+    "Affrontement armé",
+    "Engin explosif / IED",
+    "Bombardement / artillerie",
+    "Frappe aérienne ou de drone",
+    "Enlèvement / disparition forcée",
+    "Attaque contre des civils",
+    "Pillage / destruction de biens",
+    "Activité des forces",
+    "Attaque, cible non précisée"
    ],
    "actors": [
     "Forces de sécurité iraniennes",
@@ -891,13 +868,13 @@
    "zoom": 5.5,
    "count": 19,
    "events": [
-    "Attaque",
-    "Combat / Affrontement",
-    "Embuscade",
-    "Frappe / Drône",
-    "IED / Explosif",
-    "Opération (forces)",
-    "Présence / Mouvement"
+    "Affrontement armé",
+    "Engin explosif / IED",
+    "Bombardement / artillerie",
+    "Frappe aérienne ou de drone",
+    "Attaque contre des civils",
+    "Activité des forces",
+    "Attaque, cible non précisée"
    ],
    "actors": [
     "Auteur non identifié",
@@ -945,12 +922,12 @@
    "zoom": 5.5,
    "count": 16,
    "events": [
-    "Arrestation",
-    "Assassinat",
-    "Attaque",
-    "Combat / Affrontement",
-    "Opération (forces)",
-    "Présence / Mouvement"
+    "Affrontement armé",
+    "Attaque contre des civils",
+    "Arrestations",
+    "Reddition / défection",
+    "Activité des forces",
+    "Attaque, cible non précisée"
    ],
    "actors": [
     "Auteur non identifié",
@@ -1008,9 +985,10 @@
    "zoom": 5.5,
    "count": 16,
    "events": [
-    "Combat / Affrontement",
-    "Frappe / Drône",
-    "IED / Explosif"
+    "Affrontement armé",
+    "Engin explosif / IED",
+    "Bombardement / artillerie",
+    "Frappe aérienne ou de drone"
    ],
    "actors": [
     "AFF (Afghanistan Freedom Front)",
@@ -1070,7 +1048,8 @@
    "zoom": 5.5,
    "count": 12,
    "events": [
-    "Frappe / Drône"
+    "Bombardement / artillerie",
+    "Frappe aérienne ou de drone"
    ],
    "actors": [
     "Auteur non identifié",
@@ -1121,8 +1100,11 @@
    "zoom": 5.5,
    "count": 12,
    "events": [
-    "Attaque",
-    "Frappe / Drône"
+    "Affrontement armé",
+    "Bombardement / artillerie",
+    "Frappe aérienne ou de drone",
+    "Attaque contre des civils",
+    "Attaque, cible non précisée"
    ],
    "actors": [
     "Copilote omanais (vol flydubai FZ1073)",
@@ -1161,10 +1143,12 @@
    "zoom": 5.5,
    "count": 11,
    "events": [
-    "Embuscade",
-    "Frappe / Drône",
-    "Information / Divers",
-    "Opération (forces)"
+    "Affrontement armé",
+    "Bombardement / artillerie",
+    "Frappe aérienne ou de drone",
+    "Activité des forces",
+    "Politique et institutionnel",
+    "Information / divers"
    ],
    "actors": [
     "Arabie saoudite",
@@ -1211,10 +1195,10 @@
    "zoom": 5.5,
    "count": 6,
    "events": [
-    "Déplacement / Réfugiés",
-    "Information / Divers",
-    "Opération (forces)",
-    "Présence / Mouvement"
+    "Activité des forces",
+    "Déplacement de population",
+    "Politique et institutionnel",
+    "Information / divers"
    ],
    "actors": [
     "FDS",
@@ -1253,8 +1237,11 @@
    "zoom": 5.5,
    "count": 6,
    "events": [
-    "Attaque",
-    "Frappe / Drône"
+    "Affrontement armé",
+    "Bombardement / artillerie",
+    "Frappe aérienne ou de drone",
+    "Attaque contre des civils",
+    "Attaque, cible non précisée"
    ],
    "actors": [
     "Iran",
@@ -1293,7 +1280,8 @@
    "zoom": 5.5,
    "count": 5,
    "events": [
-    "Frappe / Drône"
+    "Bombardement / artillerie",
+    "Frappe aérienne ou de drone"
    ],
    "actors": [
     "Inconnu",
@@ -1332,8 +1320,9 @@
    "zoom": 5.5,
    "count": 4,
    "events": [
-    "Enlèvement / Prise d'otage",
-    "Frappe / Drône"
+    "Bombardement / artillerie",
+    "Frappe aérienne ou de drone",
+    "Enlèvement / disparition forcée"
    ],
    "actors": [
     "Inconnu",
@@ -1364,8 +1353,11 @@
    "zoom": 5.5,
    "count": 3,
    "events": [
-    "Attaque",
-    "Frappe / Drône"
+    "Affrontement armé",
+    "Bombardement / artillerie",
+    "Frappe aérienne ou de drone",
+    "Attaque contre des civils",
+    "Attaque, cible non précisée"
    ],
    "actors": [
     "Inconnu",
@@ -1399,7 +1391,8 @@
    "zoom": 5.5,
    "count": 3,
    "events": [
-    "Frappe / Drône"
+    "Bombardement / artillerie",
+    "Frappe aérienne ou de drone"
    ],
    "actors": [
     "Hezbollah",
@@ -1429,8 +1422,11 @@
    "zoom": 5.5,
    "count": 2,
    "events": [
-    "Attaque",
-    "Frappe / Drône"
+    "Affrontement armé",
+    "Bombardement / artillerie",
+    "Frappe aérienne ou de drone",
+    "Attaque contre des civils",
+    "Attaque, cible non précisée"
    ],
    "actors": [
     "IRGC"
@@ -1455,7 +1451,8 @@
    "zoom": 5.5,
    "count": 1,
    "events": [
-    "Frappe / Drône"
+    "Bombardement / artillerie",
+    "Frappe aérienne ou de drone"
    ],
    "actors": [
     "IRGC"
@@ -1480,7 +1477,8 @@
    "zoom": 5.5,
    "count": 1,
    "events": [
-    "Frappe / Drône"
+    "Bombardement / artillerie",
+    "Frappe aérienne ou de drone"
    ],
    "actors": [
     "IRGC"
@@ -1505,7 +1503,9 @@
    "zoom": 5.5,
    "count": 1,
    "events": [
-    "Attaque"
+    "Affrontement armé",
+    "Attaque contre des civils",
+    "Attaque, cible non précisée"
    ],
    "actors": [
     "Houthis"
@@ -1530,7 +1530,8 @@
    "zoom": 5.5,
    "count": 1,
    "events": [
-    "Information / Divers"
+    "Politique et institutionnel",
+    "Information / divers"
    ],
    "actors": [
     "Ministère pakistanais des Affaires étrangères"
@@ -1544,5 +1545,6 @@
    "statut": "osint",
    "theatre": "Asie du Sud"
   }
- ]
+ ],
+ "typologie": "Grille alignée sur les types et sous-types d'événements du codebook ACLED"
 }
