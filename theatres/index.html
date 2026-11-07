@@ -352,7 +352,7 @@
     if (k === 'date') return (e.months || []).map(function (m) { return { v: m.key, l: m.label }; });
     // Typologies : grille ACLED, groupées par famille (shared/typologie-acled.js).
     var T = window.AlgorTypologie;
-    if (k === 'event') return (e.events || []).map(function (x) { return { v: x, l: x, g: T && T.famille(x) }; });
+    if (k === 'event') return (e.events || []).slice().sort(function (a, b) { return T ? T.rang(a) - T.rang(b) : 0; }).map(function (x) { return { v: x, l: x, g: T && T.famille(x) }; });
     return (e.actors || []).map(function (x) { return { v: x, l: x }; });
   }
   // Nouveau : le dernier lot publié pour ce pays (champ publie du manifeste) date de moins de 7 jours.
