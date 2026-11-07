@@ -65,8 +65,10 @@
     if (/discours|d[ée]claration|revendication|rencontre|r[ée]union|[ée]lection|manifestation|[ée]meute|divers|information|crash|trafic|lib[ée]ration|violence/.test(low)) return 'Information / Divers';
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
+  // Libellé canonique (shared/acteurs.js) : une case par acteur réel dans les filtres.
   function normalizeActor(raw) {
     if (!raw) return null;
+    if (window.AlgorActeurs) return window.AlgorActeurs.normaliser(raw);
     var s = String(raw).trim().replace(/\s+/g, ' ').replace(/\s*-\s*/g, '-').replace(/\s*\/\s*/g, '/');
     return s || null;
   }
@@ -277,7 +279,7 @@
         var e = wanted && data.countries.find(function (c) { return c.name === wanted; });
         if (e) {
           state.entry = e; state.country = e.name;
-          state.sel = { from: q.get('from') || null, to: q.get('to') || null, event: q.get('event') || null, actor: q.get('actor') || null };
+          state.sel = { from: q.get('from') || null, to: q.get('to') || null, event: q.get('event') || null, actor: normalizeActor(q.get('actor')) || null };
         }
         renderSummary();
         whenAuthorized(function () {

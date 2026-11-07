@@ -325,6 +325,7 @@
 <script type="module" src="/shared/site-auth.js?v=20261020a"></script>
 <script src="/shared/v5/chrome.js?v=20261107a"></script>
 <script src="/shared/typologie-acled.js?v=20261107a"></script>
+<script src="/shared/acteurs.js?v=20261107a"></script>
 <script>
 /* Champ d'ouverture. Visiteur : démo sur n'importe quelle zone (/demo/). Abonné connecté : l'outil pays du site en ligne,
    en quatre étapes (pays suivi, période, typologie, acteur), qui ouvre /carte/ déjà filtrée. ?apercu=1 force la vue abonné. */
@@ -353,7 +354,9 @@
     // Typologies : grille ACLED, groupées par famille (shared/typologie-acled.js).
     var T = window.AlgorTypologie;
     if (k === 'event') return (e.events || []).slice().sort(function (a, b) { return T ? T.rang(a) - T.rang(b) : 0; }).map(function (x) { return { v: x, l: x, g: T && T.famille(x) }; });
-    return (e.actors || []).map(function (x) { return { v: x, l: x }; });
+    // Une case par acteur réel (shared/acteurs.js) : CIVIL, CIVILS, CIVIL INT… → Civils.
+    var acts = window.AlgorActeurs ? window.AlgorActeurs.liste(e.actors) : (e.actors || []);
+    return acts.map(function (x) { return { v: x, l: x }; });
   }
   // Nouveau : le dernier lot publié pour ce pays (champ publie du manifeste) date de moins de 7 jours.
   function neuf(c) {
