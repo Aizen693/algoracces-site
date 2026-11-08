@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<script src="/shared/i18n.js?v=20261108b"></script>
+<script src="/shared/i18n.js?v=20261108c"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Veilles : Algor Acces</title>
 <meta name="robots" content="noindex">
@@ -316,6 +316,46 @@
   .rep__lire { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 14px; color: var(--ink); text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 4px; text-decoration-thickness: 1px; }
   .rep--oct:hover .rep__lire { text-decoration-color: currentColor; }
 
+  /* ── Pôle France ── */
+  .fr-intro { max-width: 860px; margin: 0 0 22px; font-size: 16px; line-height: 1.55; color: var(--ink-2); }
+  .fr-intro b { font-weight: 500; color: var(--ink); }
+  .fcert { list-style: none; margin: 0; padding: 0; }
+  .fcert li { padding: 13px 0 14px; border-top: 1px solid var(--line); }
+  .fcert__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .fcert__cat { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); }
+  .fcert__cat::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--c, var(--muted)); }
+  .fcert__cat--alerte { --c: var(--alert); } .fcert__cat--cti { --c: #9A8AD0; } .fcert__cat--avis { --c: #E0924A; }
+  .fcert__id { font: 400 12px var(--mono); color: var(--muted); }
+  .fcert__t { display: block; margin: 5px 0 4px; font-size: 16.5px; line-height: 1.38; color: var(--ink); }
+  .fcert__t:hover { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+  .fcert__t::after { content: ' ↗'; font-size: 13px; color: var(--faint); }
+  .fcert__r { margin: 0; font-size: 14.5px; line-height: 1.5; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .fscroll { max-height: 640px; overflow-y: auto; padding-right: 4px; scrollbar-width: thin; scrollbar-color: var(--stone) transparent; }
+  .fvict { list-style: none; margin: 14px 0 0; padding: 0; }
+  .fvict li { display: grid; grid-template-columns: 54px minmax(0, 1fr) auto; gap: 0 12px; align-items: baseline; padding: 8px 0; border-top: 1px solid var(--line); font-size: 14.5px; }
+  .fvict__d { font: 400 12.5px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .fvict__v { color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fvict__v small { display: block; font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fvict__g { font-size: 13px; color: var(--ink-2); }
+  .bar__fill.is-strat { background: var(--alert); }
+  .fstrat { margin-top: 10px; font-size: 13px; color: var(--muted); }
+  .fstrat i { display: inline-block; width: 10px; height: 6px; margin-right: 6px; background: var(--alert); vertical-align: middle; }
+  .fsrc { margin-top: 26px; font-size: 13px; line-height: 1.5; color: var(--muted); }
+
+  /* ── Onglets cyber : une question par onglet ── */
+  .cq-bar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px 32px; margin: 0 0 18px; }
+  .cq-bar__txt { flex: 1 1 420px; min-width: 0; }
+  .cq-bar__tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; flex: 0 1 460px; }
+  .cq-bar__tools .csearch { flex: 1 1 200px; margin: 0; }
+  .cq-bar__tools .csearch[hidden] { display: none; }
+  .cq { margin: 0 0 4px; font-size: clamp(22px, 2.4vw, 28px); font-weight: 400; line-height: 1.2; color: var(--ink); }
+  .cq__sub { margin: 0; max-width: 78ch; font-size: 15px; line-height: 1.5; color: var(--muted); }
+  .couche__maj.is-perime { color: var(--alert); }
+  .cmaj { margin: 10px 0 0; }
+  #vue-rapports { margin-top: clamp(24px, 3vw, 40px); }
+  #vue-rapports .reports { max-height: none; }
+  #fcert-pills b, #corriger-pills b { margin-left: 6px; }
+
   /* Fiche rapport OpenCTI */
   .fr-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-bottom: 12px; padding-right: 44px; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
   .fr-meta b { font-weight: 500; color: var(--ink); }
@@ -464,8 +504,9 @@
     .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .kpi { padding: 14px 14px 18px; }
     .search, .csearch { min-width: 0; flex-basis: 100%; }
-    .vswitch { width: 100%; }
-    .vswitch button { flex: 1; justify-content: center; padding: 0 10px; }
+    .vswitch { display: flex; width: 100%; flex-wrap: wrap; }
+    .cfilters .cselect { width: 100%; }
+    .vswitch button { flex: 1 1 30%; justify-content: center; padding: 0 10px; white-space: nowrap; }
     .cve { grid-template-columns: auto minmax(0, 1fr); }
     .cve__date { grid-column: 2; }
   }
@@ -784,7 +825,7 @@
   function report(r) {
     const title = safeUrl(r.url) ? `<a href="${esc(r.url)}" target="_blank" rel="noopener noreferrer" data-i18n-skip>${esc(txt(r, 'titre'))}</a>` : esc(txt(r, 'titre'));
     const pays = (r.pays || []).slice(0, 4), sect = (r.secteurs || []).slice(0, 3);
-    return `<article class="rep" data-date="${esc(String(r.date || '').slice(0, 10))}" data-q="${esc((r.titre + ' ' + (r.titre_en || '') + ' ' + (r.etiquettes || []).join(' ') + ' ' + pays.join(' ') + ' ' + sect.join(' ') + ' ' + r.resume + ' ' + (r.resume_en || '')).toLowerCase())}">
+    return `<article class="rep" data-date="${esc(String(r.date || '').slice(0, 10))}" data-pays="${esc((r.pays || []).join('|'))}" data-acteurs="${esc((r.acteurs || []).join('|'))}" data-types="${esc((r.types || []).join('|'))}" data-q="${esc((r.titre + ' ' + (r.titre_en || '') + ' ' + (r.etiquettes || []).join(' ') + ' ' + pays.join(' ') + ' ' + sect.join(' ') + ' ' + r.resume + ' ' + (r.resume_en || '')).toLowerCase())}">
       <div class="rep__meta"><span>${esc(fmtD(r.date, true))}</span><span class="rep__src">${esc(r.source)}</span>${sect.length ? `<span>· ${sect.map((x) => `<span>${esc(x)}</span>`).join(', ')}</span>` : ''}<span class="rep__badges">${(r.types || []).slice(0, 2).map(badgeType).join('')}${(r.acteurs || []).slice(0, 2).map((a) => `<span class="bact bact--s" data-i18n-skip>${esc(a)}</span>`).join('')}</span></div>
       <h3 class="rep__title">${title}</h3>
       ${r.resume ? `<p class="rep__sum" data-i18n-skip>${esc(txt(r, 'resume'))}</p>` : ''}
@@ -807,7 +848,8 @@
   let periode = ['7', '30', '90'].includes(params.get('periode')) ? Number(params.get('periode')) : 7;
   const dansPeriode = (r) => !r.date || (Date.now() - Date.parse(String(r.date).slice(0, 10) + 'T00:00:00Z')) / 864e5 < periode + 1;
   const rapportsPeriode = () => (cmapData?.rapports || []).filter(dansPeriode);
-  const rapportsFiltres = () => rapportsPeriode().filter((r) => (!filtre.type || r.types.includes(filtre.type)) && (!filtre.acteur || r.acteurs.includes(filtre.acteur)));
+  let recherche = '';
+  const rapportsFiltres = () => rapportsPeriode().filter((r) => (!filtre.type || r.types.includes(filtre.type)) && (!filtre.acteur || r.acteurs.includes(filtre.acteur)) && (!recherche || r._q.includes(recherche)));
   function agreger(list) {
     const m = new Map();
     for (const r of list) for (const p of r.pays) { const e = m.get(p) || { nom: p, n: 0, liste: [] }; e.n++; e.liste.push(r); m.set(p, e); }
@@ -819,7 +861,7 @@
   const plage = (a, b) => !b ? '' : a === b ? `le ${fmtD(b, true)}` : `du ${fmtD(a)} au ${fmtD(b, true)}`;
   const badgeType = (t) => `<span class="btype" style="--c:${tcol(t)}">${esc(t)}</span>`;
   const badgeActeur = (a) => `<button class="bact" data-acteur="${esc(a)}" title="Filtrer la carte sur cet attaquant"><span data-i18n-skip>${esc(a)}</span></button>`;
-  const ligneRapport = (r) => `<a class="clink" href="${esc(safeUrl(r.url) || '#')}" target="_blank" rel="noopener noreferrer">
+  const ligneRapport = (r) => `<a class="clink" data-otx="${esc(r.id || '')}" href="${esc(safeUrl(r.url) || '#')}" target="_blank" rel="noopener noreferrer">
       <div class="clink__meta">${esc(fmtD(r.date, true))} · ${esc(r.source)}${r.pays.length > 1 ? ` · ${r.pays.length} pays` : ''}</div>
       <div class="clink__title" data-i18n-skip>${esc(txt(r, 'titre'))}</div>
       <div class="clink__badges">${r.types.slice(0, 2).map(badgeType).join('')}${r.acteurs.length ? r.acteurs.slice(0, 2).map((a) => `<span class="bact bact--s" data-i18n-skip>${esc(a)}</span>`).join('') : '<span class="bact bact--s bact--none">attaquant non attribué</span>'}</div></a>`;
@@ -844,16 +886,19 @@
       }
       cmapSel = null;
     }
-    const acteurs = compte(list, (r) => r.acteurs);
-    const max = Math.max(...pays.map((x) => x.n), 1), maxA = Math.max(...acteurs.map((x) => x[1]), 1);
-    el.innerHTML = `<div class="cside__head"><div class="pills pills--s"><button data-o="pays" class="${cmapOnglet === 'pays' ? 'is-on' : ''}">Pays <b>${pays.length}</b></button><button data-o="acteurs" class="${cmapOnglet === 'acteurs' ? 'is-on' : ''}">Attaquants <b>${acteurs.length}</b></button></div><span class="card__hint">${fmtN(list.length)} rapports</span></div>
+    const acteurs = compte(list, (r) => r.acteurs), secteurs = compte(list, (r) => r.secteurs || []);
+    const max = Math.max(...pays.map((x) => x.n), 1), maxA = Math.max(...acteurs.map((x) => x[1]), 1), maxS = Math.max(...secteurs.map((x) => x[1]), 1);
+    el.innerHTML = `<div class="cside__head"><div class="pills pills--s"><button data-o="pays" class="${cmapOnglet === 'pays' ? 'is-on' : ''}">Pays <b>${pays.length}</b></button><button data-o="acteurs" class="${cmapOnglet === 'acteurs' ? 'is-on' : ''}">Attaquants <b>${acteurs.length}</b></button><button data-o="secteurs" class="${cmapOnglet === 'secteurs' ? 'is-on' : ''}">Secteurs <b>${secteurs.length}</b></button></div></div>
       ${filtreTxt ? `<div class="cside__filtre"><span>${filtreTxt}</span> <button id="cside-raz">effacer</button></div>` : ''}
-      <div class="cside__list">${cmapOnglet === 'pays'
+      <div class="cside__list">${cmapOnglet === 'secteurs'
+        ? (secteurs.map(([t, n]) => `<button class="crow" data-secteur="${esc(t)}"><span>${esc(t)}</span><b>${fmtN(n)}</b><span class="crow__bar" style="width:${(100 * n / maxS).toFixed(1)}%"></span></button>`).join('') || '<div class="empty">Aucun secteur déclaré pour ce filtre.</div>')
+        : cmapOnglet === 'pays'
         ? (pays.map((p) => `<button class="crow" data-pays="${esc(p.nom)}"><span>${esc(p.nom)}<i class="crow__dot" style="background:${tcol(p.dominant)}" title="${esc(p.dominant)}"></i>${p.dernier ? `<small> · ${esc(fmtD(p.dernier))}</small>` : ''}</span><b>${fmtN(p.n)}</b><span class="crow__bar" style="width:${(100 * p.n / max).toFixed(1)}%;background:${tcol(p.dominant)}"></span></button>`).join('') || '<div class="empty">Aucun pays pour ce filtre.</div>')
         : (acteurs.map(([a, n]) => { const np = new Set(list.filter((r) => r.acteurs.includes(a)).flatMap((r) => r.pays)).size; return `<button class="crow" data-acteur="${esc(a)}"><span><span data-i18n-skip>${esc(a)}</span><small> · ${np} pays</small></span><b>${fmtN(n)}</b><span class="crow__bar" style="width:${(100 * n / maxA).toFixed(1)}%"></span></button>`; }).join('') || '<div class="empty">Aucun attaquant nommé pour ce filtre.</div>')}</div>`;
     el.querySelectorAll('[data-o]').forEach((b) => b.addEventListener('click', () => { cmapOnglet = b.dataset.o; cmapSide(); }));
     el.querySelectorAll('.crow[data-pays]').forEach((b) => b.addEventListener('click', () => cmapFocus(b.dataset.pays)));
     el.querySelectorAll('.crow[data-acteur]').forEach((b) => b.addEventListener('click', () => setFiltre('acteur', b.dataset.acteur)));
+    el.querySelectorAll('.crow[data-secteur]').forEach((b) => b.addEventListener('click', () => { const q = document.getElementById('cq'); q.value = b.dataset.secteur; q.dispatchEvent(new Event('input')); }));
     el.querySelector('#cside-raz')?.addEventListener('click', () => { filtre.type = null; filtre.acteur = null; cmapRefresh(); });
   }
   function cmapFiltres() {
@@ -861,13 +906,11 @@
     // Compte sur tous les types reconnus d'un rapport (pas seulement le dominant), comme le filtre lui-même
     const types = compte(rapportsPeriode().filter((r) => !filtre.acteur || r.acteurs.includes(filtre.acteur)), (r) => r.types);
     const acteurs = compte(rapportsPeriode().filter((r) => !filtre.type || r.types.includes(filtre.type)), (r) => r.acteurs);
-    el.innerHTML = `<span class="cfilters__lbl">Type d’attaque</span>
-      <button class="fchip ${!filtre.type ? 'is-on' : ''}" data-type="">Tous</button>
-      ${types.map(([t, n]) => `<button class="fchip ${filtre.type === t ? 'is-on' : ''}" data-type="${esc(t)}"><i style="background:${tcol(t)}"></i>${esc(t)} <b>${n}</b></button>`).join('')}
-      <span class="sep"></span>
+    el.innerHTML = `<label class="cfilters__lbl" for="ctype">Type d’attaque</label>
+      <select class="cselect" id="ctype"><option value="">Tous (${types.length})</option>${types.map(([t, n]) => `<option value="${esc(t)}" ${filtre.type === t ? 'selected' : ''}>${esc(t)} (${n})</option>`).join('')}</select>
       <label class="cfilters__lbl" for="cacteur">Attaquant</label>
       <select class="cselect" id="cacteur"><option value="">Tous (${acteurs.length} nommés)</option>${acteurs.map(([a, n]) => `<option data-i18n-skip value="${esc(a)}" ${filtre.acteur === a ? 'selected' : ''}>${esc(a)} (${n})</option>`).join('')}</select>`;
-    el.querySelectorAll('[data-type]').forEach((b) => b.addEventListener('click', () => setFiltre('type', b.dataset.type || null, true)));
+    el.querySelector('#ctype').addEventListener('change', (e) => setFiltre('type', e.target.value || null, true));
     el.querySelector('#cacteur').addEventListener('change', (e) => setFiltre('acteur', e.target.value || null, true));
   }
   function setFiltre(k, v, force) {
@@ -875,10 +918,20 @@
     if (k === 'acteur' && filtre.acteur) cmapOnglet = 'pays'; // un attaquant choisi : on montre les pays qu'il vise
     cmapSel = null; cmapRefresh();
   }
-  function cmapRefresh() {
-    const note = document.getElementById('cnote-rapports-n');
-    if (note && cmapData) { const n = rapportsPeriode().length; note.textContent = `${fmtN(n)} rapport${n > 1 ? 's' : ''} localisé${n > 1 ? 's' : ''} sur ${periode === 7 ? 'les 7 derniers jours' : `les ${periode} derniers jours`}`; }
-    cmapFiltres(); cmapSide();
+  function filtrerListe() {
+    const box = document.getElementById('reports'); if (!box) return;
+    let vis = 0;
+    for (const el of box.querySelectorAll('.rep')) {
+      const a = (k) => (el.dataset[k] || '').split('|');
+      el.hidden = !((!recherche || el.dataset.q.includes(recherche)) && dansPeriode({ date: el.dataset.date }) && (!cmapSel || a('pays').includes(cmapSel)) && (!filtre.acteur || a('acteurs').includes(filtre.acteur)) && (!filtre.type || a('types').includes(filtre.type)));
+      if (!el.hidden) vis++;
+    }
+    const vide = document.getElementById('reports-vide'); if (vide) vide.hidden = vis > 0;
+    const t = document.getElementById('reports-titre'); if (t) t.textContent = cmapSel ? `Rapports : ${T(cmapSel)}` : filtre.acteur ? `Rapports : ${filtre.acteur}` : filtre.type ? `Rapports : ${T(filtre.type)}` : 'Rapports';
+    const h = document.getElementById('reports-hint'); if (h) h.textContent = `${fmtN(vis)} sur ${periode} jours`;
+  }
+  function cmapRefresh(fixe) {
+    cmapFiltres(); cmapSide(); filtrerListe();
     if (!cmap || !cmap.getSource('cyber')) return;
     const pays = agreger(rapportsFiltres()), coords = cmapData.coords;
     cmap.getSource('cyber').setData({ type: 'FeatureCollection', features: pays.filter((p) => coords[p.nom]).map((p) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: coords[p.nom] },
@@ -887,13 +940,13 @@
     cmap.setPaintProperty('cyber-pts', 'circle-opacity', sel ? ['case', ['==', ['get', 'nom'], sel], 0.9, 0.3] : 0.65);
     if (sel && coords[sel]) cmap.flyTo({ center: coords[sel], zoom: Math.max(cmap.getZoom(), 3.2), speed: 1.1, essential: true });
     else if (!sel && filtre.acteur) { const pts = pays.filter((p) => coords[p.nom]).map((p) => coords[p.nom]); if (pts.length) { const b = new mapboxgl.LngLatBounds(); pts.forEach((c) => b.extend(c)); cmap.fitBounds(b, { padding: 60, maxZoom: 4, speed: 1.1, essential: true }); } }
-    else if (!sel) cmap.fitBounds(MONDE, { padding: 24, speed: 1.1, essential: true });
+    else if (!sel && !fixe) cmap.fitBounds(MONDE, { padding: 24, speed: 1.1, essential: true });
   }
   function cmapFocus(nom) { cmapSel = nom; cmapRefresh(); if (!nom && cmap && !filtre.acteur) cmap.fitBounds(MONDE, { padding: 24, speed: 1.1, essential: true }); }
   function cmapInit(d) {
     const host = document.getElementById('cmap'); if (!host || cmap) return;
     const coords = {}; for (const p of (d.carte?.pays || [])) coords[p.nom] = [p.lon, p.lat];
-    cmapData = { rapports: (d.carte?.rapports || []).map((r) => ({ ...r, types: r.types?.length ? r.types : ['Non classé'], acteurs: r.acteurs || [], pays: r.pays || [] })), coords, periode: d.periode_jours };
+    cmapData = { rapports: (d.carte?.rapports || []).map((r) => ({ ...r, types: r.types?.length ? r.types : ['Non classé'], acteurs: r.acteurs || [], pays: r.pays || [], _q: [r.titre, r.titre_en, ...(r.acteurs || []), ...(r.types || []), ...(r.malwares || []), ...(r.pays || []), ...(r.secteurs || [])].join(' ').toLowerCase() })), coords, periode: d.periode_jours };
     cmapFiltres(); cmapSide();
     if (!window.mapboxgl) { host.innerHTML = '<div class="cmap__loading">La carte n’a pas pu se charger (Mapbox indisponible).</div>'; return; }
     mapboxgl.accessToken = MAPBOX_TOKEN;
@@ -915,18 +968,6 @@
         pop.setLngLat(e.features[0].geometry.coordinates).setHTML(`<div class="cpop__t">${esc(f.nom)}<b>${fmtN(f.n)}</b></div>${f.plage ? `<div class="cpop__l cpop__date">Rapport${f.n > 1 ? 's' : ''} ${esc(f.plage)}</div>` : ''}<div class="cpop__l"><i style="background:${esc(f.couleur)}"></i>${esc(f.type)}</div>${f.acteur ? `<div class="cpop__l">Attaquant principal : <span data-i18n-skip>${esc(f.acteur)}</span></div>` : ''}`).addTo(cmap); });
       cmap.on('mouseleave', 'cyber-pts', () => { cmap.getCanvas().style.cursor = ''; pop.remove(); });
       cmap.on('click', 'cyber-pts', (e) => cmapFocus(e.features[0].properties.nom));
-      // Couche temps réel (masquée tant que la couche « rapports » est affichée)
-      cmap.addSource('live', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-      cmap.addLayer({ id: 'live-halo', type: 'circle', source: 'live', layout: { visibility: 'none' }, paint: { 'circle-color': ['get', 'couleur'], 'circle-opacity': 0.2, 'circle-blur': 0.7, 'circle-radius': ['interpolate', ['linear'], ['sqrt', ['get', 'n']], 1, 10, 7, 40] } });
-      cmap.addLayer({ id: 'live-pts', type: 'circle', source: 'live', layout: { visibility: 'none' }, paint: { 'circle-color': ['get', 'couleur'], 'circle-opacity': 0.8, 'circle-stroke-color': '#fff', 'circle-stroke-width': ['case', ['>', ['get', 'c2'], 0], 1.8, 0.8], 'circle-stroke-opacity': 0.85, 'circle-radius': ['interpolate', ['linear'], ['sqrt', ['get', 'n']], 1, 4, 7, 16] } });
-      cmap.addLayer({ id: 'live-lbl', type: 'symbol', source: 'live', filter: ['>=', ['get', 'n'], 4], layout: { visibility: 'none', 'text-field': ['get', 'nom'], 'text-size': 11, 'text-offset': [0, 1.6], 'text-anchor': 'top', 'text-font': ['DIN Pro Medium', 'Arial Unicode MS Regular'] }, paint: { 'text-color': '#F2F2F4', 'text-halo-color': '#0F1013', 'text-halo-width': 1.2 } });
-      cmap.on('mousemove', 'live-pts', (e) => { cmap.getCanvas().style.cursor = 'pointer'; const f = e.features[0].properties;
-        pop.setLngLat(e.features[0].geometry.coordinates).setHTML(`<div class="cpop__t" data-i18n-skip>${esc(f.nom)}<b>${fmtN(f.n)}</b></div><div class="cpop__l"><i style="background:${esc(f.couleur)}"></i>${esc(f.type)}</div>${f.famille ? `<div class="cpop__l">Famille principale : <span data-i18n-skip>${esc(f.famille)}</span></div>` : ''}${f.c2 ? `<div class="cpop__l">${f.c2} C2 Feodo en ligne</div>` : ''}`).addTo(cmap); });
-      cmap.on('mouseleave', 'live-pts', () => { cmap.getCanvas().style.cursor = ''; pop.remove(); });
-      cmap.on('click', 'live-pts', (e) => liveFocus(e.features[0].properties.cc));
-      const legendLive = document.createElement('div'); legendLive.className = 'cmap__legend cmap__legend--live is-hidden';
-      legendLive.innerHTML = `<div class="cmap__legend-row">${Object.entries(LIVE_COL).map(([t, c]) => `<span><i style="background:${c}88;border-color:${c}"></i>${esc(t)}</span>`).join('')}</div><div class="cmap__legend-row"><span>Taille = indicateurs sur 24 h · halo = signalé dans l’heure</span></div>`;
-      host.appendChild(legendLive);
       // Couche « Attaques en cours » : origine par pays (DShield) + arcs DDoS (Cloudflare Radar si disponible)
       cmap.addSource('ddos', { type: 'geojson', lineMetrics: true, data: { type: 'FeatureCollection', features: [] } });
       cmap.addLayer({ id: 'ddos-arcs', type: 'line', source: 'ddos', layout: { visibility: 'none', 'line-cap': 'round' }, paint: { 'line-width': ['interpolate', ['linear'], ['get', 'part'], 0, 1, 20, 3.5], 'line-gradient': ['interpolate', ['linear'], ['line-progress'], 0, 'rgba(255,138,80,0.1)', 1, 'rgba(255,138,80,0.6)'] } });
@@ -960,71 +1001,25 @@
       if (couche !== 'rapports') setCouche(couche);
     });
   }
-  /* ── Couche temps réel : indicateurs ThreatFox des 24 dernières heures (IP géolocalisées par pays),
-     rafraîchie chaque minute depuis live.json déposé toutes les 5 minutes par le VPS. ── */
-  const LIVE_COL = { 'Serveur de commande': '#5A9BD5', 'Diffusion de charge': '#E0924A', 'Charge malveillante': '#D9BC55' };
-  const lcol = (t) => LIVE_COL[t] || '#8C8D93';
-  let couche = ['direct', 'attaques', 'rancon'].includes(params.get('couche')) ? params.get('couche') : 'rapports', liveData = null, liveTimer = null, liveAnim = null, liveSel = null, atkSel = null, atkTick = null;
-  const liveVus = new Set();
+  /* ── Flux quasi temps réel (live.json, déposé toutes les 5 minutes par le VPS, relu chaque minute).
+     Si le dépôt s'arrête, la page le dit au lieu d'afficher un faux direct. ── */
+  let couche = 'rapports', liveData = null, liveTimer = null, liveAnim = null, atkSel = null, atkTick = null;
   const ilYA = (iso) => { const m = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 6e4)); return m < 1 ? 'à l’instant' : m < 60 ? `il y a ${m} min` : m < 1440 ? `il y a ${Math.floor(m / 60)} h${m % 60 ? ' ' + String(m % 60).padStart(2, '0') : ''}` : `il y a ${Math.floor(m / 1440)} j`; };
-  const hhmm = (iso) => new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-  const iocLbl = (t) => t === 'ip:port' ? 'IP' : /hash/.test(t) ? 'fichier' : t === 'domain' ? 'domaine' : t;
-  const ligneLive = (x) => { const neuf = liveVus.size && !liveVus.has(x.id); return `<div class="lrow ${neuf ? 'is-new' : ''}" ${x.cc ? `data-cc="${esc(x.cc)}" role="button" tabindex="0"` : ''} title="${esc(x.type)}${x.rapporteur ? ' · signalé par ' + esc(x.rapporteur) : ''}${x.confiance != null ? ' · confiance ' + x.confiance + ' %' : ''}">
-      <span class="lrow__t">${hhmm(x.t)}</span>
-      <span class="lrow__m" data-i18n-skip><i class="lrow__dot" style="background:${lcol(x.type)}"></i><span style="overflow:hidden;text-overflow:ellipsis">${esc(x.famille)}</span><small>${esc(iocLbl(x.ioc))}</small></span>
-      <span class="lrow__p" data-i18n-skip>${x.pays ? esc(x.pays) : '<span style="color:var(--muted)">non localisé</span>'}</span></div>`; };
+  const livePerime = () => !!liveData && (Date.now() - Date.parse(liveData.genere_le)) / 36e5 > 2;
+  function majFlux(txt) {
+    const el = document.getElementById('couche-maj'); if (!el || !liveData) return;
+    el.classList.toggle('is-perime', livePerime());
+    el.textContent = livePerime() ? `Flux interrompu : dernières données du ${fmtD(liveData.genere_le.slice(0, 10), true)}` : txt;
+  }
   async function chargerLive() {
     try {
-      const d = await window.algorAuth.loadZoneFile('veille-cyber/live.json');
-      liveData = d;
-      if (couche === 'direct') liveRefresh(); else if (couche === 'attaques') atkRefresh(); else if (couche === 'rancon') rwRefresh();
+      liveData = await window.algorAuth.loadZoneFile('veille-cyber/live.json');
+      if (couche === 'attaques') atkRefresh(); else if (couche === 'rancon') rwRefresh();
     } catch (e) {
       console.warn('[veille] live', e);
-      if (couche !== 'rapports' && !liveData) document.getElementById('cside').innerHTML = '<div class="empty">Flux temps réel indisponible pour le moment.</div>';
+      if (couche !== 'rapports' && !liveData) document.getElementById('cside').innerHTML = '<div class="empty">Flux indisponible pour le moment.</div>';
     }
   }
-  function liveFeatures() {
-    if (!liveData) return [];
-    const now = Date.now();
-    return liveData.pays.map((p) => { const types = p.types.slice().sort((a, b) => b.valeur - a.valeur); return { type: 'Feature', geometry: { type: 'Point', coordinates: [p.lon, p.lat] },
-      properties: { cc: p.cc, nom: p.nom, n: p.n, couleur: lcol(types[0]?.nom), type: types[0]?.nom || '', famille: p.familles[0]?.nom || '', c2: p.c2_en_ligne || 0, frais: Math.max(0, 1 - (now - Date.parse(p.dernier)) / 36e5) } }; });
-  }
-  function liveRefresh() {
-    liveSide();
-    const maj = document.getElementById('couche-maj');
-    if (maj && liveData) maj.textContent = `Mis à jour ${ilYA(liveData.genere_le)} · dernier signalement ${ilYA(liveData.dernier)}`;
-    if (!cmap || !cmap.getSource('live')) return;
-    cmap.getSource('live').setData({ type: 'FeatureCollection', features: liveFeatures() });
-    cmap.setPaintProperty('live-pts', 'circle-opacity', liveSel ? ['case', ['==', ['get', 'cc'], liveSel], 0.95, 0.3] : 0.8);
-  }
-  function liveSide() {
-    const el = document.getElementById('cside'); if (!el || !liveData || couche !== 'direct') return;
-    const d = liveData;
-    if (liveSel) {
-      const p = d.pays.find((x) => x.cc === liveSel);
-      if (p) {
-        const flux = d.flux.filter((x) => x.cc === p.cc);
-        el.innerHTML = `<button class="cside__back" id="cside-back">← Tous les pays</button>
-          <div class="cside__head"><div><h3 class="cside__title" data-i18n-skip>${esc(p.nom)}</h3><div class="cside__sub">${fmtN(p.n)} indicateur${p.n > 1 ? 's' : ''} sur ${d.fenetre_h} h${p.c2_en_ligne ? ` · ${p.c2_en_ligne} C2 Feodo en ligne` : ''} · dernier ${ilYA(p.dernier)}</div></div></div>
-          <div class="cside__sec"><div class="cside__lbl">Familles</div><div class="cside__chips">${p.familles.map((f) => `<span class="bact bact--s" data-i18n-skip>${esc(f.nom)} <b>${f.valeur}</b></span>`).join('')}</div></div>
-          <div class="cside__sec"><div class="cside__lbl">Types</div><div class="cside__chips">${p.types.map((t) => `<span class="btype" style="--c:${lcol(t.nom)}">${esc(t.nom)} <b>${t.valeur}</b></span>`).join('')}</div></div>
-          <div class="cside__lbl">Derniers signalements</div>
-          <div class="cside__list">${flux.slice(0, 60).map(ligneLive).join('') || '<div class="empty">Détail non conservé pour ce pays sur cette fenêtre.</div>'}</div>`;
-        el.querySelector('#cside-back').addEventListener('click', () => { liveSel = null; liveRefresh(); if (cmap) cmap.fitBounds(MONDE, { padding: 24, speed: 1.1, essential: true }); });
-        return;
-      }
-      liveSel = null;
-    }
-    const max = Math.max(...d.par_heure.map((h) => h.n), 1);
-    el.innerHTML = `<div class="cside__head"><div><h3 class="cside__title"><span class="live-dot" style="margin-right:8px;vertical-align:middle"></span>Flux en direct</h3><div class="cside__sub">ThreatFox · ${d.fenetre_h} dernières heures · rafraîchi chaque minute</div></div></div>
-      <div class="lstat"><span><b>${fmtN(d.total)}</b>indicateurs</span><span><b>${fmtN(d.localises)}</b>localisés</span><span><b>${fmtN(d.pays.length)}</b>pays</span><span><b>${fmtN((d.c2_en_ligne || []).length)}</b>C2 en ligne</span></div>
-      <div class="lbars" title="Indicateurs par heure">${d.par_heure.map((h, i) => `<i style="height:${Math.max(2, 100 * h.n / max)}%" class="${i === d.par_heure.length - 1 ? 'is-last' : ''}" title="${hhmm(h.h)} · ${h.n}"></i>`).join('')}</div>
-      <div class="cside__sec"><div class="cside__chips">${d.familles.filter((f) => f.nom !== 'Non identifié').slice(0, 6).map((f) => `<span class="bact bact--s" data-i18n-skip>${esc(f.nom)} <b>${f.valeur}</b></span>`).join('')}</div></div>
-      <div class="cside__list">${d.flux.slice(0, 80).map(ligneLive).join('')}</div>`;
-    el.querySelectorAll('.lrow[data-cc]').forEach((b) => b.addEventListener('click', () => liveFocus(b.dataset.cc)));
-    for (const x of d.flux.slice(0, 80)) liveVus.add(x.id);
-  }
-  function liveFocus(cc) { liveSel = cc; liveRefresh(); const p = liveData?.pays.find((x) => x.cc === cc); if (p && cmap) cmap.flyTo({ center: [p.lon, p.lat], zoom: Math.max(cmap.getZoom(), 3.2), speed: 1.1, essential: true }); }
   /* ── Attaques en cours : capteurs honeypot SANS ISC DShield (origine des attaques par pays, services visés),
      + DDoS pays → pays de Cloudflare Radar quand le jeton est posé sur le VPS (arcs animés). ── */
   const arc = (a, b) => { let [x1, y1] = a, [x2, y2] = b; if (x2 - x1 > 180) x2 -= 360; else if (x1 - x2 > 180) x2 += 360;
@@ -1048,8 +1043,7 @@
   }
   function atkRefresh() {
     atkSide();
-    const maj = document.getElementById('couche-maj');
-    if (maj && liveData?.attaques) maj.textContent = `Capteurs SANS ISC + blocklist.de · mis à jour ${ilYA(liveData.genere_le)}`;
+    if (liveData?.attaques) majFlux(`Capteurs SANS ISC et blocklist.de · mis à jour ${ilYA(liveData.genere_le)}`);
     if (!cmap || !cmap.getSource('atk')) return;
     const { pts, arcs } = atkFeatures();
     cmap.getSource('atk').setData({ type: 'FeatureCollection', features: pts });
@@ -1079,20 +1073,20 @@
     }
     const maxS = Math.max(...a.ports.map((p) => p.records), 1), maxT = Math.max(...(T?.liste || []).map((t) => t.valeur), 1), maxP = Math.max(...paysT.map((p) => p.n), 1);
     const ddos = [...(a.ddos?.l7 || []), ...(a.ddos?.l3 || [])].filter((x) => x.o_cc !== x.t_cc).sort((x, y) => y.part - x.part).slice(0, 6);
-    el.innerHTML = `<div class="cside__head"><div><h3 class="cside__title"><span class="live-dot live-dot--red" style="margin-right:8px;vertical-align:middle"></span>Attaques en cours</h3><div class="cside__sub">Capteurs SANS ISC (aujourd’hui) · blocklist.de (48 h)</div></div></div>
+    el.innerHTML = `<div class="cside__head"><div><h3 class="cside__title">${livePerime() ? '' : '<span class="live-dot live-dot--red" style="margin-right:8px;vertical-align:middle"></span>'}Attaques observées</h3><div class="cside__sub">Capteurs SANS ISC (aujourd’hui) · blocklist.de (48 h)</div></div></div>
       <div class="atk-count" id="atk-count">${fmtN(auj.evenements)}</div>
       <div class="atk-rate" id="atk-rate">événements d’attaque aujourd’hui</div>
       <div class="lstat"><span><b>${fmtN(auj.sources)}</b>adresses sources</span>${T ? `<span><b>${fmtN(T.total)}</b>attaquants 48 h</span>` : ''}${veille ? `<span><b>${fmtN(veille.evenements)}</b>événements hier</span>` : ''}</div>
       <div class="cside__list" style="margin-top:6px">
         ${T?.liste?.length ? `<div class="cside__lbl">Types d’attaque · 48 h</div>${T.liste.map((t) => `<div class="prow"><span class="prow__n"><i class="lrow__dot" style="background:${acol(t.nom)};margin-right:6px"></i>${esc(t.nom)}</span><b>${fmtN(t.valeur)}</b><span class="prow__bar" style="width:${(100 * t.valeur / maxT).toFixed(1)}%;background:${acol(t.nom)}"></span></div>`).join('')}` : ''}
-        <div class="cside__lbl" style="margin-top:12px">Services visés · capteurs</div>
-        ${a.ports.slice(0, 6).map((p) => `<div class="prow"><span class="prow__n">${esc(p.service || 'Port ' + p.port)}<small>${p.port}</small></span><b>${fmtN(p.records)}</b><span class="prow__bar" style="width:${(100 * p.records / maxS).toFixed(1)}%"></span></div>`).join('')}
         ${paysT.length ? `<div class="cside__lbl" style="margin-top:12px">Pays d’origine · adresses attaquantes</div>
-        ${paysT.slice(0, 15).map((p) => `<button class="crow" data-cc="${esc(p.cc)}"><span data-i18n-skip>${esc(p.nom)}<i class="crow__dot" style="background:${acol(p.types[0]?.nom)}" title="${esc(p.types[0]?.nom || '')}"></i></span><b>${fmtN(p.n)}</b><span class="crow__bar" style="width:${(100 * p.n / maxP).toFixed(1)}%;background:${acol(p.types[0]?.nom)}"></span></button>`).join('')}` : ''}
+        ${paysT.slice(0, 10).map((p) => `<button class="crow" data-cc="${esc(p.cc)}"><span data-i18n-skip>${esc(p.nom)}<i class="crow__dot" style="background:${acol(p.types[0]?.nom)}" title="${esc(p.types[0]?.nom || '')}"></i></span><b>${fmtN(p.n)}</b><span class="crow__bar" style="width:${(100 * p.n / maxP).toFixed(1)}%;background:${acol(p.types[0]?.nom)}"></span></button>`).join('')}` : ''}
         ${ddos.length ? `<div class="cside__lbl" style="margin-top:12px">DDoS · origine → cible (24 h)</div>${ddos.map((x) => `<div class="prow"><span class="prow__n" data-i18n-skip>${esc(x.o_nom)} → ${esc(x.t_nom)}</span><b>${x.part.toFixed(1).replace('.', ',')} %</b></div>`).join('')}` : ''}
+        ${liveData.total ? `<div class="cside__lbl" style="margin-top:12px">Infrastructure malveillante · ${liveData.fenetre_h} h</div><div class="lstat"><span><b>${fmtN(liveData.total)}</b>indicateurs ThreatFox</span><span><b>${fmtN((liveData.c2_en_ligne || []).length)}</b>serveurs de commande en ligne</span></div><div class="cside__chips">${liveData.familles.filter((f) => f.nom !== 'Non identifié').slice(0, 6).map((f) => `<span class="bact bact--s" data-i18n-skip>${esc(f.nom)} <b>${f.valeur}</b></span>`).join('')}</div>` : ''}
       </div>`;
     el.querySelectorAll('.crow[data-cc]').forEach((b) => b.addEventListener('click', () => atkFocus(b.dataset.cc)));
     clearInterval(atkTick);
+    if (livePerime()) { document.getElementById('atk-rate').textContent = 'événements relevés le dernier jour disponible'; return; }
     const t0 = Date.parse(liveData.genere_le), minuit = Date.parse(a.jour + 'T00:00:00Z'), rythme = auj.evenements / Math.max(60, (t0 - minuit) / 1000);
     const cpt = document.getElementById('atk-count'), lbl = document.getElementById('atk-rate');
     lbl.textContent = `événements d’attaque aujourd’hui · ≈ ${fmtN(Math.round(rythme))} par seconde, estimé au rythme du jour`;
@@ -1119,8 +1113,7 @@
       <span class="lrow__p" data-i18n-skip>${avecPays ? (x.cc && liveData.rancon.centres[x.cc] ? esc(liveData.rancon.centres[x.cc][2]) : '<span style="color:var(--muted)">pays inconnu</span>') : esc(x.s || '')}</span></div>`;
   function rwRefresh() {
     rwSide();
-    const maj = document.getElementById('couche-maj');
-    if (maj && liveData?.rancon) maj.textContent = `ransomware.live · ${rwJours()} derniers jours · mis à jour ${ilYA(liveData.rancon.genere_le)}${periode > 30 ? ' · historique limité à 30 jours' : ''}`;
+    if (liveData?.rancon) majFlux(`ransomware.live · ${rwJours()} derniers jours · mis à jour ${ilYA(liveData.rancon.genere_le)}`);
     if (!cmap || !cmap.getSource('rw')) return;
     cmap.getSource('rw').setData({ type: 'FeatureCollection', features: rwAgreger(rwListe()).map((p) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [p.lon, p.lat] },
       properties: { cc: p.cc, nom: p.nom, n: p.n, groupe: p.groupes[0]?.[0] || '', plage: plage(p.premier, p.dernier) } })) });
@@ -1162,34 +1155,23 @@
   function rwFocus(cc) { rwSel = cc; rwRefresh(); const C = liveData?.rancon?.centres?.[cc]; if (C && cmap) cmap.flyTo({ center: [C[0], C[1]], zoom: Math.max(cmap.getZoom(), 3), speed: 1.1, essential: true }); }
   function setCouche(c) {
     couche = c;
-    const direct = c === 'direct', atk = c === 'attaques', rw = c === 'rancon', live = direct || atk || rw;
-    document.querySelectorAll('#couche button').forEach((b) => b.classList.toggle('is-on', b.dataset.c === c));
+    const atk = c === 'attaques', rw = c === 'rancon', live = atk || rw;
     document.getElementById('cfilters').hidden = live;
-    document.getElementById('cnote-rapports').hidden = live;
-    document.getElementById('periode').hidden = (direct || atk) && cyberVue === 'carte';
-    document.getElementById('cnote-rancon').hidden = !rw;
-    document.getElementById('cnote-direct').hidden = !direct;
-    document.getElementById('cnote-attaques').hidden = !atk;
     document.getElementById('couche-maj').hidden = !live;
-    if (cmap && cmap.getLayer('atk-pts')) for (const [id, on] of [['cyber-halo', !live], ['cyber-pts', !live], ['cyber-lbl', !live], ['live-halo', direct], ['live-pts', direct], ['live-lbl', direct], ['atk-halo', atk], ['atk-pts', atk], ['atk-lbl', atk], ['ddos-arcs', atk], ['rw-halo', rw], ['rw-pts', rw], ['rw-lbl', rw]]) cmap.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none');
+    if (cmap && cmap.getLayer('atk-pts')) for (const [id, on] of [['cyber-halo', !live], ['cyber-pts', !live], ['cyber-lbl', !live], ['atk-halo', atk], ['atk-pts', atk], ['atk-lbl', atk], ['ddos-arcs', atk], ['rw-halo', rw], ['rw-pts', rw], ['rw-lbl', rw]]) cmap.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none');
     const host = document.getElementById('cmap');
-    host?.querySelector('.cmap__legend:not(.cmap__legend--live):not(.cmap__legend--atk):not(.cmap__legend--rw)')?.classList.toggle('is-hidden', live);
+    host?.querySelector('.cmap__legend:not(.cmap__legend--atk):not(.cmap__legend--rw)')?.classList.toggle('is-hidden', live);
     host?.querySelector('.cmap__legend--rw')?.classList.toggle('is-hidden', !rw);
-    host?.querySelector('.cmap__legend--live')?.classList.toggle('is-hidden', !direct);
     host?.querySelector('.cmap__legend--atk')?.classList.toggle('is-hidden', !atk);
     clearInterval(liveTimer); liveTimer = null; cancelAnimationFrame(liveAnim); clearInterval(atkTick);
-    const u = new URL(location.href); if (live) u.searchParams.set('couche', c); else u.searchParams.delete('couche'); history.replaceState(null, '', u);
     if (live) {
-      liveSel = null; atkSel = null; rwSel = null;
-      if (!liveData) document.getElementById('cside').innerHTML = '<div class="empty">Chargement du flux en direct…</div>';
-      else if (atk) atkRefresh(); else if (rw) rwRefresh(); else liveRefresh();
+      atkSel = null; rwSel = null;
+      if (!liveData) document.getElementById('cside').innerHTML = '<div class="empty">Chargement du flux…</div>';
+      else if (atk) atkRefresh(); else rwRefresh();
       chargerLive(); liveTimer = setInterval(chargerLive, 60_000);
-      const anim = () => { if (couche === 'rapports') return;
+      const anim = () => { if (couche !== 'attaques') return;
         const ph = (Date.now() % 2400) / 2400;
-        if (couche === 'direct' && cmap && cmap.getLayer('live-halo')) {
-          cmap.setPaintProperty('live-halo', 'circle-radius', ['interpolate', ['linear'], ['sqrt', ['get', 'n']], 1, 9 + 9 * ph, 7, 34 + 20 * ph]);
-          cmap.setPaintProperty('live-halo', 'circle-opacity', ['*', ['+', 0.1, ['*', 0.35, ['get', 'frais']]], 1 - ph]); }
-        if (couche === 'attaques' && cmap && cmap.getLayer('atk-halo')) {
+        if (cmap && cmap.getLayer('atk-halo')) {
           cmap.setPaintProperty('atk-halo', 'circle-radius', ['interpolate', ['linear'], ['sqrt', ['get', 'n']], 1, 4 + 8 * ph, 110, 30 + 26 * ph]);
           cmap.setPaintProperty('atk-halo', 'circle-opacity', 0.42 * (1 - ph));
           // Comète le long de chaque arc : arrêts strictement croissants 0 < queue < tête < après < 1 (sinon Mapbox rejette le dégradé)
@@ -1206,25 +1188,43 @@
       <div><div class="cve__id">${id}${v.kev ? '<span class="kev">Exploitée (CISA)</span>' : ''}</div><div class="cve__sum" data-i18n-skip>${esc(v.resume)}</div></div>
       <span class="cve__date">${esc(fmtD(v.date, true))}</span></div>`;
   }
-  const TENDANCES = [['acteurs', 'Acteurs', 'acteurs_actifs', ''], ['codes', 'Codes malveillants', 'malwares_actifs', ''], ['secteurs', 'Secteurs ciblés', 'secteurs_cibles', 'is-alert'], ['pays', 'Pays ciblés', 'pays_cibles', 'is-alert']];
-  let cyberVue = params.get('vue') === 'carte' ? 'carte' : 'liste', tendance = 'acteurs';
+  /* Une question par onglet : rien n'apparaît dans deux onglets à la fois. */
+  const VUES = {
+    menaces: ['Menaces', 'Qui attaque qui ?', 'Rapports de menace placés sur les pays visés. Cliquez un pays, un attaquant ou un type : la liste des rapports suit.', 'rapports'],
+    rancon: ['Rançongiciels', 'Qui vient d’être touché ?', 'Victimes revendiquées par les groupes sur leurs sites, relevées par ransomware.live. Les noms sont ceux que publient les attaquants, sans vérification.', 'rancon'],
+    attaques: ['Attaques en cours', 'D’où partent les attaques ?', 'Le bruit de fond mondial : adresses qui attaquent des serveurs (blocklist.de, capteurs SANS ISC) et DDoS (Cloudflare Radar). Le pays est celui qui héberge l’adresse, pas la nationalité de l’attaquant.', 'attaques'],
+    corriger: ['À corriger', 'Que corriger en priorité ?', 'Les failles réellement exploitées d’abord, puis les bulletins de l’ANSSI et les failles critiques les plus récentes.'],
+    france: ['France', 'Qu’est-ce qui vise la France ?', 'Bulletins de menace du CERT-FR, rapports qui citent la France, victimes françaises revendiquées. Secteurs stratégiques mis en évidence.'],
+  };
+  const vueDemandee = () => { const v = params.get('vue'), c = params.get('couche'); return VUES[v] ? v : c === 'rancon' ? 'rancon' : (c === 'attaques' || c === 'direct') ? 'attaques' : 'menaces'; };
+  let cyberVue = vueDemandee();
   function setVue(v) {
     cyberVue = v;
-    document.getElementById('vue-liste').hidden = v !== 'liste';
-    document.getElementById('vue-carte').hidden = v !== 'carte';
-    const per = document.getElementById('periode'); if (per) per.hidden = v === 'carte' && (couche === 'direct' || couche === 'attaques');
-    document.querySelectorAll('.vswitch button').forEach((b) => b.classList.toggle('is-on', b.dataset.vue === v));
-    const u = new URL(location.href); if (v === 'carte') u.searchParams.set('vue', 'carte'); else u.searchParams.delete('vue'); history.replaceState(null, '', u);
-    if (v === 'carte') { cmapInit(cyberData); cmap?.resize(); }
+    const [, q, sub, c] = VUES[v];
+    document.getElementById('cq-titre').textContent = T(q);
+    document.getElementById('cq-sub').textContent = T(sub);
+    document.getElementById('vue-carte').hidden = !c;
+    document.getElementById('vue-rapports').hidden = v !== 'menaces';
+    document.getElementById('vue-corriger').hidden = v !== 'corriger';
+    document.getElementById('vue-france').hidden = v !== 'france';
+    document.getElementById('cq').hidden = v !== 'menaces';
+    const per = document.getElementById('periode');
+    per.hidden = v !== 'menaces' && v !== 'rancon';
+    per.querySelector('[data-p="90"]').hidden = v === 'rancon';
+    if (v === 'rancon' && periode === 90) per.querySelector('[data-p="30"]').click();
+    document.querySelectorAll('.vswitch button').forEach((b) => { const on = b.dataset.vue === v; b.classList.toggle('is-on', on); b.setAttribute('aria-selected', on); });
+    const u = new URL(location.href); u.searchParams.delete('couche'); if (v === 'menaces') u.searchParams.delete('vue'); else u.searchParams.set('vue', v); history.replaceState(null, '', u);
+    if (c) { cmapInit(cyberData); if (couche !== c) setCouche(c); cmap?.resize(); }
   }
   /* ── Rapports OpenCTI : fiche complète de chaque rapport (rapports.json exporté chaque heure du VPS) ── */
   let rapportsOct = null;
   const TYPES_RAPPORT = { 'threat-report': 'Rapport de menace', 'malware': 'Code malveillant', 'attack-pattern': 'Technique d’attaque', 'vulnerability': 'Vulnérabilité', 'threat-actor': 'Acteur de la menace', 'campaign': 'Campagne', 'internal-report': 'Rapport interne' };
   const ORDRE_TACTIQUES = ['Reconnaissance', 'Préparation', 'Accès initial', 'Exécution', 'Persistance', 'Élévation de privilèges', 'Contournement des défenses', 'Vol d’identifiants', 'Découverte', 'Déplacement latéral', 'Collecte', 'Commande et contrôle', 'Exfiltration', 'Impact'];
   const hote = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
+  const typesOct = (r) => (cyberData?.carte?.rapports || []).find((x) => x.id === r.otx)?.types || [];
   function repOct(r) {
     const chips = [...r.attaquants.slice(0, 2).map((a) => `<span class="bact bact--s" data-i18n-skip>${esc(a)}</span>`), ...r.malwares.slice(0, 2).map((m) => `<span class="tag" data-i18n-skip>${esc(m)}</span>`), ...r.pays.slice(0, 3).map((p) => `<span class="tag tag--pays" data-pays="${esc(p)}" title="Voir sur la carte"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg>${esc(p)}</span>`)];
-    return `<article class="rep rep--oct" data-rid="${esc(r.id)}" data-date="${esc(r.date)}" data-q="${esc([r.titre, r.titre_en, r.resume, ...r.etiquettes, ...r.attaquants, ...r.malwares, ...r.outils, ...r.pays, ...r.secteurs, ...r.cves.map((c) => c.id), ...r.techniques].join(' ').toLowerCase())}">
+    return `<article class="rep rep--oct" data-rid="${esc(r.id)}" data-date="${esc(r.date)}" data-pays="${esc(r.pays.join('|'))}" data-acteurs="${esc(r.attaquants.join('|'))}" data-types="${esc(typesOct(r).join('|'))}" data-q="${esc([r.titre, r.titre_en, r.resume, ...r.etiquettes, ...r.attaquants, ...r.malwares, ...r.outils, ...r.pays, ...r.secteurs, ...r.cves.map((c) => c.id), ...r.techniques].join(' ').toLowerCase())}">
       <div class="rep__meta"><span>${esc(fmtD(r.date, true))}</span><span class="rep__src">${esc(r.source)}</span>${r.techniques.length ? `<span>· ${r.techniques.length} techniques</span>` : ''}${r.indicateurs ? `<span>· ${fmtN(r.indicateurs)} indicateurs</span>` : ''}</div>
       <h3 class="rep__title" data-i18n-skip>${esc(txt(r, 'titre'))}</h3>
       ${r.resume ? `<p class="rep__sum" data-i18n-skip>${esc(r.resume)}</p>` : ''}
@@ -1274,79 +1274,130 @@
     window.addEventListener('keydown', onKey);
     document.body.appendChild(el);
   }
+  /* ── Pôle France : menace visant la France et les intérêts français.
+     france.json (VPS, horaire) = bulletins CERT-FR + victimes françaises revendiquées (ransomware.live) ;
+     les rapports de menace viennent de rapports.json (OpenCTI) et de l'instantané OTX, filtrés sur la France. ── */
+  let franceData = null, franceCat = 'cti', corrigerCat = 'alerte';
+  const FR_PAYS = /^(france|french|guadeloupe|martinique|guyane|french guiana|la réunion|réunion|reunion|mayotte|nouvelle-calédonie|new caledonia|polynésie française|french polynesia|saint-pierre-et-miquelon|wallis)/i;
+  const visesFrance = (r) => [...(r.pays || []), ...(r.regions || [])].some((p) => FR_PAYS.test(p));
+  const SECT_STRAT = /défense|defen|aérospatial|aerospace|aéro|administration|gouvern|government|énergie|energy|télécom|telecom|transport|santé|health|nucl|spatial|semiconductor/i;
+  const CERT_CATS = [['cti', 'Menaces et incidents'], ['actualite', 'Actualités']];
+  const CERT_CORRIGER = [['alerte', 'Alertes'], ['avis', 'Avis de sécurité']];
+  const compteNoms = (arr) => { const m = new Map(); for (const x of arr) if (x) m.set(x, (m.get(x) || 0) + 1); return [...m].sort((a, b) => b[1] - a[1]).map(([nom, valeur]) => ({ nom, valeur })); };
+  const ligneCert = (c) => `<li><div class="fcert__meta"><span class="fcert__cat fcert__cat--${esc(c.cat)}">${esc(c.libelle)}</span><span>${esc(fmtD(c.date, true))}</span>${c.id ? `<span class="fcert__id">${esc(c.id)}</span>` : ''}</div><a class="fcert__t" href="${esc(safeUrl(c.lien) || '#')}" target="_blank" rel="noopener noreferrer" data-i18n-skip>${esc(c.titre)}</a>${c.resume ? `<p class="fcert__r" data-i18n-skip>${esc(c.resume.replace(/\*\*/g, ''))}</p>` : ''}</li>`;
+  function renderFrance() {
+    const box = document.getElementById('vue-france'); if (!box) return;
+    if (!franceData) return;
+    const d = cyberData || {}, oct = rapportsOct?.rapports || [];
+    const derOct = oct.reduce((m, r) => (r.date > m ? r.date : m), '');
+    const otx = (d.rapports || []).filter((r) => visesFrance(r) && String(r.date || '').slice(0, 10) > derOct.slice(0, 10));
+    const octFr = oct.filter(visesFrance);
+    const certs = franceData.certfr || [], vict = franceData.rancon?.victimes || [];
+    const attaquants = compteNoms([...octFr.flatMap((r) => [...r.attaquants, ...r.campagnes]), ...otx.flatMap((r) => r.acteurs || [])]).slice(0, 8);
+    const groupes = compteNoms(vict.map((v) => v.g)).slice(0, 8);
+    const secteurs = compteNoms([...octFr.flatMap((r) => r.secteurs), ...otx.flatMap((r) => r.secteurs || []), ...vict.map((v) => v.s)]).slice(0, 10);
+    const barsSect = secteurs.length ? '<div class="bars">' + secteurs.map((x, i) => `<div class="bar" title="${esc(x.nom)} : ${fmtN(x.valeur)}"><span class="bar__name">${esc(x.nom)}</span><span class="bar__track"><span class="bar__fill ${SECT_STRAT.test(x.nom) ? 'is-strat' : ''}" style="width:${(100 * x.valeur / secteurs[0].valeur).toFixed(1)}%;animation-delay:${i * 40}ms"></span></span><span class="bar__val">${fmtN(x.valeur)}</span></div>`).join('') + '</div>' : '<div class="empty">Aucun secteur déclaré.</div>';
+    box.innerHTML = `
+      <div class="grid">
+        <div class="col">
+          <section class="card">
+            <div class="card__head"><h2 class="card__title">Bulletins du CERT-FR</h2><span class="card__hint">ANSSI · flux officiels</span></div>
+            <div class="pills" id="fcert-pills" style="margin-bottom:6px">${CERT_CATS.map(([k, l]) => `<button data-c="${k}" class="${k === franceCat ? 'is-on' : ''}">${l} <b>${fmtN(certs.filter((c) => c.cat === k).length)}</b></button>`).join('')}</div>
+            <ul class="fcert fscroll" id="fcert"></ul>
+          </section>
+          <section class="card">
+            <div class="card__head"><h2 class="card__title">Rapports de menace visant la France</h2><span class="card__hint">${fmtN(octFr.length + otx.length)} · OpenCTI${otx.length ? ' et OTX' : ''} · 90 j</span></div>
+            <div class="reports fscroll" id="freports">${otx.map(report).join('') + octFr.map(repOct).join('') || '<div class="empty">Aucun rapport ne cite la France sur la période.</div>'}</div>
+          </section>
+        </div>
+        <div class="col">
+          <section class="card"><div class="card__head"><h2 class="card__title">Qui vise la France</h2><span class="card__hint">attaquants cités · 90 j</span></div>${bars(attaquants, 'is-alert')}</section>
+          <section class="card"><div class="card__head"><h2 class="card__title">Secteurs visés en France</h2><span class="card__hint">rapports et revendications · 90 j</span></div>${barsSect}<div class="fstrat"><i></i>Secteur stratégique</div></section>
+          <section class="card"><div class="card__head"><h2 class="card__title">Rançongiciels en France</h2><span class="card__hint">${fmtN(vict.length)} victimes · 90 j</span></div>
+            ${bars(groupes)}
+            <ul class="fvict">${vict.slice(0, 14).map((v) => `<li><span class="fvict__d">${esc(fmtD(v.d, true))}</span><span class="fvict__v" data-i18n-skip>${esc(v.v)}${v.s ? `<small>${esc(v.s)}</small>` : ''}</span><a class="fvict__g" href="https://www.ransomware.live/group/${encodeURIComponent(v.g)}" target="_blank" rel="noopener noreferrer" data-i18n-skip>${esc(v.g)}</a></li>`).join('')}</ul>
+          </section>
+        </div>
+      </div>
+      <p class="fsrc">Sources : CERT-FR (ANSSI), plateforme OpenCTI Algor Acces, AlienVault OTX, ransomware.live. Les noms de victimes sont ceux que publient les attaquants, sans vérification ; aucune donnée volée n’est reprise. Mise à jour chaque heure.</p>`;
+    const renderCert = () => {
+      const l = certs.filter((c) => c.cat === franceCat);
+      document.getElementById('fcert').innerHTML = l.map(ligneCert).join('') || '<li class="empty">Aucun bulletin dans cette catégorie.</li>';
+      document.querySelectorAll('#fcert-pills button').forEach((b) => b.classList.toggle('is-on', b.dataset.c === franceCat));
+    };
+    document.querySelectorAll('#fcert-pills button').forEach((b) => b.addEventListener('click', () => { franceCat = b.dataset.c; renderCert(); }));
+    renderCert();
+    document.getElementById('freports').addEventListener('click', (e) => {
+      const pays = e.target.closest('.tag--pays');
+      if (pays) { setVue('menaces'); cmapFocus(pays.dataset.pays); document.getElementById('vue-carte').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+      const oc = e.target.closest('.rep--oct'); if (oc && !e.target.closest('a')) { ouvrirRapport(oc.dataset.rid); return; }
+      const rp = e.target.closest('.rep'); if (rp && !e.target.closest('a')) rp.classList.toggle('is-open');
+    });
+  }
+  function renderCorriger() {
+    const box = document.getElementById('vue-corriger'), d = cyberData; if (!box || !d) return;
+    const certs = franceData?.certfr || [], critiques = d.vulnerabilites_critiques || [];
+    const exploitees = d.vulnerabilites_exploitees || critiques.filter((v) => v.kev);
+    const recentes = critiques.filter((v) => !exploitees.some((x) => x.cve === v.cve)).slice(0, 8);
+    box.innerHTML = `<div class="grid">
+      <div class="col">
+        <section class="card"><div class="card__head"><h2 class="card__title">Failles exploitées</h2><span class="card__hint">catalogue CISA · CVSS ≥ 9 · ${d.periode_jours} j</span></div><div class="cves">${exploitees.map(cve).join('') || '<div class="empty">Aucune faille critique publiée sur la période n’est signalée comme exploitée.</div>'}</div></section>
+        <section class="card"><div class="card__head"><h2 class="card__title">Failles critiques récentes</h2><span class="card__hint">CVSS ≥ 9 · pas d’exploitation signalée</span></div><div class="cves">${recentes.map(cve).join('') || '<div class="empty">Aucune.</div>'}</div></section>
+      </div>
+      <div class="col">
+        <section class="card"><div class="card__head"><h2 class="card__title">Bulletins de l’ANSSI</h2><span class="card__hint">CERT-FR</span></div>
+          <div class="pills" id="corriger-pills" style="margin-bottom:6px">${CERT_CORRIGER.map(([k, l]) => `<button data-c="${k}">${l} <b>${fmtN(certs.filter((c) => c.cat === k).length)}</b></button>`).join('')}</div>
+          <ul class="fcert fscroll" id="corriger-cert"></ul></section>
+      </div></div>`;
+    const liste = () => {
+      document.getElementById('corriger-cert').innerHTML = certs.filter((c) => c.cat === corrigerCat).map(ligneCert).join('') || (franceData ? '<li class="empty">Aucun bulletin dans cette catégorie.</li>' : '<li class="empty">Chargement des bulletins…</li>');
+      document.querySelectorAll('#corriger-pills button').forEach((b) => b.classList.toggle('is-on', b.dataset.c === corrigerCat));
+    };
+    document.querySelectorAll('#corriger-pills button').forEach((b) => b.addEventListener('click', () => { corrigerCat = b.dataset.c; liste(); }));
+    liste();
+  }
+
   let cyberData = null;
   function renderCyber(d) {
     cyberData = d;
-    const c = d.compteurs || {}, nbPays = (d.carte?.pays || []).length;
+    const c = d.compteurs || {};
     document.getElementById('pane-cyber').innerHTML = `
-      <section class="kpis">
-        <div class="kpi"><div class="kpi__label">Rapports</div><div class="kpi__value">${fmtN(c.rapports_90j)}<small>${d.periode_jours} j</small></div></div>
-        <div class="kpi"><div class="kpi__label">Pays ciblés</div><div class="kpi__value">${fmtN(nbPays)}</div></div>
-        <div class="kpi"><div class="kpi__label">Indicateurs</div><div class="kpi__value">${fmtN(c.indicateurs)}</div></div>
-        <div class="kpi"><div class="kpi__label">CVE critiques</div><div class="kpi__value">${fmtN(c.vulnerabilites)}</div></div>
-        <div class="kpi"><div class="kpi__label">Groupes MITRE</div><div class="kpi__value">${fmtN(c.acteurs)}</div></div>
-      </section>
-      <div class="ctools">
-        <div class="vswitch" role="tablist">
-          <button data-vue="liste" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Rapports</button>
-          <button data-vue="carte" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4z"/><path d="M8 2v16M16 6v16"/></svg>Carte des attaques</button>
+      <div class="ctools"><div class="vswitch" role="tablist">${Object.entries(VUES).map(([k, v]) => `<button data-vue="${k}" role="tab">${v[0]}</button>`).join('')}</div></div>
+      <div class="cq-bar">
+        <div class="cq-bar__txt"><h2 class="cq" id="cq-titre"></h2><p class="cq__sub" id="cq-sub"></p></div>
+        <div class="cq-bar__tools">
+          <div class="pills periode" id="periode" title="Période">${[7, 30, 90].map((p) => `<button data-p="${p}" class="${p === periode ? 'is-on' : ''}">${p === 7 ? '7 jours' : p + ' j'}</button>`).join('')}</div>
+          <input class="csearch" id="cq" type="search" placeholder="Acteur, pays, secteur, logiciel, CVE…" autocomplete="off" value="${esc(params.get('q') || '')}">
         </div>
-        <div class="pills periode" id="periode" title="Période des rapports">${[7, 30, 90].map((p) => `<button data-p="${p}" class="${p === periode ? 'is-on' : ''}">${p === 7 ? '7 jours' : p + ' j'}</button>`).join('')}</div>
-        <input class="csearch" id="cq" type="search" placeholder="Filtrer les rapports : acteur, pays, secteur, logiciel, CVE…" autocomplete="off" value="${esc(params.get('q') || '')}">
       </div>
       <div id="vue-carte" hidden>
-        <div class="couche"><div class="pills" id="couche"><button data-c="rapports" class="is-on">Rapports</button><button data-c="attaques"><span class="live-dot live-dot--red"></span>Attaques en cours</button><button data-c="rancon"><span class="live-dot" style="background:${RW_COL};animation:none"></span>Rançongiciels</button><button data-c="direct"><span class="live-dot"></span>Infrastructure · 24 h</button></div><span class="couche__maj" id="couche-maj" hidden></span></div>
-        <p class="cnote" id="cnote-rapports"><b id="cnote-rapports-n"></b>, c’est-à-dire qui déclarent au moins un pays ciblé. Chaque point est placé au centre du pays ; sa taille suit le nombre de rapports, sa couleur le type d’attaque dominant. Cliquez un pays pour voir qui l’attaque et comment, ou filtrez par type et par attaquant.</p>
-        <p class="cnote" id="cnote-attaques" hidden>Adresses qui ont attaqué des serveurs dans les dernières 48 heures, signalées par le réseau <b>blocklist.de</b> et classées par type (messagerie, web, force brute SSH…), plus les attaques reçues aujourd’hui par les capteurs du <b>SANS Internet Storm Center</b>. Chaque point est le pays qui héberge ces adresses (base DB-IP), sa couleur le type d’attaque dominant ; les arcs sont les DDoS de Cloudflare Radar. Mise à jour toutes les 5 à 30 minutes selon la source.</p>
-        <p class="cnote" id="cnote-rancon" hidden>Victimes que les groupes de rançongiciels revendiquent sur leurs sites, relevées par <b>ransomware.live</b> et mises à jour toutes les 30 minutes. Chaque point est le pays de la victime ; les noms sont ceux que publient les attaquants, sans vérification, et la date est celle de la revendication. Historique limité aux 30 derniers jours.</p>
-        <p class="cnote" id="cnote-direct" hidden>Infrastructure malveillante signalée dans <b>ThreatFox</b> (abuse.ch) au cours des 24 dernières heures, à quelques minutes près : serveurs de commande, sites de diffusion, charges. Seules les adresses IP sont placées sur la carte, au pays qui les héberge (base DB-IP) ; domaines, URL et fichiers restent dans le flux. Les valeurs des indicateurs ne sont pas publiées.</p>
         <div class="filters cfilters" id="cfilters"></div>
         <div class="cmap-wrap">
           <div class="cmap" id="cmap"><div class="cmap__loading">Chargement de la carte…</div></div>
           <section class="card cside" id="cside"></section>
         </div>
+        <p class="cmaj"><span class="couche__maj" id="couche-maj" hidden></span></p>
       </div>
-      <div id="vue-liste" hidden>
-        <div class="grid">
-          <div class="col">
-            <section class="card card--sticky">
-              <div class="card__head"><h2 class="card__title">Rapports récents</h2><span class="card__hint" id="reports-hint">${fmtN((d.rapports || []).length)} derniers · AlienVault OTX</span></div>
-              <div class="reports" id="reports">${(d.rapports || []).map(report).join('') || '<div class="empty">Aucun rapport importé pour l’instant.</div>'}<div class="empty" id="reports-vide" hidden>Aucun rapport sur cette période. Élargissez à 30 ou 90 jours.</div></div>
-            </section>
-          </div>
-          <div class="col">
-            <section class="card"><div class="card__head"><h2 class="card__title">Tendances</h2><span class="card__hint">${d.periode_jours} j</span></div>
-              <div class="pills" id="pills" style="margin-bottom:12px">${TENDANCES.map(([k, l]) => `<button data-t="${k}">${l}</button>`).join('')}</div>
-              <div id="tendance"></div>
-            </section>
-            <section class="card"><div class="card__head"><h2 class="card__title">Vulnérabilités critiques</h2><span class="card__hint">CVSS ≥ 9 · ${d.periode_jours} j</span></div><div class="cves">${(d.vulnerabilites_critiques || []).slice(0, 8).map(cve).join('') || '<div class="empty">Aucune vulnérabilité critique importée.</div>'}</div></section>
-            <section class="card"><div class="card__head"><h2 class="card__title">Rythme des rapports</h2><span class="card__hint">par semaine</span></div>${spark(d.rapports_par_semaine)}
-              <div class="chips" style="margin-top:12px">${(d.indicateurs_par_type || []).slice(0, 5).map((t) => `<span class="chip">${esc(TYPE_FR[t.nom] || t.nom)} <b>${fmtN(t.valeur)}</b></span>`).join('')}</div></section>
-          </div>
-        </div>
-      </div>`;
-    const renderTendance = () => {
-      const [, , key, cls] = TENDANCES.find((t) => t[0] === tendance);
-      document.getElementById('tendance').innerHTML = bars(d[key], cls);
-      document.querySelectorAll('#pills button').forEach((b) => b.classList.toggle('is-on', b.dataset.t === tendance));
-    };
-    document.querySelectorAll('#pills button').forEach((b) => b.addEventListener('click', () => { tendance = b.dataset.t; renderTendance(); }));
-    renderTendance();
+      <div id="vue-rapports" hidden>
+        <section class="card">
+          <div class="card__head"><h2 class="card__title" id="reports-titre">Rapports</h2><span class="card__hint" id="reports-hint"></span></div>
+          <div class="reports" id="reports">${(d.rapports || []).map(report).join('') || '<div class="empty">Aucun rapport importé pour l’instant.</div>'}<div class="empty" id="reports-vide" hidden>Aucun rapport pour ces filtres. Élargissez à 30 ou 90 jours.</div></div>
+        </section>
+      </div>
+      <div id="vue-corriger" hidden></div>
+      <div id="vue-france" hidden><div class="empty">Chargement…</div></div>`;
     document.querySelectorAll('.vswitch button').forEach((b) => b.addEventListener('click', () => setVue(b.dataset.vue)));
-    document.querySelectorAll('#couche button').forEach((b) => b.addEventListener('click', () => setCouche(b.dataset.c)));
-    if (couche !== 'rapports') { document.querySelectorAll('#couche button').forEach((b) => b.classList.toggle('is-on', b.dataset.c === couche)); document.getElementById('cfilters').hidden = true; document.getElementById('cnote-rapports').hidden = true; document.getElementById(couche === 'attaques' ? 'cnote-attaques' : couche === 'rancon' ? 'cnote-rancon' : 'cnote-direct').hidden = false; if (couche !== 'rancon') document.getElementById('periode').hidden = true; }
+    document.getElementById('cside').addEventListener('click', (e) => { const a = e.target.closest('.clink[data-otx]'); if (!a) return; const r = rapportsOct?.rapports.find((x) => x.otx === a.dataset.otx); if (r) { e.preventDefault(); ouvrirRapport(r.id); } });
     const q = document.getElementById('cq');
-    const applyQ = () => { const s = q.value.trim().toLowerCase(); if (s && cyberVue !== 'liste') setVue('liste');
-      let vis = 0; for (const el of document.querySelectorAll('#reports .rep')) { el.hidden = (!!s && !el.dataset.q.includes(s)) || !dansPeriode({ date: el.dataset.date }); if (!el.hidden) vis++; }
-      const vide = document.getElementById('reports-vide'); if (vide) vide.hidden = vis > 0; };
+    const applyQ = () => { recherche = q.value.trim().toLowerCase(); if (cmapData) cmapRefresh(true); else filtrerListe(); };
     const setPeriode = (p) => { periode = p; document.querySelectorAll('#periode button').forEach((b) => b.classList.toggle('is-on', Number(b.dataset.p) === p));
       const u = new URL(location.href); if (p === 7) u.searchParams.delete('periode'); else u.searchParams.set('periode', String(p)); history.replaceState(null, '', u);
-      applyQ(); cmapSel = null; rwSel = null; if (couche === 'rapports') cmapRefresh(); else if (couche === 'rancon') rwRefresh(); };
+      cmapSel = null; rwSel = null; if (couche === 'rancon') rwRefresh(); applyQ(); };
     document.querySelectorAll('#periode button').forEach((b) => b.addEventListener('click', () => setPeriode(Number(b.dataset.p))));
     q.addEventListener('input', applyQ); applyQ();
     document.getElementById('reports').addEventListener('click', (e) => {
       const pays = e.target.closest('.tag--pays');
-      if (pays) { setVue('carte'); cmapFocus(pays.dataset.pays); document.getElementById('vue-carte').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+      if (pays) { setVue('menaces'); cmapFocus(pays.dataset.pays); document.getElementById('vue-carte').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
       const oct = e.target.closest('.rep--oct'); if (oct && !e.target.closest('a')) { ouvrirRapport(oct.dataset.rid); return; }
       const rep = e.target.closest('.rep'); if (rep && !e.target.closest('a')) rep.classList.toggle('is-open');
     });
@@ -1361,10 +1412,12 @@
       const otxRecents = (d.rapports || []).filter((r) => String(r.date || '').slice(0, 10) > derOct.slice(0, 10));
       box.innerHTML = otxRecents.map(report).join('') + o.rapports.map(repOct).join('');
       if (vide) box.appendChild(vide);
-      document.getElementById('reports-hint').textContent = `${fmtN(o.rapports.length)} rapports · OpenCTI · ${o.jours} j` + (otxRecents.length ? ` · ${fmtN(otxRecents.length)} plus récents · OTX` : '');
-      applyQ();
+      applyQ(); renderFrance();
       const id = params.get('rapport'); if (id) ouvrirRapport(id);
     }).catch((e) => console.warn('[veille] rapports OpenCTI', e));
+    window.algorAuth.loadZoneFile('veille-cyber/france.json').then((f) => { franceData = f; renderFrance(); renderCorriger(); })
+      .catch((e) => { console.warn('[veille] France', e); const b = document.getElementById('vue-france'); if (b) b.innerHTML = '<div class="err">Le volet France n’est pas disponible pour le moment.</div>'; });
+    renderCorriger();
     setVue(cyberVue);
     document.getElementById('n-cyber').textContent = fmtN(c.rapports_90j);
     const gen = new Date(d.genere_le);
@@ -1551,7 +1604,7 @@
         </article>`).join('') || '<div class="empty">Instantané indisponible pour le moment.</div>'}</div>
       </section>
       ${bloc("La veille cyber en entier", "La carte des attaques pays par pays, les filtres par type et par attaquant, les vulnérabilités critiques et le détail de chaque rapport.",
-             ['Carte des attaques', 'Flux temps réel 24 h', 'Filtre par attaquant', `${fmtN(c.vulnerabilites || 0)} CVE critiques`])}`;
+             ['Carte des attaques', 'Rançongiciels par pays', 'Failles à corriger', `${fmtN(c.vulnerabilites || 0)} CVE critiques`])}`;
     fetch(LIVE_PUBLIC, { cache: 'no-store' }).then((r) => r.ok ? r.json() : null).then((l) => {
       if (!l || !l.total) return;
       const k = document.createElement('div'); k.className = 'kpi';
