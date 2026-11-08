@@ -1185,7 +1185,7 @@
   function cve(v) {
     const id = /^CVE-\d{4}-\d+$/.test(v.cve) ? `<a href="https://www.cve.org/CVERecord?id=${esc(v.cve)}" target="_blank" rel="noopener noreferrer">${esc(v.cve)}</a>` : esc(v.cve);
     return `<div class="cve"><span class="cve__score" title="Score CVSS">${(v.score ?? '').toString().replace('.', ',')}</span>
-      <div><div class="cve__id">${id}${v.kev ? '<span class="kev">Exploitée (CISA)</span>' : ''}</div><div class="cve__sum" data-i18n-skip>${esc(v.resume)}</div></div>
+      <div><div class="cve__id">${id}${v.kev ? '<span class="kev">Exploitée (CISA)</span>' : ''}</div><div class="cve__sum" data-i18n-skip>${esc(txt(v, 'resume'))}</div></div>
       <span class="cve__date">${esc(fmtD(v.date, true))}</span></div>`;
   }
   /* Une question par onglet : rien n'apparaît dans deux onglets à la fois. */
@@ -1337,11 +1337,11 @@
   function renderCorriger() {
     const box = document.getElementById('vue-corriger'), d = cyberData; if (!box || !d) return;
     const certs = franceData?.certfr || [], critiques = d.vulnerabilites_critiques || [];
-    const exploitees = d.vulnerabilites_exploitees || critiques.filter((v) => v.kev);
+    const connu = Array.isArray(d.vulnerabilites_exploitees), exploitees = d.vulnerabilites_exploitees || [];
     const recentes = critiques.filter((v) => !exploitees.some((x) => x.cve === v.cve)).slice(0, 8);
     box.innerHTML = `<div class="grid">
       <div class="col">
-        <section class="card"><div class="card__head"><h2 class="card__title">Failles exploitées</h2><span class="card__hint">catalogue CISA · CVSS ≥ 9 · ${d.periode_jours} j</span></div><div class="cves">${exploitees.map(cve).join('') || '<div class="empty">Aucune faille critique publiée sur la période n’est signalée comme exploitée.</div>'}</div></section>
+        <section class="card"><div class="card__head"><h2 class="card__title">Failles exploitées</h2><span class="card__hint">catalogue CISA · CVSS ≥ 9 · ${d.periode_jours} j</span></div><div class="cves">${exploitees.map(cve).join('') || `<div class="empty">${connu ? 'Aucune faille critique publiée sur la période n’est signalée comme exploitée.' : 'Liste en cours de mise à jour.'}</div>`}</div></section>
         <section class="card"><div class="card__head"><h2 class="card__title">Failles critiques récentes</h2><span class="card__hint">CVSS ≥ 9 · pas d’exploitation signalée</span></div><div class="cves">${recentes.map(cve).join('') || '<div class="empty">Aucune.</div>'}</div></section>
       </div>
       <div class="col">
