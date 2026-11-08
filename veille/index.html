@@ -647,6 +647,7 @@
     const vb = document.getElementById('vbody'); vb.classList.toggle('is-nuit', name === 'geo'); vb.dataset.nav = name === 'geo' ? 'dark' : 'light';
     if (window.V5 && window.V5.teinte) window.V5.teinte();
     const u = new URL(location.href); u.searchParams.set('onglet', name); history.replaceState(null, '', u);
+    if (name === 'cyber' && cyberData) setVue(cyberVue);
   }
   for (const t of document.querySelectorAll('.tab')) t.addEventListener('click', () => showTab(t.dataset.tab));
   const ONGLET_DEMANDE = () => (['cyber', 'radio'].includes(params.get('onglet')) ? params.get('onglet') : 'geo');
@@ -1214,7 +1215,8 @@
     if (v === 'rancon' && periode === 90) per.querySelector('[data-p="30"]').click();
     document.querySelectorAll('.vswitch button').forEach((b) => { const on = b.dataset.vue === v; b.classList.toggle('is-on', on); b.setAttribute('aria-selected', on); });
     const u = new URL(location.href); u.searchParams.delete('couche'); if (v === 'menaces') u.searchParams.delete('vue'); else u.searchParams.set('vue', v); history.replaceState(null, '', u);
-    if (c) { cmapInit(cyberData); if (couche !== c) setCouche(c); cmap?.resize(); }
+    // Jamais dans un onglet caché : Mapbox y prendrait une taille de secours de 400 × 300. showTab rappelle setVue à l'affichage.
+    if (c && !document.getElementById('pane-cyber').hidden) { cmapInit(cyberData); if (couche !== c) setCouche(c); cmap?.resize(); }
   }
   /* ── Rapports OpenCTI : fiche complète de chaque rapport (rapports.json exporté chaque heure du VPS) ── */
   let rapportsOct = null;
