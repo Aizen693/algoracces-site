@@ -653,7 +653,7 @@
 
   function anaSection(title, rows, total, colorFn, moreNoun, clickable, labelTitleFn) {
     var max = rows.length ? rows[0].n : 1;
-    var body = rows.slice(0, 8).map(function (r) {
+    function rowHTML(r) {
       var w = Math.max(4, Math.round(r.n / max * 100));
       var p = total ? Math.round(r.n / total * 100) : 0;
       // Localités cliquables → la carte vole sur la ville/village (data-v = clé).
@@ -669,25 +669,24 @@
         '<span class="ana-row-track"><span class="ana-row-fill" style="width:' + w + '%;background:' + colorFn(r.k) + '"></span></span>' +
         '<span class="ana-row-v">' + p + '%</span>' +
         (clic ? '<span class="ana-row-go">' + ICO.arrowR + '</span>' : '') + '</div>';
-    }).join('') || '<div class="ana-empty">Aucune donnée</div>';
-    // Le reste de la liste, rangé dans le « + N autres » et montré au survol.
-    var rest = rows.slice(8).map(function (r) {
-      var p = total ? Math.round(r.n / total * 100) : 0;
-      var clic = (clickable && r.k !== 'Non précisé');
-      return '<div class="ana-tip-row' + (clic ? ' ana-tip-clic" data-v="' + esc(r.k) : '') + '">' +
-        '<span class="ana-row-c">' + r.n + '</span>' +
-        '<span class="ana-tip-l">' + esc(labelTitleFn ? labelTitleFn(r.k) : r.k) + '</span>' +
-        '<span class="ana-row-v">' + p + '%</span></div>';
-    }).join('');
-    var label = (rows.length - 8) + ' autres ' + (moreNoun || 'entrées');
-    var more = rows.length > 8 ? '<div class="ana-more" tabindex="0">+ ' + label +
-      '<div class="ana-more-list" hidden><div class="ana-tip-h">' + label + '</div>' + rest + '</div></div>' : '';
+    }
+    var body = rows.slice(0, 8).map(rowHTML).join('') || '<div class="ana-empty">Aucune donnée</div>';
+    // Au-delà de 8 lignes, le reste se déroule au clic (état gardé par section).
+    var more = '';
+    if (rows.length > 8) {
+      state.anaMore = state.anaMore || {};
+      var open = !!state.anaMore[title];
+      var label = '+ ' + (rows.length - 8) + ' autres ' + (moreNoun || 'entrées');
+      more = '<div class="ana-rest"' + (open ? '' : ' hidden') + '>' + rows.slice(8).map(rowHTML).join('') + '</div>' +
+        '<button class="ana-more" type="button" aria-expanded="' + open + '" data-sec="' + esc(title) + '" data-label="' + esc(label) + '">' +
+        (open ? 'Réduire' : esc(label)) + '</button>';
+    }
     return '<div class="ana-sec"><div class="ana-sec-h"><span class="ana-sec-t">' + esc(title) +
       '</span><span class="ana-sec-n">' + rows.length + '</span></div><div class="ana-bars">' + body + more + '</div></div>';
   }
 
-  // Infobulle du panneau Analyse : nom complet d'une ligne, ou liste complète
-  // d'un « + N autres ». Accrochée au body car .ana-body coupe ce qui dépasse.
+  // Infobulle du panneau Analyse : nom complet et chiffres d'une ligne.
+  // Accrochée au body car .ana-body coupe ce qui dépasse.
   var anaTipHide = function () {};
   function anaTipInit(box) {
     if (box._anaTip) return;
@@ -695,10 +694,8 @@
     var tip = document.createElement('div');
     tip.className = 'ana-tip';
     document.body.appendChild(tip);
-    var timer = null, cur = null;
-    function isMore(el) { return el && el.classList.contains('ana-more'); }
-    function hide() { clearTimeout(timer); tip.style.display = 'none'; cur = null; }
-    function hideSoon() { clearTimeout(timer); timer = setTimeout(hide, 180); }
+    var cur = null;
+    function hide() { tip.style.display = 'none'; cur = null; }
     function place(el) {
       var m = 8, pr = box.getBoundingClientRect(), r = el.getBoundingClientRect();
       var tw = tip.offsetWidth, th = tip.offsetHeight, vw = window.innerWidth, vh = window.innerHeight;
@@ -713,43 +710,23 @@
       tip.style.top = Math.max(m, Math.min(top, vh - th - m)) + 'px';
     }
     function show(el) {
-      clearTimeout(timer);
       if (el === cur) return;
       cur = el;
-      if (isMore(el)) {
-        tip.innerHTML = el.querySelector('.ana-more-list').innerHTML;
-        tip.classList.add('ana-tip-list');
-      } else {
-        var n = +el.getAttribute('data-n'), full = el.getAttribute('data-full'), k = el.getAttribute('data-k');
-        tip.innerHTML = '<div class="ana-tip-t">' + esc(full) + '</div><div class="ana-tip-s">' +
-          (k !== full ? esc(k) + ' · ' : '') + n + ' événement' + (n > 1 ? 's' : '') + ' · ' + el.getAttribute('data-p') + '%</div>';
-        tip.classList.remove('ana-tip-list');
-      }
-      tip.scrollTop = 0;
+      var n = +el.getAttribute('data-n'), full = el.getAttribute('data-full'), k = el.getAttribute('data-k');
+      tip.innerHTML = '<div class="ana-tip-t">' + esc(full) + '</div><div class="ana-tip-s">' +
+        (k !== full ? esc(k) + ' · ' : '') + n + ' événement' + (n > 1 ? 's' : '') + ' · ' + el.getAttribute('data-p') + '%</div>';
       tip.style.display = 'block';
       place(el);
     }
     box.addEventListener('mouseover', function (e) {
-      var el = e.target.closest('.ana-row[data-full],.ana-more');
-      if (!el) { if (cur) hideSoon(); return; }
-      clearTimeout(timer);
-      // Depuis une liste, on laisse le temps d'atteindre l'infobulle en diagonale.
-      if (isMore(cur) && el !== cur) timer = setTimeout(function () { show(el); }, 180);
-      else show(el);
+      var el = e.target.closest('.ana-row[data-full]');
+      if (el) show(el); else if (cur) hide();
     });
-    box.addEventListener('mouseleave', hideSoon);
-    box.addEventListener('focusin', function (e) { if (isMore(e.target)) show(e.target); });
-    box.addEventListener('focusout', function (e) { if (isMore(e.target)) hideSoon(); });
+    box.addEventListener('mouseleave', hide);
     box.addEventListener('scroll', hide, true);
-    tip.addEventListener('mouseenter', function () { clearTimeout(timer); });
-    tip.addEventListener('mouseleave', hideSoon);
-    tip.addEventListener('click', function (e) {
-      var row = e.target.closest('.ana-tip-clic');
-      if (row) openRegionDrill(row.getAttribute('data-v'));
-    });
     // Écran tactile : un toucher ailleurs referme.
     document.addEventListener('click', function (e) {
-      if (cur && !e.target.closest('.ana-tip,.ana-more,.ana-row')) hide();
+      if (cur && !e.target.closest('.ana-row')) hide();
     });
     anaTipHide = hide;
   }
@@ -856,6 +833,15 @@
       }
       runAnalysisIA(btn, out, state._anaStats);
     };
+    body.querySelectorAll('.ana-more').forEach(function (el) {
+      el.onclick = function () {
+        var rest = el.previousElementSibling, open = rest.hidden;
+        rest.hidden = !open;
+        state.anaMore[el.getAttribute('data-sec')] = open;
+        el.setAttribute('aria-expanded', open);
+        el.textContent = open ? 'Réduire' : el.getAttribute('data-label');
+      };
+    });
     body.querySelectorAll('.ana-row-clic').forEach(function (el) {
       el.onclick = function () { openRegionDrill(el.getAttribute('data-v')); };
     });

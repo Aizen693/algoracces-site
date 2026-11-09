@@ -313,18 +313,12 @@
   .ana-row-track{flex:1;height:6px;background:var(--band);border-radius:1px;overflow:hidden}
   .ana-row-fill{display:block;height:100%;border-radius:1px;transition:width .5s var(--ease)}
   .ana-row-v{flex:none;font:400 12px var(--mono);color:var(--ink);min-width:36px;text-align:right;font-variant-numeric:tabular-nums}
-  .ana-more{font:400 13px var(--sans);color:var(--muted);padding:2px 0 4px;cursor:help;text-decoration:underline dotted;text-underline-offset:3px}
+  .ana-more{display:block;padding:2px 0 4px;background:none;border:0;cursor:pointer;font:400 13px var(--sans);color:var(--muted);text-decoration:underline dotted;text-underline-offset:3px}
   .ana-more:hover{color:var(--ink)}
-  .ana-tip{position:fixed;z-index:40;display:none;width:max-content;max-width:300px;max-height:min(70vh,460px);overflow-y:auto;padding:10px 12px;
+  .ana-tip{position:fixed;z-index:40;display:none;width:max-content;max-width:300px;padding:10px 12px;
     background:#fff;border:1px solid var(--line);border-radius:2px;box-shadow:0 6px 24px rgba(0,0,0,.14);pointer-events:none}
-  .ana-tip-list{width:300px;pointer-events:auto}
   .ana-tip-t{font:400 14px/1.3 var(--sans);color:var(--ink)}
   .ana-tip-s{margin-top:4px;font:400 12px/1.3 var(--mono);color:var(--muted)}
-  .ana-tip-h{font:400 14px/1.2 var(--sans);color:var(--ink);margin-bottom:8px}
-  .ana-tip-row{display:flex;align-items:center;gap:8px;margin:0 -6px;padding:4px 6px;border-radius:2px}
-  .ana-tip-clic{cursor:pointer}
-  .ana-tip-clic:hover{background:rgba(0,0,0,.05)}
-  .ana-tip-l{flex:1;min-width:0;font:400 13px/1.25 var(--sans);color:var(--ink-2)}
   .ana-empty{font:400 13px var(--sans);color:var(--muted);padding:4px 0}
   /* synthèse IA */
   .ana-ia{margin-top:12px;padding-top:14px;border-top:1px solid var(--line)}
@@ -463,7 +457,7 @@
 
 <script src="./demo-donnees.js?v=20261006e"></script>
 <script src="../shared/acteurs.js?v=20261107a"></script>
-<script src="../shared/humint-engine.js?v=20261109a"></script>
+<script src="../shared/humint-engine.js?v=20261109b"></script>
 <!-- Imagerie Satellite HD (shared/satellite-hd.js) volontairement absente : quota Cesium ion / Google
      réservé aux abonnés. -->
 <script src="../shared/carte-layout.js?v=20261104c"></script>
