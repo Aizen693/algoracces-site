@@ -57,6 +57,9 @@
       '.ar-filtres select option{color:#1C1D21}' +
       '.ar-fil{flex:1;overflow:auto;padding:4px 16px 12px}' +
       '.ar-vide{margin:14px 0 0;font:400 13px/1.5 var(--sans,"Host Grotesk",Arial,sans-serif);color:var(--on-night-2,#A8A9AD)}' +
+      '.ar-demo{margin:16px 0 4px;padding-top:12px;border-top:1px solid var(--line-night,rgba(255,255,255,.12))}.ar-demo .ar-exemple+.ar-exemple{margin-top:6px}' +
+      '.ar-demo-t{font:600 11px/1 var(--sans,"Host Grotesk",Arial,sans-serif);letter-spacing:.08em;text-transform:uppercase;color:var(--on-night,#F2F2F4)}' +
+      '.ar-demo-g{margin:12px 0 6px;font:500 11px/1 var(--sans,"Host Grotesk",Arial,sans-serif);letter-spacing:.06em;text-transform:uppercase;color:var(--on-night-2,#A8A9AD)}' +
       '.ar-vide ul{margin:10px 0 0;padding:0;list-style:none}.ar-vide li+li{margin-top:6px}' +
       '.ar-exemple{width:100%;text-align:left;padding:7px 10px;border:1px solid var(--line-night,rgba(255,255,255,.12));border-radius:2px;background:none;color:var(--on-night,#F2F2F4);font:400 13px/1.35 var(--sans,"Host Grotesk",Arial,sans-serif);cursor:pointer}.ar-exemple:hover{background:rgba(255,255,255,.07)}' +
       '.ar-q{margin:16px 0 8px;padding-left:10px;border-left:2px solid var(--on-night,#F2F2F4);font:400 14px/1.4 var(--sans,"Host Grotesk",Arial,sans-serif)}' +
@@ -215,16 +218,52 @@
 
   /* ─────────── Fil de discussion ─────────── */
   var EXEMPLES = ['Quels enlèvements sont rapportés au Niger ?', 'Que se passe-t-il autour de Goma et Rutshuru ?', 'Quelles attaques contre des convois de carburant figurent dans le corpus ?'];
+  // Mode démonstration (10/11/2026) : ?argos=demo ouvre Argos avec un jeu de questions éprouvées au banc
+  // d'essai (réponses citées, 4 à 7 faits). Chaque question porte son théâtre et sa date de début ; les
+  // questions déjà posées disparaissent de la liste. Le mode tient le temps de l'onglet (sessionStorage).
+  var DEMO = [
+    ['Acteurs extérieurs', 'Quels incidents impliquant Africa Corps ou les anciens de Wagner figurent dans le corpus au Mali ?', 'sahel'],
+    ['Acteurs extérieurs', 'Que se passe-t-il au Niger depuis octobre ?', 'sahel', '2026-10-01'],
+    ['Acteurs extérieurs', 'Quels faits récents concernent la Confédération des États du Sahel et sa force unifiée ?', 'sahel', '2026-10-01'],
+    ['Stratégie du JNIM', 'Comment le JNIM utilise-t-il le blocus du carburant contre Bamako ?', 'sahel'],
+    ['Stratégie du JNIM', 'Comment évolue la pression du JNIM sur les axes routiers maliens ?', 'sahel'],
+    ['Stratégie du JNIM', 'Que s\'est-il passé au Burkina Faso cette semaine ?', 'sahel'],
+    ['Extension régionale', 'Quels signes d\'extension des groupes armés vers le nord du Bénin et du Togo ?', 'sahel'],
+    ['Extension régionale', 'Le JNIM progresse-t-il vers les frontières du Sénégal et de la Mauritanie ?', 'sahel'],
+    ['Modes d\'action', 'Quelles frappes de drones sont rapportées au Mali depuis octobre ?', 'sahel', '2026-10-01'],
+    ['Modes d\'action', 'Quelles attaques visent des sites miniers ou d\'orpaillage ?', 'sahel'],
+    ['Modes d\'action', 'Quels enlèvements sont rapportés dans l\'ouest du Mali ?', 'sahel'],
+    ['Grands Lacs', 'Quelle est la situation autour de Goma et du M23 ?', 'rdc'],
+    ['Protection des sources', 'Qui est l\'informateur à l\'origine des renseignements non corroborés sur Djibo ?', 'sahel']
+  ];
+  var modeDemo = false;
+  try {
+    if (new URLSearchParams(location.search).get('argos') === 'demo') sessionStorage.setItem('argos-demo', '1');
+    modeDemo = sessionStorage.getItem('argos-demo') === '1';
+  } catch (e) { modeDemo = new URLSearchParams(location.search).get('argos') === 'demo'; }
+  function listeDemo() {
+    var posees = echanges.map(function (x) { return x.question; });
+    var reste = DEMO.map(function (d, i) { return [d, i]; }).filter(function (p) { return posees.indexOf(p[0][1]) < 0; });
+    if (!reste.length) return '';
+    var h = '<div class="ar-demo"><div class="ar-demo-t">Questions préparées</div>', g = '';
+    reste.forEach(function (p) {
+      if (p[0][0] !== g) { g = p[0][0]; h += '<div class="ar-demo-g">' + esc(g) + '</div>'; }
+      h += '<button type="button" class="ar-exemple" data-demo="' + p[1] + '">' + esc(p[0][1]) + '</button>';
+    });
+    return h + '</div>';
+  }
 
   function rendreFil() {
     if (!fil) return;
     if (!echanges.length) {
       fil.innerHTML = '<div class="ar-vide">Argos répond à partir des seuls extraits du corpus, sur le théâtre et la période choisis, et cite chaque fait. Les renseignements non recoupés par une source ouverte sont signalés comme non corroborés.' +
-        '<ul>' + EXEMPLES.map(function (q) { return '<li><button type="button" class="ar-exemple">' + esc(q) + '</button></li>'; }).join('') + '</ul></div>';
+        (modeDemo ? '</div>' + listeDemo() : '<ul>' + EXEMPLES.map(function (q) { return '<li><button type="button" class="ar-exemple">' + esc(q) + '</button></li>'; }).join('') + '</ul></div>');
       return;
     }
-    fil.innerHTML = echanges.map(rendreEchange).join('');
-    fil.scrollTop = fil.scrollHeight;
+    fil.innerHTML = echanges.map(rendreEchange).join('') + (modeDemo && !enCours ? listeDemo() : '');
+    var qs = modeDemo && !enCours ? fil.querySelectorAll('.ar-q') : null;   // démo : la réponse reste en vue, la liste suit dessous
+    if (qs && qs.length) fil.scrollTop = qs[qs.length - 1].offsetTop - fil.offsetTop - 8;
+    else fil.scrollTop = fil.scrollHeight;
   }
 
   function rendreEchange(x, i) {
@@ -304,7 +343,7 @@
     try { var r = await c.auth.getSession(); return r && r.data && r.data.session ? r.data.session.access_token : null; } catch (e) { return null; }
   }
 
-  async function poser(texte) {
+  async function poser(texte, dateMin) {
     var question = String(texte || '').replace(/\s+/g, ' ').trim();
     if (enCours || question.length < 3) return;
     var x = { question: question, texte: '', extraits: null, fin: null, avis: null };
@@ -315,7 +354,8 @@
 
     var corps = { question: question };
     if (selTheatre.value) corps.theatres = [selTheatre.value];
-    if (selPeriode.value) corps.date_min = isoIlYa(+selPeriode.value);
+    if (dateMin) corps.date_min = dateMin;
+    else if (selPeriode.value) corps.date_min = isoIlYa(+selPeriode.value);
     var precedentes = echanges.slice(0, -1).filter(function (e) { return e.fin; }).slice(-2).map(function (e) { return e.question; });
     if (precedentes.length) corps.precedentes = precedentes;
 
@@ -393,6 +433,8 @@
       var map = window.HumintMap.getMap();
       if (repere) repere.remove();
       var el = document.createElement('div'); el.className = 'ar-repere'; el.style.zIndex = '5';
+      el.style.cursor = 'pointer'; el.title = 'Ouvrir la fiche';
+      el.addEventListener('click', function (ev) { ev.stopPropagation(); ficheRepere(e, map); });
       repere = new mapboxgl.Marker({ element: el }).setLngLat([e.lon, e.lat]).addTo(map);
       // Marges : panneau Analyse à gauche (s'il est là), assistant à droite.
       var ana = document.getElementById('analysis'), g = ana && ana.offsetWidth ? Math.round(ana.getBoundingClientRect().right) + 20 : 40;
@@ -403,10 +445,30 @@
     }
   }
 
+  // Clic sur le repère : la fiche du point de la carte si ce point est affiché, sinon une fiche courte
+  // tirée des métadonnées de l'extrait (le contenu HUMINT ne quitte jamais le serveur).
+  function ficheRepere(e, map) {
+    var hm = window.HumintMap;
+    if (hm && hm.popupNear && hm.popupNear(e.lon, e.lat, e.date)) return;
+    var lieu = lieuDe(e), pc = paysCarte(e);
+    var ligne = function (k, v) { return v ? '<div class="popup-row"><span class="popup-key">' + k + '</span><span class="popup-val">' + esc(v) + '</span></div>' : ''; };
+    var html = '<div class="popup-header"><div class="popup-dot-bar" style="background:#1C1D21"></div><div class="popup-actor">' + esc(e.type || 'Incident') + '</div></div>' +
+      '<div class="popup-body">' + ligne('Lieu', lieu) + ligne('Date', dateFr(e)) + ligne('Statut', STATUTS[e.statut] || e.statut) +
+      (e.categorie === 'humint' ? '<div class="popup-row"><span class="popup-val">Source humaine protégée.</span></div>' : '') +
+      (pc && !(hm && hm.getCountry && hm.getCountry() === pc) ? '<div class="popup-row"><a href="/carte/?pays=' + encodeURIComponent(pc) + '" target="_blank" rel="noopener">Ouvrir la carte ' + esc(pc) + '</a></div>' : '') +
+      '</div>';
+    new mapboxgl.Popup({ closeButton: true, maxWidth: '320px', className: 'humint-popup', offset: 14 }).setLngLat([e.lon, e.lat]).setHTML(html).addTo(map);
+  }
+
   function surClic(ev) {
     var b = ev.target.closest('button');
     if (!b) return;
     if (b.classList.contains('ar-x')) { fermer(); return; }
+    if (b.dataset.demo) {
+      var d = DEMO[+b.dataset.demo];
+      if (d && !enCours) { selTheatre.value = d[2]; selTheatre.dataset.manuel = '1'; selPeriode.value = ''; poser(d[1], d[3]); }
+      return;
+    }
     if (b.classList.contains('ar-exemple')) { poser(b.textContent); return; }
     if (b.dataset.e) { var e = extraitDe(b.dataset.e); if (e) montrer(e, b.dataset.e, b.classList.contains('ar-voir')); return; }
     var a = b.dataset.action;
@@ -425,7 +487,8 @@
     window.addEventListener('resize', function () { if (!panneau.hidden) caler(); else degagerPastille(); });
     // /veille/ : changer d'onglet (Géopolitique, Cyber, Radio) recale le théâtre proposé.
     document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('#onglets .tab')) setTimeout(theatreParDefaut, 0); });
-    setTimeout(degagerPastille, 800);   // la pastille est montée par i18n.js après le chargement du dictionnaire
+    setTimeout(degagerPastille, 800);
+    if (modeDemo) setTimeout(function () { if (panneau.hidden) ouvrir(); }, 900);   // la pastille est montée par i18n.js après le chargement du dictionnaire
     // L'accès premium peut être confirmé après le montage (overlay de connexion) : on reconstruit le corps.
     window.addEventListener('algorAuthReady', function () { window.__algorAuthGranted = true; if (!panneau.hidden) rendreCorpsSiBesoin(); });
   }

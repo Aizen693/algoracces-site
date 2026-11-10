@@ -1674,5 +1674,23 @@
     // Features normalisées du pays courant (HUMINT + flag corrobore OSINT) —
     // exploitées par zones-3d.js pour relier les incidents aux emprises bâties.
     getFeatures: function () { return state.all || []; },
+    // Argos (10/11/2026) : ouvre la fiche du point affiché le plus proche (même date de préférence).
+    // Renvoie false si aucun point de la carte courante ne correspond (autre pays, point filtré).
+    popupNear: function (lon, lat, date) {
+      if (!map) return false;
+      var best = null, bd = Infinity;
+      (state.all || []).forEach(function (f) {
+        if (!f.coords) return;
+        var d = Math.abs(f.coords[0] - lon) + Math.abs(f.coords[1] - lat);
+        if (date && String(f.iso || '').slice(0, 10) !== date) d += 1;
+        if (d < bd) { bd = d; best = f; }
+      });
+      if (!best || bd > 0.05) return false;
+      new mapboxgl.Popup({ closeButton: true, maxWidth: '320px', className: 'humint-popup' })
+        .setLngLat(best.coords)
+        .setHTML(makePopup({ acteur: best.acteur, type: best.type, brut: best.typeBrut, iso: best.iso, description: best.description, sources: best.sources, corrobore: best.corrobore, reference: best.reference, _color: actorColor(best.acteur) }))
+        .addTo(map);
+      return true;
+    },
   };
 })();
