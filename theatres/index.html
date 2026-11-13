@@ -373,7 +373,8 @@
   }
   function ouvrir() {
     var q = new URLSearchParams(); q.set('pays', sel.entree.name);
-    if (sel.date) { q.set('from', sel.date + '-01'); q.set('to', sel.date + '-31'); }
+    // Dernier jour réel du mois (30 septembre, 28 ou 29 février) : la carte affichait « 31 sept. ».
+    if (sel.date) { var am = sel.date.split('-').map(Number); q.set('from', sel.date + '-01'); q.set('to', sel.date + '-' + String(new Date(Date.UTC(am[0], am[1], 0)).getUTCDate()).padStart(2, '0')); }
     if (sel.event) q.set('event', sel.event);
     if (sel.actor) q.set('actor', sel.actor);
     location.href = '/carte/?' + q.toString();
