@@ -16,6 +16,7 @@
 (function () {
   'use strict';
   var URL_FN = 'https://lwgrjdpuagnvvzmdbyzb.supabase.co/functions/v1/assistant-renseignement';
+  var URL_VOIX = 'https://lwgrjdpuagnvvzmdbyzb.supabase.co/functions/v1/argos-voix';   // chat vocal (16/11/2026)
   var THEATRES = [['', 'Tous les théâtres'], ['sahel', 'Sahel'], ['rdc', 'RDC, Grands Lacs'], ['moyen-orient', 'Moyen-Orient'],
     ['asie-sud', 'Asie du Sud'], ['madagascar', 'Madagascar'], ['afrique', 'Afrique'], ['cyber', 'Cyber']];
   var PERIODES = [['', 'Toute la période'], ['30', '30 derniers jours'], ['90', '90 derniers jours'], ['365', '12 derniers mois']];
@@ -90,6 +91,13 @@
       // Curseur blanc : v5.css met caret-color à l'encre sur tout le site, invisible sur ce fond de nuit.
       '.ar-saisie textarea{caret-color:var(--on-night,#F2F2F4)}.ar-saisie textarea:focus{outline:none;border-color:rgba(255,255,255,.55);background:rgba(255,255,255,.07)}' +
       '.ar-saisie button{height:40px;padding:0 14px;border:0;border-radius:2px;background:var(--on-night,#F2F2F4);color:#1C1D21;font:500 13px var(--sans,"Host Grotesk",Arial,sans-serif);cursor:pointer}.ar-saisie button:disabled{opacity:.45;cursor:default}' +
+      // Chat vocal : bouton micro au trait, anneau qui suit le niveau de la voix, ligne d'état sous la saisie.
+      '.ar-saisie.ar-avec-micro{grid-template-columns:1fr auto auto}' +
+      '.ar-saisie .ar-micro{width:40px;padding:0;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line-night,rgba(255,255,255,.2));background:none;color:var(--on-night,#F2F2F4);transition:box-shadow .08s linear}' +
+      '.ar-saisie .ar-micro svg{width:18px;height:18px}.ar-saisie .ar-micro:hover{background:rgba(255,255,255,.07)}' +
+      '.ar-saisie .ar-micro.ecoute{background:var(--on-night,#F2F2F4);color:#1C1D21;border-color:var(--on-night,#F2F2F4)}' +
+      '.ar-saisie .ar-micro.attente{opacity:.6}.ar-saisie .ar-micro.lecture{border-color:rgba(255,255,255,.55)}' +
+      '.ar-vocal{margin-top:8px;font:400 12px/1.4 var(--sans,"Host Grotesk",Arial,sans-serif);color:var(--on-night-2,#A8A9AD)}.ar-vocal:empty{display:none}' +
       '.ar-info{display:flex;justify-content:space-between;gap:10px;margin-top:8px;font:400 10.5px/1.4 var(--mono,monospace);color:var(--on-night-2,#A8A9AD)}' +
       '.ar-verrou{margin:auto 0;padding:24px 16px;text-align:left}.ar-verrou p{margin:0 0 12px;font:400 14px/1.5 var(--sans,"Host Grotesk",Arial,sans-serif);color:var(--on-night-2,#A8A9AD)}' +
       '.ar-verrou a,.ar-verrou button{display:inline-flex;align-items:center;height:34px;padding:0 14px;border:1px solid var(--line-night,rgba(255,255,255,.2));border-radius:2px;background:none;color:var(--on-night,#F2F2F4);font:400 13px var(--sans,"Host Grotesk",Arial,sans-serif);text-decoration:none;cursor:pointer}' +
@@ -127,7 +135,7 @@
       PERIODES.map(function (x) { return '<option value="' + x[0] + '">' + esc(x[1]) + '</option>'; }).join('') + '</select></div></div>' +
       '<div class="ar-fil" aria-live="polite"></div>' +
       '<div class="ar-pied"><form class="ar-saisie"><textarea id="ar-question" rows="2" maxlength="500" placeholder="Posez une question sur le corpus"></textarea>' +
-      '<button type="submit">Envoyer</button></form>' +
+      '<button type="submit">Envoyer</button></form><div class="ar-vocal" aria-live="polite"></div>' +
       '<div class="ar-info"><span>Réponses rédigées par IA (Mistral) à partir du seul corpus. Vérifiez chaque citation.</span><span class="ar-quota"></span></div></div>';
     fil = corps.querySelector('.ar-fil');
     champ = corps.querySelector('#ar-question');
@@ -139,6 +147,7 @@
     selTheatre.addEventListener('change', function () { selTheatre.dataset.manuel = '1'; });
     corps.querySelector('.ar-saisie').addEventListener('submit', function (e) { e.preventDefault(); poser(champ.value); });
     champ.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); poser(champ.value); } });
+    monterMicro(corps);
     theatreParDefaut();
     rendreFil();
   }
@@ -195,7 +204,7 @@
     caler();
     if (champ) champ.focus();
   }
-  function fermer() { panneau.hidden = true; chip.setAttribute('aria-pressed', 'false'); }
+  function fermer() { arreterVoix(); panneau.hidden = true; chip.setAttribute('aria-pressed', 'false'); }
   function basculer() { if (panneau.hidden) ouvrir(); else fermer(); }
   var corpsPremium = false;
   function rendreCorpsSiBesoin() { if (!panneau.querySelector('.ar-corps').children.length || corpsPremium !== premium()) { corpsPremium = premium(); rendreCorps(); } }
@@ -415,6 +424,222 @@
     if (!pied) return;
     if (n === null) pied.textContent = t('Accès équipe : sans plafond');   // admin et editor
     else if (typeof n === 'number') pied.textContent = t(n + (n > 1 ? ' questions restantes' : ' question restante') + ' aujourd\'hui');
+  }
+
+  /* ─────────── Chat vocal (16/11/2026) ───────────
+   * Le micro enregistre la question, la coupe au premier silence, puis la fonction Edge argos-voix la transcrit
+   * (Voxtral, Mistral). La transcription part comme une question tapée (même quota, même vérificateur). La
+   * réponse est ensuite lue à voix haute (Voxtral TTS) sans les renvois [n], et le micro se rouvre : on parle
+   * à Argos comme au téléphone. Toucher le bouton pendant l'écoute envoie tout de suite ; pendant la lecture,
+   * l'interrompt et met fin à la conversation. Huit secondes sans voix : la conversation se met en pause.
+   * Le son ne quitte le navigateur que vers la fonction Edge ; rien n'est conservé côté serveur. */
+  var MICRO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg>';
+  var STOP = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><rect x="7" y="7" width="10" height="10" rx="1"/></svg>';
+  var voix = { etat: 'repos', conversation: false, flux: null, enreg: null, ctx: null, minuteur: null, audio: null, ac: null, envoyer: false };
+  var micro = null, ligneVocale = null;
+
+  function vocalPossible() { return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder); }
+  function monterMicro(corps) {
+    if (!vocalPossible()) return;   // navigateur sans enregistrement : la saisie reste au clavier
+    var form = corps.querySelector('.ar-saisie');
+    form.classList.add('ar-avec-micro');
+    micro = document.createElement('button');
+    micro.type = 'button'; micro.className = 'ar-micro';
+    form.insertBefore(micro, form.lastElementChild);
+    micro.addEventListener('click', clicMicro);
+    ligneVocale = corps.querySelector('.ar-vocal');
+    etatVoix('repos');
+  }
+  var ETATS = {
+    repos: ['Parler à Argos', ''],
+    ecoute: ['Envoyer la question dictée', 'À l\'écoute. Parlez : la question part dès que vous vous taisez.'],
+    transcription: ['Arrêter la conversation vocale', 'Transcription de la question…'],
+    reflexion: ['Arrêter la conversation vocale', 'Argos prépare sa réponse…'],
+    lecture: ['Interrompre la lecture', 'Voix de synthèse (Mistral). Touchez le bouton pour l\'interrompre.']
+  };
+  function etatVoix(e, message) {
+    voix.etat = e;
+    if (!micro) return;
+    micro.className = 'ar-micro' + (e === 'repos' ? '' : e === 'ecoute' ? ' ecoute' : e === 'lecture' ? ' lecture' : ' attente');
+    micro.innerHTML = e === 'lecture' || e === 'transcription' || e === 'reflexion' ? STOP : MICRO;
+    micro.setAttribute('aria-label', t(ETATS[e][0])); micro.title = t(ETATS[e][0]);
+    micro.setAttribute('aria-pressed', e === 'repos' ? 'false' : 'true');
+    if (e !== 'ecoute') micro.style.boxShadow = '';
+    if (e === 'repos' && !voix.conversation) fermerContexte();
+    if (ligneVocale) ligneVocale.textContent = message != null ? t(message) : t(ETATS[e][1]);
+  }
+
+  function clicMicro() {
+    if (voix.etat === 'ecoute') { finEcoute(true); return; }
+    if (voix.etat !== 'repos') { arreterVoix(); return; }
+    if (enCours) return;   // une question tapée est en cours
+    deverrouillerAudio();
+    // Le contexte d'analyse du niveau naît pendant le geste (sinon Safari et Chrome le laissent suspendu)
+    // et sert toute la conversation, micro rouvert après chaque réponse compris.
+    try {
+      if (!voix.ctx) { var AC = window.AudioContext || window.webkitAudioContext; voix.ctx = new AC(); }
+      if (voix.ctx.resume) voix.ctx.resume().catch(function () {});
+    } catch (e) { voix.ctx = null; }
+    voix.conversation = true;
+    ecouter();
+  }
+
+  // iOS et Safari ne jouent un son lancé après une attente réseau que si l'élément audio a déjà joué pendant
+  // un geste de l'utilisateur : on lui fait jouer un silence de 0,1 s au toucher du micro.
+  function deverrouillerAudio() {
+    if (!voix.audio) voix.audio = new Audio();
+    try {
+      var n = 2205, b = new DataView(new ArrayBuffer(44 + n * 2)), s = function (o, x) { for (var k = 0; k < x.length; k++) b.setUint8(o + k, x.charCodeAt(k)); };
+      s(0, 'RIFF'); b.setUint32(4, 36 + n * 2, true); s(8, 'WAVEfmt '); b.setUint32(16, 16, true); b.setUint16(20, 1, true); b.setUint16(22, 1, true);
+      b.setUint32(24, 22050, true); b.setUint32(28, 44100, true); b.setUint16(32, 2, true); b.setUint16(34, 16, true); s(36, 'data'); b.setUint32(40, n * 2, true);
+      voix.audio.src = URL.createObjectURL(new Blob([b.buffer], { type: 'audio/wav' }));
+      var p = voix.audio.play(); if (p && p.catch) p.catch(function () {});
+    } catch (e) { /* lecture vocale facultative */ }
+  }
+
+  function typeEnregistrement() {
+    var types = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/ogg;codecs=opus', 'audio/webm'];
+    for (var k = 0; k < types.length; k++) if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(types[k])) return types[k];
+    return '';
+  }
+
+  async function ecouter() {
+    try {
+      voix.flux = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+    } catch (e) {
+      voix.conversation = false;
+      etatVoix('repos', e && e.name === 'NotAllowedError' ? 'Accès au micro refusé. Autorisez le micro pour ce site dans le navigateur.' : 'Aucun micro disponible.');
+      return;
+    }
+    if (!voix.conversation || panneau.hidden) { couperMicro(); return; }   // arrêté pendant la demande d'autorisation
+    var type = typeEnregistrement(), morceaux = [];
+    voix.enreg = new MediaRecorder(voix.flux, type ? { mimeType: type } : undefined);
+    voix.enreg.ondataavailable = function (ev) { if (ev.data && ev.data.size) morceaux.push(ev.data); };
+    voix.enreg.onstop = function () {
+      var envoyer = voix.envoyer, mime = (voix.enreg && voix.enreg.mimeType) || type || 'audio/webm';
+      couperMicro();
+      if (!envoyer) { if (voix.etat === 'ecoute') { voix.conversation = false; etatVoix('repos', 'Conversation en pause. Touchez le micro pour reprendre.'); } return; }
+      transcrire(new Blob(morceaux, { type: mime }), mime);
+    };
+    voix.envoyer = false;
+    voix.enreg.start(250);
+    etatVoix('ecoute');
+
+    // Coupure au silence : niveau RMS du micro toutes les 100 ms. La voix doit d'abord avoir été entendue.
+    try {
+      if (!voix.ctx) throw new Error('sans contexte');
+      var src = voix.ctx.createMediaStreamSource(voix.flux), an = voix.ctx.createAnalyser();
+      an.fftSize = 1024; src.connect(an); voix.source = src;
+      var buf = new Float32Array(an.fftSize), debut = Date.now(), dernierSon = 0, parle = false, fond = 0.004;
+      voix.minuteur = setInterval(function () {
+        an.getFloatTimeDomainData(buf);
+        var somme = 0; for (var k = 0; k < buf.length; k++) somme += buf[k] * buf[k];
+        var rms = Math.sqrt(somme / buf.length), maintenant = Date.now();
+        var seuil = Math.max(0.015, fond * 3);
+        if (rms > seuil) { parle = true; dernierSon = maintenant; }
+        else fond = fond * 0.9 + rms * 0.1;   // plancher de bruit de la pièce, suivi hors parole seulement
+        if (micro) micro.style.boxShadow = '0 0 0 ' + Math.round(Math.min(10, rms * 160)) + 'px rgba(242,242,244,.22)';
+        if (parle && maintenant - dernierSon > 1500) finEcoute(true);
+        else if (!parle && maintenant - debut > 8000) finEcoute(false);
+        else if (maintenant - debut > 45000) finEcoute(true);
+      }, 100);
+    } catch (e) { /* sans analyse du niveau, l'abonné touche le bouton pour envoyer */ }
+  }
+
+  function finEcoute(envoyer) {
+    if (voix.minuteur) { clearInterval(voix.minuteur); voix.minuteur = null; }
+    voix.envoyer = envoyer;
+    if (voix.enreg && voix.enreg.state !== 'inactive') voix.enreg.stop(); else couperMicro();
+  }
+  function couperMicro() {
+    if (voix.minuteur) { clearInterval(voix.minuteur); voix.minuteur = null; }
+    if (voix.flux) voix.flux.getTracks().forEach(function (p) { p.stop(); });
+    if (voix.source) { try { voix.source.disconnect(); } catch (e) {} }
+    voix.flux = null; voix.source = null; voix.enreg = null;
+  }
+  function fermerContexte() {
+    if (voix.ctx && voix.ctx.close) voix.ctx.close().catch(function () {});
+    voix.ctx = null;
+  }
+
+  function erreurVoix(r) {
+    if (r.status === 401) return 'Votre session a expiré. Reconnectez-vous pour continuer.';
+    if (r.status === 403) return 'Argos est réservé aux abonnés premium.';
+    if (r.status === 429) return 'Trop de demandes vocales en peu de temps. Réessayez dans une minute.';
+    return 'Le service vocal ne répond pas pour le moment. La saisie au clavier reste disponible.';
+  }
+
+  async function transcrire(blob, mime) {
+    etatVoix('transcription');
+    voix.ac = new AbortController();
+    var texte = '';
+    try {
+      var j = await jeton();
+      if (!j) { voix.conversation = false; etatVoix('repos', 'Votre session a expiré. Reconnectez-vous pour continuer.'); return; }
+      var fd = new FormData();
+      fd.append('audio', blob, 'question.' + (/mp4/.test(mime) ? 'm4a' : /ogg/.test(mime) ? 'ogg' : 'webm'));
+      var r = await fetch(URL_VOIX, { method: 'POST', body: fd, signal: voix.ac.signal, headers: { Authorization: 'Bearer ' + j } });
+      if (!r.ok) { voix.conversation = false; etatVoix('repos', erreurVoix(r)); return; }
+      texte = String(((await r.json()) || {}).texte || '').trim();
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;
+      voix.conversation = false; etatVoix('repos', 'Le service vocal ne répond pas pour le moment. La saisie au clavier reste disponible.'); return;
+    } finally { voix.ac = null; }
+    if (voix.etat !== 'transcription') return;   // arrêté entre-temps
+    if (texte.length < 3) { ecouterOuPause('Je n\'ai pas compris la question.'); return; }
+    etatVoix('reflexion');
+    await poser(texte);
+    var x = echanges[echanges.length - 1];
+    if (voix.etat !== 'reflexion' || !x || x.question !== texte.replace(/\s+/g, ' ')) { if (voix.etat === 'reflexion') etatVoix('repos'); return; }
+    lireReponse(x);
+  }
+
+  function ecouterOuPause(message) {
+    if (voix.conversation && !panneau.hidden) { etatVoix('repos', message); ecouter(); }
+    else etatVoix('repos', message);
+  }
+
+  // Texte lu : la réponse sans renvois aux sources, ou l'avis affiché (quota, session…). Coupé à la dernière
+  // phrase entière sous 1 500 caractères (les réponses d'Argos font 100 mots environ).
+  function texteALire(x) {
+    var s = x.avis ? t(x.avis.texte) : String(x.texte || '');
+    s = s.replace(/\[\d{1,3}(?:,\s*\d{1,3})*\]/g, '').replace(/\s+([.,;:!?])/g, '$1').replace(/\s+/g, ' ').trim();
+    if (s.length > 1500) { s = s.slice(0, 1500); var p = s.lastIndexOf('. '); if (p > 400) s = s.slice(0, p + 1); }
+    return s;
+  }
+
+  async function lireReponse(x) {
+    var texte = texteALire(x);
+    if (!texte) { ecouterOuPause(''); return; }
+    etatVoix('lecture');
+    voix.ac = new AbortController();
+    try {
+      var j = await jeton();
+      var r = await fetch(URL_VOIX, { method: 'POST', signal: voix.ac.signal,
+        headers: { Authorization: 'Bearer ' + j, 'Content-Type': 'application/json' }, body: JSON.stringify({ lire: texte }) });
+      if (!r.ok) { voix.conversation = false; etatVoix('repos', r.status === 429 ? erreurVoix(r) : 'Lecture vocale indisponible : la réponse est affichée ci-dessus.'); return; }
+      var son = await r.blob();
+      if (voix.etat !== 'lecture') return;
+      if (!voix.audio) voix.audio = new Audio();
+      var url = URL.createObjectURL(son);
+      voix.audio.onended = function () { URL.revokeObjectURL(url); if (voix.etat === 'lecture') ecouterOuPause(''); };
+      voix.audio.onerror = function () { URL.revokeObjectURL(url); if (voix.etat === 'lecture') { voix.conversation = false; etatVoix('repos', 'Lecture vocale indisponible : la réponse est affichée ci-dessus.'); } };
+      voix.audio.src = url;
+      await voix.audio.play();
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;
+      if (voix.etat === 'lecture') { voix.conversation = false; etatVoix('repos', 'Lecture vocale bloquée par le navigateur : la réponse est affichée ci-dessus.'); }
+    } finally { voix.ac = null; }
+  }
+
+  function arreterVoix() {
+    voix.conversation = false;
+    if (voix.ac) { try { voix.ac.abort(); } catch (e) {} voix.ac = null; }
+    if (voix.audio) { try { voix.audio.pause(); } catch (e) {} }
+    if (voix.enreg && voix.enreg.state !== 'inactive') { voix.envoyer = false; voix.etat = 'arret'; finEcoute(false); }
+    else couperMicro();
+    fermerContexte();
+    etatVoix('repos');
   }
 
   /* ─────────── Citations ─────────── */
