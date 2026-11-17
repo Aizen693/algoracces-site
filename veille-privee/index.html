@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<script src="/shared/i18n.js?v=20261117d"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Veille privée · Algor Acces</title>
+<meta name="description" content="Déposez votre propre base de données et consultez la dans un espace de veille réservé à votre compte." />
+<meta name="theme-color" content="#0F1013" />
+<!-- Veille privée (16/11/2026) : un abonné importe son propre fichier (CSV, Excel, JSON,
+     GeoJSON) et le retrouve dans un espace qui n'appartient qu'à son compte.
+     Page non gatée : le visiteur voit une présentation et une démonstration sur données
+     fictives. Le vrai mur est en base (tables veille_privee_*, RLS propriétaire + abonné).
+     Fonction isolée : tout son code est dans ce dossier, rien n'est modifié ailleurs. -->
+<link rel="icon" type="image/jpeg" href="/favicon.jpg" />
+<link rel="stylesheet" href="/shared/home/fonts-display.css?v=20261104c" />
+<link rel="stylesheet" href="/shared/v5/v5.css?v=20261104c" />
+<link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.24.0/mapbox-gl.css" />
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.24.0/mapbox-gl.js" defer></script>
+<link rel="stylesheet" href="/veille-privee/veille-privee.css?v=20261117k" />
+</head>
+<body data-rubrique="veille">
+
+<!-- v5:nav -->
+<div class="annonce" id="annonce" hidden>
+  <div class="annonce__in">
+    <p>Dernière note de veille : <a id="annonce-lien" href="/veille/"></a></p>
+    <button class="annonce__x" id="annonce-x" aria-label="Fermer le bandeau"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+  </div>
+</div>
+<header class="nav" id="nav">
+  <div class="nav__bar">
+    <a class="brand" href="/" aria-label="Algor Acces, accueil"><svg class="marque" viewBox="0 0 100 100" width="28" height="28" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16 90 L28 90 L46.4 40 L34.4 40 Z M74 90 L86 90 L75 62 L63 62 Z M50 5 L59 14 L50 23 L41 14 Z"/></svg><span>Algor Acces</span></a>
+    <nav class="nav__links" aria-label="Rubriques"><a href="/theatres/">Théâtres</a><a href="/veille/" aria-current="page">Veille</a><a href="/argos/">Argos</a><a href="/methodologie/">Méthodologie</a><a href="/offres/">Offres</a><a href="/a-propos/">À propos</a><a href="/contact/">Contact</a></nav>
+    <div class="nav__right">
+      <span class="lang-slot"></span>
+      <button class="btn-login site-login" type="button">Connexion</button>
+      <a class="btn-rect" href="/offres/">Demander un accès</a>
+      <div class="sq">
+        <button type="button" class="sq__compte site-login" data-auth-icone aria-label="Connexion"><svg class="ico-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20.5c1.2-3.8 4-5.6 7.5-5.6s6.3 1.8 7.5 5.6"/></svg><svg class="ico-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="8.5" r="3.8" fill="currentColor"/><path d="M3 20.5c1.2-3.8 3.8-5.6 7-5.6 1.3 0 2.5.3 3.5.9" fill="none"/><path d="M15.5 18l2.2 2.2 4-4.4"/></svg></button>
+        <button type="button" id="ouvrir-recherche" aria-label="Rechercher une zone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
+        <button type="button" id="ouvrir-menu" aria-label="Ouvrir le menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"/></svg></button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="veil" id="menu" role="dialog" aria-modal="true" aria-label="Menu">
+  <div class="veil__top">
+    <a class="brand" href="/" aria-label="Algor Acces, accueil"><svg class="marque" viewBox="0 0 100 100" width="28" height="28" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16 90 L28 90 L46.4 40 L34.4 40 Z M74 90 L86 90 L75 62 L63 62 Z M50 5 L59 14 L50 23 L41 14 Z"/></svg><span>Algor Acces</span></a>
+    <button class="veil__x" data-fermer aria-label="Fermer le menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+  </div>
+  <nav class="veil__body">
+    <div class="veil__main"><a href="/">Plateforme</a><a href="/theatres/">Théâtres</a><a href="/veille/" aria-current="page">Veille</a><a href="/argos/">Argos</a><a href="/methodologie/">Méthodologie</a></div>
+    <div class="veil__col"><h3>Théâtres</h3><a href="/moyen-orient/">Moyen-Orient</a><a href="/sahel/">Sahel</a><a href="/rdc/">RDC, Grands Lacs</a><a href="/madagascar/">Madagascar</a><a href="/afrique/">Afrique maritime</a><a href="/asie-sud/">Asie du Sud</a></div>
+    <div class="veil__col"><h3>Algor Acces</h3><button class="veil__compte site-login" type="button">Connexion</button><a href="/offres/">Offres</a><a href="/a-propos/">À propos</a><a href="/contact/">Contact</a><a href="/demo/">Démo sur une zone</a></div>
+  </nav>
+</div>
+
+<div class="veil veil--search" id="recherche" role="dialog" aria-modal="true" aria-label="Recherche">
+  <div class="veil__top">
+    <a class="brand" href="/" aria-label="Algor Acces, accueil"><svg class="marque" viewBox="0 0 100 100" width="28" height="28" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16 90 L28 90 L46.4 40 L34.4 40 Z M74 90 L86 90 L75 62 L63 62 Z M50 5 L59 14 L50 23 L41 14 Z"/></svg><span>Algor Acces</span></a>
+    <button class="veil__x" data-fermer aria-label="Fermer la recherche"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+  </div>
+  <div class="veil__body">
+    <form class="search-form" action="/demo/">
+      <label for="q">Essayez la démo sur n'importe quelle zone du monde</label>
+      <input id="q" name="q" type="search" placeholder="Bogotá" autocomplete="off" required>
+      <p>Indiquez une ville, une région ou un pays : vous verrez le rendu de nos cartes sur des données fictives.</p>
+    </form>
+  </div>
+</div>
+<!-- /v5:nav -->
+
+<main>
+  <section class="v5-phero" data-nav="dark" data-v5-trame data-hachures="7,0">
+    <h1>Veille privée</h1>
+    <p class="v5-phero__lede">Déposez votre propre base de données, un tableur ou un export d'outil interne, et consultez la dans un espace réservé à votre compte.</p>
+    <div class="v5-actions">
+      <a class="btn-outline" href="/veille/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M20 12H4M10 6l-6 6 6 6"/></svg>Veilles</a>
+    </div>
+  </section>
+
+  <section class="v5-sec" data-nav="light" aria-label="Veille privée">
+    <div class="vp">
+      <p class="vp-verif" id="verif" role="status" aria-live="polite">Vérification de votre accès…</p>
+
+      <!-- 1. Présentation : visiteur ou compte sans abonnement -->
+      <div id="v-presentation" hidden>
+        <div class="pres-tete">
+          <h2>Votre tableur, lu sur une carte</h2>
+          <p>Vous suivez déjà des incidents, des concurrents, des sites ou des fournisseurs dans un tableur. Importez le fichier : l'outil répond à quatre questions, où, quand, qui et qui est où, avec une carte, une frise, un classement et un rapport de veille prêt à imprimer.</p>
+        </div>
+
+        <!-- Les deux démonstrations d'abord : on juge l'outil en l'ouvrant -->
+        <div class="pres-demos">
+          <button class="pres-demo" type="button" data-demo="surete">
+            <span class="pres-demo__sur">Démonstration 1</span>
+            <span class="pres-demo__titre">Incidents de sûreté</span>
+            <span class="pres-demo__texte">460 signalements fictifs sur 19 sites, de Lagos à São Paulo. Où se concentrent ils, et depuis quand ?</span>
+            <span class="pres-demo__action">Ouvrir la démonstration</span>
+          </button>
+          <button class="pres-demo" type="button" data-demo="concurrence">
+            <span class="pres-demo__sur">Démonstration 2</span>
+            <span class="pres-demo__titre">Veille concurrentielle</span>
+            <span class="pres-demo__texte">300 mouvements fictifs de cinq concurrents dans 17 pays. Qui avance, et sur quel terrain ?</span>
+            <span class="pres-demo__action">Ouvrir la démonstration</span>
+          </button>
+        </div>
+
+        <div class="pres-points">
+          <div><h3>Formats</h3><p>CSV, Excel, JSON et GeoJSON, jusqu'à 10 Mo et 20 000 lignes par base.</p></div>
+          <div><h3>Colonnes</h3><p>Reconnues automatiquement, puis confirmées par vous. Celles qui ne sont pas reconnues restent filtrables.</p></div>
+          <div><h3>Données réelles</h3><p>Dates en formats variés, point-virgule, encodages Windows, cellules vides : les lignes illisibles sont listées, elles ne bloquent pas le reste.</p></div>
+          <div><h3>Confidentialité</h3><p>Une base n'est visible que depuis le compte qui l'a importée. Vous la supprimez quand vous voulez.</p></div>
+        </div>
+
+        <div class="vp-acces">
+          <p id="presentation-acces">La veille privée est réservée aux abonnés.</p>
+          <div class="v5-actions">
+            <a class="btn-rect btn-rect--ink" href="#" data-algor-login id="presentation-login">Se connecter</a>
+            <a class="btn-outline" href="/offres/">Voir les offres</a>
+            <button class="btn-outline" type="button" id="essayer">Voir l'import d'un fichier</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Mes bases : abonné -->
+      <div id="v-bases" hidden>
+        <div class="sec-head">
+          <h2>Mes bases</h2>
+          <button class="btn-rect btn-rect--ink" type="button" id="importer">Importer un fichier</button>
+        </div>
+        <p class="vp-bandeau" id="bases-echeance" hidden></p>
+        <p class="v5-empty" id="bases-vide" hidden>Aucune base pour le moment. Importez un premier fichier pour commencer.</p>
+        <ul class="v5-rows vp-bases" id="bases"></ul>
+        <p class="vp-statut" id="bases-statut" role="status" aria-live="polite"></p>
+      </div>
+
+      <!-- 3. L'espace d'analyse d'une base : carte, frise, répartitions, croisement, tableau -->
+      <div id="v-base" hidden>
+        <p class="vp-retour"><button class="btn-link" type="button" data-retour>Retour</button></p>
+        <p class="vp-statut" id="base-statut" role="status" aria-live="polite"></p>
+        <div class="vp-barre" id="base-barre" hidden><i></i></div>
+
+        <!-- Le poste d'analyse occupe tout l'écran. Trois onglets : Carte, Tableau de bord, Entrées. -->
+        <div id="v-espace" class="poste" hidden>
+          <header class="poste__tete">
+            <button class="poste__retour" type="button" data-retour id="base-retour">Mes bases</button>
+            <div class="poste__titre">
+              <h2 id="base-nom" data-i18n-skip></h2>
+              <p class="es-lecture" id="es-lecture"></p>
+            </div>
+            <span class="poste__demo" id="espace-demo" hidden>Démonstration, données fictives</span>
+            <div class="poste__actions">
+              <button class="btn-rect btn-rect--ink" type="button" id="es-rapport">Rapport de veille</button>
+              <button class="btn-outline" type="button" id="es-csv">CSV</button>
+              <button class="btn-outline" type="button" id="maj">Mettre à jour</button>
+            </div>
+          </header>
+
+          <div class="poste__onglets" id="es-onglets" role="tablist" aria-label="Vues du poste d'analyse">
+              <button type="button" role="tab" data-onglet="carte" aria-selected="true">Où ?</button>
+              <button type="button" role="tab" data-onglet="quand" aria-selected="false">Quand ?</button>
+              <button type="button" role="tab" data-onglet="qui" aria-selected="false" id="es-onglet-qui" data-i18n-skip>Qui</button>
+              <button type="button" role="tab" data-onglet="croix" aria-selected="false">Croisement</button>
+              <button type="button" role="tab" data-onglet="entrees" aria-selected="false">Liste</button>
+          </div>
+
+          <div class="es-barre">
+            <label class="es-lire">Lire par <select id="es-champ"></select></label>
+            <div class="es-periodes" id="es-periodes" role="group" aria-label="Période"></div>
+            <label class="es-cherche"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg><input class="es-recherche" id="es-recherche" type="search" placeholder="Rechercher dans la base" aria-label="Rechercher dans la base" autocomplete="off"></label>
+            <div class="es-vues" id="es-vues-bloc">
+              <select id="es-vues" aria-label="Vues enregistrées"><option value="">Vues enregistrées</option></select>
+              <button class="es-lien" type="button" id="es-vue-enreg">Enregistrer cette vue</button>
+              <button class="es-lien" type="button" id="es-vue-suppr" hidden>Supprimer la vue</button>
+              <form class="es-vue-form" id="es-vue-form" autocomplete="off" hidden>
+                <label class="v5-sr" for="es-vue-nom">Nom de la vue</label>
+                <input id="es-vue-nom" type="text" maxlength="80" placeholder="Nom de la vue" required>
+                <button class="btn-outline" type="submit">Enregistrer</button>
+              </form>
+            </div>
+            <div class="es-actifs" id="es-actifs" aria-live="polite"></div>
+          </div>
+
+          <div class="poste__corps">
+            <!-- Où ? La carte seule, et une phrase qui dit ce qu'on y voit. -->
+            <section class="poste__vue" data-vue="carte">
+              <div class="es-carte" id="es-carte">
+                <div id="es-map"></div>
+                <div class="poste__phrase poste__phrase--carte" id="ph-carte" data-i18n-skip></div>
+                <div class="es-echelle">
+                  <div class="es-modes" id="es-modes" role="group" aria-label="Lecture de la carte">
+                    <button type="button" data-mode="disques" aria-pressed="true">Points</button>
+                    <button type="button" data-mode="chaleur" aria-pressed="false">Densité</button>
+                    <button type="button" data-mode="pays" aria-pressed="false">Pays</button>
+                  </div>
+                  <button type="button" id="es-anim">Rejouer dans le temps</button>
+                  <button type="button" id="es-selection">Recentrer</button>
+                  <button type="button" id="es-image">Image</button>
+                  <span hidden>Échelle <b id="es-niveau">mondiale</b></span>
+                  <button type="button" id="es-monde" hidden>Toute la base</button>
+                  <button type="button" id="es-plein" hidden>Plein écran</button>
+                </div>
+                <div class="es-legende" id="es-legende"></div>
+                <p class="es-attente" id="es-attente" role="status">Dessin de la carte…</p>
+                <p class="es-hors" id="es-hors" hidden></p>
+                <p class="es-date-anim" id="es-date-anim" hidden></p>
+                <aside class="es-fiche" id="es-fiche" hidden></aside>
+              </div>
+            </section>
+
+            <!-- Quand ? La frise en grand, puis le rythme. -->
+            <section class="poste__vue poste__vue--defile" data-vue="quand" hidden>
+              <div class="page">
+                <div class="poste__phrase" id="ph-quand" data-i18n-skip></div>
+                <div class="tuile" id="es-frise-bloc">
+                  <div class="tuile__tete"><h3>Dans le temps</h3><p id="es-frise-pas"></p><p>Glissez sur la frise pour retenir une période</p></div>
+                  <div class="es-frise" id="es-frise"></div>
+                </div>
+                <div class="page__deux">
+                  <div class="tuile"><div class="tuile__tete"><h3>Jours de la semaine</h3><p>Nombre d'entrées par jour</p></div><div id="es-rythme"></div></div>
+                  <div class="tuile"><div class="tuile__tete"><h3>Jour par jour</h3><p id="es-cal-note"></p></div><div id="es-cal"></div><p class="es-reste">Une colonne par semaine, du lundi en haut au dimanche en bas. Plus la case est sombre, plus la journée est chargée.</p></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Qui ou quoi ? Le classement de la colonne lue, et ce qui bouge. -->
+            <section class="poste__vue poste__vue--defile" data-vue="qui" hidden>
+              <div class="page">
+                <div class="poste__phrase" id="ph-qui" data-i18n-skip></div>
+                <div class="tuile"><div class="tuile__tete"><h3 id="es-bandeau-titre" data-i18n-skip></h3><p>La part de chacun dans la sélection</p></div><div id="es-bandeau"></div></div>
+                <div class="page__deux">
+                  <div class="tuile"><div class="tuile__tete"><h3 id="es-rep-titre" data-i18n-skip></h3><p>Classement, avec la courbe de chacun dans le temps</p></div><div id="es-rep" class="es-grand"></div></div>
+                  <div class="tuile"><div class="tuile__tete"><h3>Qui monte, qui baisse</h3><p>La seconde moitié de la période comparée à la première</p></div><div id="es-mouv"></div></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Qui est où ? Le croisement de deux colonnes. -->
+            <section class="poste__vue poste__vue--defile" data-vue="croix" hidden>
+              <div class="page">
+                <div class="poste__phrase" id="ph-croix" data-i18n-skip></div>
+                <div class="tuile"><div class="tuile__tete"><h3 id="es-croix-titre"></h3><select id="es-croix" aria-label="Champ croisé"></select><p>Plus la case est sombre, plus il y a d'entrées. Cliquez une case pour ne garder qu'elles.</p></div><div id="es-matrice"></div></div>
+                <div class="page__deux">
+                  <div class="tuile"><div class="tuile__tete"><h3 id="es-geo-titre">Pays</h3><p>Du plus au moins représenté</p></div><div id="es-geo"></div></div>
+                  <div class="tuile"><div class="tuile__tete"><h3>Lieux</h3><p>Les dix premiers</p></div><div id="es-lieux"></div></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- La liste : chaque entrée, et la gestion de la base. -->
+            <section class="poste__vue poste__vue--defile" data-vue="entrees" hidden>
+              <div class="page">
+                <div class="tuile">
+                  <div class="tuile__tete"><h3>Entrées</h3><p>Cliquez une ligne pour l'ouvrir sur la carte</p><button class="btn-outline es-ajouter" type="button" id="es-ajouter">Ajouter une entrée</button></div>
+                  <div class="vp-table-cadre"><table class="vp-table es-table" id="es-table"></table></div>
+                  <p class="v5-empty" id="es-table-vide" hidden>Aucune entrée ne correspond à ces filtres.</p>
+                  <button class="btn-outline es-plus" type="button" id="es-plus" hidden></button>
+                </div>
+                <div class="tuile" id="es-gestion">
+                  <div class="tuile__tete"><h3>Gérer cette base</h3></div>
+                  <div class="vp-outils">
+                    <form class="vp-renommer" id="renommer-form" autocomplete="off">
+                      <label class="v5-sr" for="renommer-nom">Nom de la base</label>
+                      <input id="renommer-nom" type="text" maxlength="80" required>
+                      <button class="btn-outline" type="submit">Renommer</button>
+                    </form>
+                    <button class="btn-outline vp-danger" type="button" id="supprimer">Supprimer la base</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Import en trois étapes -->
+      <div id="v-import" hidden>
+        <p class="vp-retour"><button class="btn-link" type="button" data-retour id="import-retour">Mes bases</button></p>
+        <p class="vp-bandeau" id="demo-bandeau" hidden><b>Démonstration.</b> Jeu de données fictif. Rien n'est enregistré ni transmis.</p>
+        <ol class="vp-etapes" id="etapes">
+          <li data-etape="1">Fichier</li>
+          <li data-etape="2">Correspondance</li>
+          <li data-etape="3">Rapport</li>
+        </ol>
+
+        <!-- Étape 1 : le fichier -->
+        <div id="e-fichier">
+          <div class="vp-depot" id="depot" tabindex="0" role="button" aria-label="Choisir un fichier à importer">
+            <p class="vp-depot__t">Glissez votre fichier ici</p>
+            <p class="vp-depot__s">ou</p>
+            <span class="btn-outline">Choisir un fichier</span>
+            <p class="vp-depot__f">CSV, Excel (XLSX), JSON ou GeoJSON. 10 Mo et 20 000 lignes au plus.</p>
+            <input id="fichier" type="file" accept=".csv,.tsv,.txt,.xlsx,.xls,.json,.geojson" hidden>
+          </div>
+          <p class="vp-statut" id="fichier-statut" role="status" aria-live="polite"></p>
+          <div class="vp-info" id="info-hebergement">
+            <h3>Où vont vos données</h3>
+            <p>Votre fichier est lu dans votre navigateur : il n'est pas envoyé tel quel. Seules les lignes que vous validez à la dernière étape sont enregistrées.</p>
+            <p>Elles sont conservées dans la base de données d'Algor Acces, hébergée par Supabase dans un centre de données situé en Irlande (Union européenne).</p>
+            <p>Elles ne sont visibles que depuis votre compte. L'équipe d'Algor Acces ne les consulte pas. L'administration technique de la base reste possible pour la maintenance et la sécurité.</p>
+            <p>Aucune ligne n'est transmise à un service tiers ni à une intelligence artificielle. Vous pouvez supprimer une base à tout moment : ses lignes sont alors effacées.</p>
+          </div>
+        </div>
+
+        <!-- Étape 2 : la correspondance des colonnes -->
+        <div id="e-correspondance" hidden>
+          <h3 class="vp-h3">Vérifiez le rôle de chaque colonne</h3>
+          <p class="vp-aide" id="corr-resume"></p>
+          <div class="vp-table-cadre"><table class="vp-table vp-table--corr" id="corr-table"></table></div>
+          <p class="vp-aide">Une colonne laissée en « Champ libre » est conservée telle quelle et restera filtrable.</p>
+          <ul class="vp-notes" id="corr-notes"></ul>
+          <div class="vp-actions">
+            <button class="btn-outline" type="button" id="corr-precedent">Changer de fichier</button>
+            <button class="btn-rect btn-rect--ink" type="button" id="corr-suivant">Continuer</button>
+          </div>
+        </div>
+
+        <!-- Étape 3 : le rapport d'import -->
+        <div id="e-rapport" hidden>
+          <h3 class="vp-h3">Rapport d'import</h3>
+          <div class="vp-kpis" id="rapport-kpis"></div>
+
+          <div class="vp-bloc" id="geo-bloc" hidden>
+            <label class="vp-coche"><input type="checkbox" id="geo-pays"><span id="geo-pays-txt"></span></label>
+            <p class="vp-aide">Le calcul est fait dans votre navigateur à partir du nom du pays. Aucun nom de lieu n'est transmis.</p>
+          </div>
+
+          <details class="vp-details" id="rapport-ecartees" hidden><summary></summary><ul></ul></details>
+          <details class="vp-details" id="rapport-averifier" hidden><summary></summary><ul></ul></details>
+
+          <div class="vp-bloc" id="cible-bloc">
+            <div class="v5-field" id="cible-nouvelle">
+              <label for="cible-nom">Nom de la base</label>
+              <input id="cible-nom" type="text" maxlength="80" autocomplete="off">
+            </div>
+            <fieldset class="vp-choix" id="cible-maj" hidden>
+              <legend>Mise à jour de la base <b id="cible-maj-nom" data-i18n-skip></b></legend>
+              <label class="vp-coche"><input type="radio" name="mode" value="ajouter" checked><span>Ajouter les nouvelles lignes. Les lignes déjà présentes sont ignorées.</span></label>
+              <label class="vp-coche"><input type="radio" name="mode" value="remplacer"><span>Remplacer tout le contenu de la base par ce fichier.</span></label>
+            </fieldset>
+          </div>
+
+          <div class="vp-actions">
+            <button class="btn-outline" type="button" id="rapport-precedent">Revoir la correspondance</button>
+            <button class="btn-rect btn-rect--ink" type="button" id="enregistrer">Enregistrer</button>
+          </div>
+          <p class="vp-statut" id="rapport-statut" role="status" aria-live="polite"></p>
+          <div class="vp-barre" id="barre" hidden><i></i></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Saisie d'une entrée à la main (ajout ou modification) -->
+<dialog class="es-saisie" id="es-saisie" aria-labelledby="es-saisie-titre">
+  <form id="es-saisie-form" method="dialog" autocomplete="off" novalidate>
+    <h3 id="es-saisie-titre">Ajouter une entrée</h3>
+    <div class="es-saisie__champs" id="es-saisie-champs"></div>
+    <p class="vp-statut" id="es-saisie-statut" role="status" aria-live="polite"></p>
+    <div class="vp-actions">
+      <button class="btn-outline" type="button" id="es-saisie-annuler">Annuler</button>
+      <button class="btn-rect btn-rect--ink" type="submit">Enregistrer</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Rapport de veille : une page A4 construite sur la vue en cours, à imprimer ou à enregistrer en PDF -->
+<div class="rapport" id="rapport" hidden>
+  <div class="rapport__outils">
+    <p>Le titre, l'analyse et les recommandations se modifient directement dans la page.</p>
+    <button class="btn-rect btn-rect--ink" type="button" id="rapport-imprimer">Imprimer ou enregistrer en PDF</button>
+    <button class="btn-outline" type="button" id="rapport-fermer">Fermer</button>
+  </div>
+  <article class="rapport__page" id="rapport-page"></article>
+</div>
+
+<!-- v5:foot -->
+<footer class="foot" data-nav="light">
+  <div class="foot__id">
+    <p>© 2026 Algor Acces</p>
+    <p>Solution française, base de données hébergée en Europe.</p>
+    <hr>
+    <div class="foot__pills">
+      <button class="pill site-login" type="button">Connexion</button>
+      <a class="pill" href="/offres/">Les offres</a>
+      <a class="pill" href="/demo/">La démo</a>
+    </div>
+  </div>
+  <div class="foot__col"><h3>Théâtres</h3><a href="/moyen-orient/">Moyen-Orient</a><a href="/sahel/">Sahel</a><a href="/rdc/">RDC, Grands Lacs</a><a href="/madagascar/">Madagascar</a><a href="/afrique/">Afrique maritime</a><a href="/asie-sud/">Asie du Sud</a></div>
+  <div class="foot__col"><h3>Plateforme</h3><a href="/">Plateforme</a><a href="/veille/">Veille</a><a href="/argos/">Argos</a><a href="/methodologie/">Méthodologie</a></div>
+  <div class="foot__col"><h3>Société</h3><a href="/a-propos/">À propos</a><a href="/offres/">Offres</a><a href="/contact/">Contact</a></div>
+  <div class="foot__col"><h3>Informations</h3><a href="/mentions-legales/">Mentions légales</a><a href="/confidentialite/">Confidentialité</a></div>
+</footer>
+<!-- /v5:foot -->
+
+<script type="module" src="/shared/site-auth.js?v=20261020a"></script>
+<script src="/shared/v5/chrome.js?v=20261107a"></script>
+<script type="module" src="/veille-privee/js/app.js?v=20261117k"></script>
+</body>
+</html>
