@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<!-- Page construite par fusion/outils/construire-argos.mjs à partir de fusion/bac-a-sable/index.html. Ne pas la modifier à la main. -->
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Argos, recherche : Algor Acces</title>
+<meta name="description" content="Argos, l'assistant de renseignement d'Algor Acces. Réservé aux abonnés." />
+<link rel="icon" type="image/jpeg" href="/favicon.jpg" />
+<link rel="stylesheet" href="/shared/home/fonts-display.css?v=20261104c" />
+<link rel="stylesheet" href="/shared/v5/v5.css?v=20261104c" />
+<style>
+  /* Bac à sable, v4 : un graphe d'enquête. On donne un flux HUMINT, l'outil cherche les sources publiques
+     qui en parlent, et le graphe pousse autour du flux : faits, flux OSINT de chaque fait, sources avec leur image.
+     On déplace les pastilles, on glisse le fond, on zoome à la molette. */
+  html, body { height: 100%; }
+  body { margin: 0; display: flex; flex-direction: column; background: var(--paper); color: var(--ink); font-family: var(--sans); }
+  button, textarea { font: inherit; color: inherit; }
+  [hidden] { display: none !important; }
+
+  .bs-barre { flex: none; z-index: 5; display: flex; align-items: center; gap: 20px; padding: 12px var(--gutter); background: var(--paper); border-bottom: 1px solid var(--line); }
+  .bs-barre h1 { margin: 0; font-weight: 500; font-size: 16px; white-space: nowrap; }
+  .bs-etat { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; font-size: 14px; color: var(--muted); }
+  .bs-etat span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bs-point { flex: none; width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: bs-pouls 1s ease-in-out infinite; }
+  @keyframes bs-pouls { 50% { opacity: .2; } }
+  .bs-btn { padding: 9px 14px; border: 1px solid var(--ink); background: var(--paper); font-size: 14px; cursor: pointer; white-space: nowrap; transition: background .15s, color .15s; }
+  .bs-btn:hover:not(:disabled) { background: var(--ink); color: var(--paper); }
+  .bs-btn[data-plein] { background: var(--ink); color: var(--paper); }
+  .bs-btn[data-plein]:hover:not(:disabled) { background: var(--ink-2); }
+  .bs-btn:disabled { border-color: var(--line); background: var(--paper); color: var(--faint); cursor: not-allowed; }
+  .bs-btn:focus-visible, textarea:focus-visible, .bs-outils button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+  /* ---------- étape 1 : donner le flux HUMINT ---------- */
+  .bs-saisie { width: 100%; max-width: 760px; box-sizing: border-box; margin: 0 auto; padding: clamp(32px, 7vh, 80px) var(--gutter) 48px; }
+  .bs-saisie h2 { margin: 0 0 12px; font-weight: 400; font-size: clamp(30px, 4vw, 48px); line-height: 1.05; letter-spacing: -0.03em; text-wrap: balance; }
+  .bs-saisie p { margin: 0 0 22px; max-width: 60ch; font-size: 17px; line-height: 1.5; color: var(--ink-2); }
+  .bs-saisie textarea { display: block; width: 100%; height: 240px; box-sizing: border-box; padding: 16px; border: 1px solid var(--ink); border-radius: 0; background: var(--paper); font-size: 15px; line-height: 1.5; resize: vertical; }
+  .bs-recents { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; font-size: 13px; color: var(--muted); }
+  .bs-recents button { padding: 5px 9px; border: 1px solid var(--line); background: var(--paper); font-size: 13px; cursor: pointer; }
+  .bs-recents button:hover { border-color: var(--ink); }
+  .bs-pays { display: flex; align-items: center; gap: 10px; margin-top: 14px; font-size: 14px; color: var(--muted); }
+  .bs-pays input { width: 160px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 0; background: var(--paper); font: inherit; color: var(--ink); }
+  .bs-pays input:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .bs-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 14px; }
+  .bs-question { display: flex; gap: 10px; margin: 0 0 14px; }
+  .bs-question input { flex: 1; min-width: 0; padding: 14px 16px; border: 1px solid var(--ink); border-radius: 0; background: var(--paper); font: inherit; font-size: 16px; color: var(--ink); }
+  .bs-question input:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .bs-ou { margin: 34px 0 10px !important; font-size: 13px !important; letter-spacing: .08em; text-transform: uppercase; color: var(--muted) !important; }
+  /* la réponse à la question : une carte claire posée sur l'arbre, reliée à Algor */
+  .bs-rep { position: absolute; left: -1130px; top: 300px; width: 800px; box-sizing: border-box; padding: 22px 24px 18px; background: var(--paper); color: var(--ink); border: 2px solid var(--on-night); cursor: default; animation: bs-pousse .5s var(--ease) backwards; }
+  .bs-rep-cols { display: grid; grid-template-columns: 290px 1fr; gap: 26px; align-items: start; }
+  .bs-rep-chiffres { flex-direction: column; }
+  .bs-rep h3 { margin: 0 0 4px; font-size: 12px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .bs-rep .bs-rep-q { margin: 0 0 16px; font-size: 15px; line-height: 1.35; }
+  .bs-rep-chiffres { display: flex; gap: 14px; margin: 0 0 14px; padding: 12px 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line); }
+  .bs-rep-chiffres div { font-size: 12px; line-height: 1.3; color: var(--muted); }
+  .bs-rep-chiffres b { display: block; font-size: 34px; font-weight: 400; line-height: 1; letter-spacing: -0.03em; color: var(--ink); }
+  .bs-rep table { width: 100%; border-collapse: collapse; margin: 0 0 14px; font-size: 13px; }
+  .bs-rep td { padding: 5px 0; border-bottom: 1px solid var(--line); }
+  .bs-rep td:first-child { white-space: nowrap; padding-right: 10px; }
+  .bs-rep td + td { text-align: right; color: var(--muted); }
+  .bs-rep-cols > div > h4:first-child { margin-top: 0; }
+  .bs-rep h4 { margin: 14px 0 6px; font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; }
+  .bs-rep ul { margin: 0; padding: 0; list-style: none; }
+  .bs-rep li { margin: 0 0 8px; font-size: 14px; line-height: 1.42; }
+  .bs-rep li button { margin-left: 6px; padding: 1px 6px; border: 1px solid var(--line); border-radius: 0; background: none; font: inherit; font-size: 11px; color: var(--muted); cursor: pointer; }
+  .bs-rep li button:hover { border-color: var(--ink); color: var(--ink); }
+  .bs-rep .bs-rep-lim li { font-size: 13px; color: var(--muted); }
+  .bs-rep .bs-rep-pied { margin: 14px 0 0; font-size: 11px; color: var(--muted); }
+  .bs-q { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); z-index: 3; max-width: min(760px, 78%); margin: 0; padding: 9px 16px; border: 1px solid rgba(255, 255, 255, .22); background: rgba(10, 10, 12, .82); color: var(--on-night); font-size: 14px; line-height: 1.4; text-align: center; text-wrap: balance; }
+  .bs-q small { display: block; margin-top: 3px; opacity: .62; font-size: 12px; }
+  .bs-note { margin: 14px 0 0 !important; font-size: 13px !important; color: var(--muted) !important; }
+
+  /* ---------- étape 2 : le graphe ---------- */
+  .bs-toile { position: relative; flex: 1; min-height: 0; overflow: hidden; background-color: var(--night); background-image: radial-gradient(rgba(255, 255, 255, .09) 1px, transparent 1px); background-size: 26px 26px; color: var(--on-night); cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .bs-toile[data-glisse] { cursor: grabbing; }
+  .bs-monde { position: absolute; left: 0; top: 0; transform-origin: 0 0; transition: transform .7s var(--ease); }
+  .bs-toile[data-main] .bs-monde { transition: none; }
+  .bs-liens { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+  .bs-liens line { stroke: rgba(255, 255, 255, .34); stroke-width: 1.2; stroke-dasharray: 1; stroke-dashoffset: 1; animation: bs-trait .55s var(--ease) forwards; }
+  .bs-liens line[data-faible] { stroke: rgba(255, 255, 255, .14); }
+  @keyframes bs-trait { to { stroke-dashoffset: 0; } }
+
+  .bs-nd { position: absolute; width: 0; height: 0; }
+  .bs-rond { position: absolute; left: 0; top: 0; display: grid; place-items: center; box-sizing: border-box; padding: 0; border: 2px solid var(--on-night); border-radius: 50%; background: var(--night-2); color: var(--on-night); overflow: hidden; cursor: pointer; transform: translate(-50%, -50%); animation: bs-pousse .45s var(--ease) backwards; transition: border-color .3s, background .3s, box-shadow .2s, opacity .3s; }
+  @keyframes bs-pousse { from { opacity: 0; transform: translate(-50%, -50%) scale(.3); } }
+  .bs-rond:hover, .bs-nd[data-choisi] .bs-rond { box-shadow: 0 0 0 5px rgba(255, 255, 255, .16); }
+  .bs-rond:focus-visible { outline: 2px solid var(--on-night); outline-offset: 3px; }
+  .bs-rond svg { width: 46%; height: 46%; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .bs-rond img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; animation: bs-fondu .5s; }
+  @keyframes bs-fondu { from { opacity: 0; } }
+  .bs-rond b { font-weight: 500; font-size: 15px; letter-spacing: .02em; }
+  .bs-lib { position: absolute; left: 0; width: 132px; margin-left: -66px; text-align: center; pointer-events: none; animation: bs-fondu .6s backwards; }
+  .bs-lib strong { display: block; font-weight: 500; font-size: 12px; line-height: 1.25; color: var(--on-night); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .bs-lib small { display: block; margin-top: 1px; font-size: 11px; color: var(--on-night-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .bs-nd[data-genre="algor"] .bs-rond { width: 96px; height: 96px; background: var(--on-night); color: var(--night); }
+  .bs-nd[data-genre="algor"] .bs-lib { top: 56px; }
+  .bs-nd[data-genre="algor"] .bs-lib strong { font-size: 15px; }
+  .bs-nd[data-genre="pilier"] .bs-rond { width: 70px; height: 70px; background: var(--on-night); color: var(--night); }
+  .bs-nd[data-genre="pilier"] .bs-lib { top: 43px; }
+  .bs-nd[data-genre="pilier"] .bs-lib strong { font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
+  .bs-nd[data-genre="flux"] .bs-rond { width: 52px; height: 52px; }
+  .bs-nd[data-genre="flux"] .bs-lib { top: 33px; }
+  .bs-nd[data-genre="fait"] .bs-rond { width: 60px; height: 60px; }
+  .bs-nd[data-genre="fait"] .bs-lib { top: 37px; width: 104px; margin-left: -52px; }
+  .bs-nd[data-genre="agent"] .bs-rond { width: 60px; height: 60px; }
+  .bs-nd[data-genre="agent"] .bs-lib { top: 37px; }
+  .bs-nd[data-genre="sortie"] .bs-rond { width: 70px; height: 70px; }
+  .bs-nd[data-genre="sortie"] .bs-lib { top: 43px; }
+  /* états communs : en attente (pointillés), en cours (halo qui bat), abouti (plein), sans résultat (pointillés) */
+  .bs-nd[data-etat="attente"] .bs-rond { border-style: dashed; border-color: rgba(255, 255, 255, .3); color: rgba(255, 255, 255, .4); }
+  .bs-nd[data-etat="attente"] .bs-lib { opacity: .55; }
+  .bs-nd[data-etat="cours"] .bs-rond { animation: bs-pousse .45s var(--ease) backwards, bs-cherche 1.1s ease-in-out infinite; }
+  @keyframes bs-cherche { 50% { box-shadow: 0 0 0 10px rgba(255, 255, 255, .13); } }
+  .bs-nd[data-etat="trouve"] .bs-rond { background: var(--on-night); color: var(--night); }
+  /* recoupement à confirmer : pastille à moitié pleine */
+  .bs-nd[data-etat="partiel"] .bs-rond { background: linear-gradient(90deg, var(--on-night) 50%, var(--night-2) 50%); color: var(--muted); }
+  .bs-nd[data-genre="source"][data-qualite="ecartee"] .bs-rond { opacity: .32; border-style: dashed; }
+  .bs-nd[data-genre="source"][data-qualite="ecartee"] .bs-lib { opacity: .45; }
+  .bs-nd[data-genre="source"][data-qualite="ecartee"] .bs-lib strong { text-decoration: line-through; }
+  .bs-nd[data-etat="rien"] .bs-rond { border-style: dashed; border-color: rgba(255, 255, 255, .45); color: rgba(255, 255, 255, .6); }
+  /* liens croisés (un fait et la source ou la connaissance qui l'éclaire) : masqués par défaut pour garder le graphe lisible,
+     montrés un instant à leur création, puis au survol ou au clic d'une pastille */
+  .bs-liens path[data-croise] { fill: none; stroke: var(--on-night); stroke-width: 1.4; opacity: 0; transition: opacity .35s; }
+  .bs-liens path[data-croise][data-montre] { opacity: .85; }
+  .bs-nd { transition: opacity .3s; }
+  .bs-toile[data-focus] .bs-nd:not([data-lie]) { opacity: .16; }
+  .bs-toile[data-focus] .bs-liens line { opacity: .25; }
+  .bs-nd[data-genre="savoir"] .bs-rond { width: 50px; height: 50px; border-color: rgba(255, 255, 255, .6); }
+  .bs-nd[data-genre="savoir"] .bs-lib { top: 31px; width: 104px; margin-left: -52px; }
+  .bs-nd[data-genre="savoir"] .bs-lib strong { font-weight: 400; }
+  /* une fiche de la base de connaissance : plus grande et cerclée en plein, c'est du savoir durable */
+  .bs-nd[data-genre="savoir"][data-base] .bs-rond { width: 62px; height: 62px; border-color: var(--on-night); border-width: 2.5px; }
+  .bs-nd[data-genre="savoir"][data-base] .bs-lib { top: 38px; }
+  .bs-nd[data-genre="savoir"][data-base] .bs-lib strong { font-weight: 500; }
+  .bs-fiche li small a { color: var(--muted); }
+  .bs-nd[data-genre="source"] .bs-rond { width: 56px; height: 56px; border-color: rgba(255, 255, 255, .55); }
+  .bs-nd[data-genre="source"] .bs-lib { top: 34px; width: 96px; margin-left: -48px; }
+  .bs-nd[data-genre="source"][data-verif="cours"] .bs-rond { animation: bs-pousse .45s var(--ease) backwards, bs-cherche 1.1s ease-in-out infinite; }
+  .bs-nd[data-genre="source"][data-verif="validee"] .bs-rond { border-color: var(--on-night); }
+  .bs-nd[data-genre="source"][data-verif="rejetee"] .bs-rond { opacity: .32; border-style: dashed; }
+  .bs-nd[data-genre="source"][data-verif="rejetee"] .bs-lib { opacity: .45; }
+  .bs-nd[data-genre="source"][data-verif="rejetee"] .bs-lib strong { text-decoration: line-through; }
+  /* petite marque de vérification, en haut à droite de la pastille */
+  .bs-marque { position: absolute; left: 14px; top: -32px; display: grid; place-items: center; min-width: 18px; height: 18px; padding: 0 3px; box-sizing: border-box; border-radius: 50%; background: var(--on-night); color: var(--night); font-size: 11px; font-weight: 500; pointer-events: none; animation: bs-pousse2 .3s var(--ease); }
+  @keyframes bs-pousse2 { from { transform: scale(0); } }
+
+  .bs-outils { position: absolute; left: 16px; bottom: 16px; z-index: 2; display: flex; gap: 6px; }
+  .bs-outils button { min-width: 36px; height: 36px; padding: 0 10px; border: 1px solid var(--line-night); background: var(--night-2); color: var(--on-night); font-size: 14px; cursor: pointer; }
+  .bs-outils button:hover { border-color: var(--on-night); }
+  .bs-aide { position: absolute; right: 16px; bottom: 16px; z-index: 1; margin: 0; font-size: 12px; color: var(--on-night-2); pointer-events: none; }
+
+  /* fiche de détail, à droite */
+  .bs-fiche { position: absolute; right: 0; top: 0; bottom: 0; z-index: 3; width: min(380px, 100%); box-sizing: border-box; padding: 0 0 24px; overflow-y: auto; background: var(--paper); color: var(--ink); border-left: 1px solid var(--line); cursor: auto; user-select: text; -webkit-user-select: text; animation: bs-glisse .3s var(--ease); }
+  @keyframes bs-glisse { from { opacity: 0; transform: translateX(24px); } }
+  .bs-fiche figure { margin: 0; background: var(--band); }
+  .bs-fiche figure img { display: block; width: 100%; max-height: 210px; object-fit: cover; }
+  .bs-fiche header { display: flex; justify-content: space-between; align-items: start; gap: 14px; padding: 18px 20px 0; }
+  .bs-fiche h3 { margin: 0; font-weight: 500; font-size: 19px; line-height: 1.3; }
+  .bs-fiche header small { display: block; margin-bottom: 4px; font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+  .bs-fiche p { margin: 14px 20px 0; font-size: 15px; line-height: 1.5; color: var(--ink-2); overflow-wrap: anywhere; }
+  .bs-fiche p b { display: block; font-weight: 400; font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+  .bs-fiche a { color: var(--ink); }
+  .bs-fiche ul { margin: 6px 20px 0; padding: 0; list-style: none; }
+  .bs-fiche li { padding: 10px 0; border-top: 1px solid var(--line); font-size: 15px; line-height: 1.5; color: var(--ink-2); }
+  .bs-fiche li small { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); }
+  /* question posée à un agent hébergé sur Hermès */
+  .bs-ask { margin: 22px 20px 0; padding-top: 18px; border-top: 1px solid var(--ink); }
+  .bs-ask h4 { margin: 0 0 4px; font-weight: 500; font-size: 15px; }
+  .bs-ask > small { display: block; margin-bottom: 12px; font-size: 13px; line-height: 1.45; color: var(--muted); }
+  .bs-ask select, .bs-ask textarea { display: block; width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 0; background: var(--paper); font: inherit; font-size: 14px; color: var(--ink); }
+  .bs-ask textarea { height: 64px; resize: vertical; }
+  .bs-ask select:focus-visible, .bs-ask textarea:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+  .bs-ask .bs-btn { width: 100%; }
+  .bs-agents { display: flex; flex-wrap: wrap; gap: 6px; }
+  .bs-agents .bs-btn { width: auto; padding: 7px 10px; font-size: 13px; }
+  .bs-rep { margin-top: 16px; padding: 14px; background: var(--band); font-size: 14px; line-height: 1.55; color: var(--ink-2); overflow-wrap: anywhere; }
+  .bs-rep header { display: block; padding: 0; margin-bottom: 8px; font-size: 12px; color: var(--muted); }
+  .bs-rep p { margin: 0 0 8px; font-size: 14px; }
+  .bs-rep p.t { font-weight: 500; color: var(--ink); margin-top: 12px; }
+  .bs-rep p.l { padding-left: 14px; text-indent: -14px; }
+  .bs-rep code { font: inherit; font-size: 12px; color: var(--muted); }
+  /* onglets : le graphe, puis les trois sorties d'Algor */
+  .bs-onglets { display: flex; gap: 2px; }
+  .bs-onglets button { padding: 8px 14px; border: 0; border-bottom: 2px solid transparent; background: none; font-size: 14px; color: var(--muted); cursor: pointer; }
+  .bs-onglets button:hover { color: var(--ink); }
+  .bs-onglets button[aria-selected="true"] { border-bottom-color: var(--ink); color: var(--ink); font-weight: 500; }
+  .bs-onglets button:disabled { color: var(--faint); cursor: default; }
+  .bs-vue { flex: 1; min-height: 0; overflow-y: auto; }
+  .bs-vue-carte { position: relative; background: var(--night); overflow: hidden; }
+  .bs-vue-carte #bs-carte { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--paper); }
+  .bs-legende { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 5; margin: 0; padding: 6px 12px; background: var(--night); color: var(--on-night); font-size: 13px; pointer-events: none; }
+  .bs-legende:empty { display: none; }
+  .bs-legende i { display: inline-block; width: 10px; height: 10px; margin-right: 8px; border: 2px solid var(--on-night); border-radius: 50%; vertical-align: -1px; }
+  .bs-legende i[data-plein] { background: var(--on-night); }
+  .bs-page { max-width: 820px; margin: 0 auto; padding: 32px var(--gutter) 80px; }
+  .bs-page h2 { margin: 0 0 6px; font-weight: 400; font-size: clamp(28px, 3.4vw, 42px); line-height: 1.08; letter-spacing: -0.03em; }
+  .bs-page .bs-chapo { margin: 0 0 6px; font-size: 14px; color: var(--muted); }
+  .bs-page h3 { margin: 34px 0 10px; padding-top: 14px; border-top: 1px solid var(--ink); font-weight: 500; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; }
+  .bs-page p { margin: 0 0 10px; font-size: 16px; line-height: 1.55; color: var(--ink-2); }
+  .bs-page ul { margin: 0; padding: 0; list-style: none; }
+  .bs-page li { padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 16px; line-height: 1.5; color: var(--ink-2); }
+  .bs-page li small { display: block; margin-top: 3px; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+  .bs-page li b { font-weight: 500; color: var(--ink); }
+  .bs-page a { color: var(--ink); }
+  .bs-page li small a { color: var(--muted); }
+  .bs-outils-page { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 18px 0 0; font-size: 14px; color: var(--muted); }
+  .bs-interne { background: var(--band); padding: 2px 6px; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
+  .bs-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 0 48px; max-width: 1080px; margin: 0 auto; padding: 32px var(--gutter) 80px; }
+  .bs-stat { padding: 22px 0 28px; border-top: 1px solid var(--ink); }
+  .bs-stat h3 { margin: 0 0 6px; font-weight: 500; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .bs-stat p { margin: 0 0 18px; font-weight: 400; font-size: 22px; line-height: 1.25; letter-spacing: -0.015em; text-wrap: balance; }
+  .bs-barre-h { display: grid; grid-template-columns: 130px minmax(0, 1fr) 34px; align-items: center; gap: 10px; padding: 5px 0; font-size: 14px; }
+  .bs-barre-h span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2); }
+  .bs-barre-h div { position: relative; height: 14px; background: var(--band); }
+  .bs-barre-h div i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--stone); }
+  .bs-barre-h div i + i { background: var(--ink); }
+  .bs-barre-h b { font-weight: 500; text-align: right; font-variant-numeric: tabular-nums; }
+  .bs-cle { margin-top: 10px; font-size: 12px; color: var(--muted); }
+  .bs-cle i { display: inline-block; width: 10px; height: 10px; margin: 0 5px 0 12px; vertical-align: -1px; background: var(--stone); }
+  .bs-cle i[data-plein] { background: var(--ink); margin-left: 0; }
+  .bs-jours { display: flex; align-items: flex-end; gap: 3px; height: 120px; border-bottom: 1px solid var(--ink); }
+  .bs-jours div { flex: 1; min-width: 4px; background: var(--stone); position: relative; }
+  .bs-jours div i { position: absolute; left: 0; right: 0; bottom: 0; background: var(--ink); }
+  .bs-jours-axe { display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; color: var(--muted); }
+  @media print { .bs-barre, .bs-outils-page, .bs-toile, #bs-vue-carte, #bs-vue-stats { display: none !important; } body { display: block; } .bs-vue { overflow: visible; } }
+  .bs-fermer { flex: none; width: 30px; height: 30px; border: 1px solid var(--line); background: var(--paper); cursor: pointer; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bs-rond, .bs-lib, .bs-fiche, .bs-point, .bs-marque, .bs-rond img { animation: none !important; }
+    .bs-liens line { animation: none; stroke-dashoffset: 0; }
+    .bs-monde { transition: none; }
+  }
+  /* ---------- disposition en couloirs, lue de gauche à droite : question, Algor, trois couloirs, réponse ---------- */
+  .bs-nd[data-genre="flux"], .bs-nd[data-genre="sortie"], .bs-nd[data-genre="reponse"], .bs-couloir { display: none; }
+  .bs-liens line[data-vers="flux"], .bs-liens line[data-vers="sortie"], .bs-liens line[data-vers="reponse"] { display: none; }
+  /* les branches de l'arbre : toujours tracées, sans dépendre d'une animation, et nettement visibles */
+  .bs-liens line { stroke: rgba(255, 255, 255, .58); stroke-width: 1.6; stroke-dasharray: none; stroke-dashoffset: 0; animation: none; }
+  .bs-liens line[data-vers="pilier"] { stroke: rgba(255, 255, 255, .9); stroke-width: 2.4; }
+  .bs-liens line[data-vers="agent"] { stroke: rgba(255, 255, 255, .75); stroke-width: 2; }
+  .bs-liens line[data-faible] { stroke: rgba(255, 255, 255, .58); }
+  .bs-liens path[data-flux] { stroke: rgba(255, 255, 255, .9); stroke-width: 2.4; }
+  .bs-liens path[data-croise] { stroke-dasharray: 3 5; stroke-width: 1.2; }
+  .bs-anneau { display: none; fill: none; stroke: rgba(255, 255, 255, .17); stroke-width: 1; stroke-dasharray: 2 7; }
+  .bs-nd[data-genre="pilier"] .bs-lib small { font-size: 12px; color: var(--on-night); }
+  .bs-couloir { position: absolute; box-sizing: border-box; border: 1px solid rgba(255, 255, 255, .14); border-radius: 16px; background: rgba(255, 255, 255, .035); transition: top .5s var(--ease), height .5s var(--ease), border-color .3s; }
+  .bs-couloir[data-actif] { border-color: rgba(255, 255, 255, .42); }
+  .bs-couloir header { position: absolute; left: 20px; right: 20px; top: 14px; display: flex; align-items: baseline; gap: 12px; color: var(--on-night); white-space: nowrap; }
+  .bs-couloir header b { font-weight: 500; font-size: 16px; }
+  .bs-couloir header span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 12.5px; color: var(--on-night-2); }
+  .bs-couloir header em { font-style: normal; font-size: 13px; color: var(--on-night); }
+  .bs-carte-q { position: absolute; width: 300px; box-sizing: border-box; padding: 16px 20px; border: 1px solid rgba(255, 255, 255, .42); border-radius: 16px; background: var(--night-2); color: var(--on-night); text-align: center; transform: translate(-50%, -100%); animation: bs-fondu .5s; }
+  .bs-carte-q small { display: block; margin-bottom: 8px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--on-night-2); }
+  .bs-carte-q p { margin: 0; font-size: 13px; line-height: 1.35; text-wrap: pretty; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .bs-carte-q em { display: block; margin-top: 6px; font-style: normal; font-size: 11.5px; line-height: 1.4; color: var(--on-night-2); }
+  .bs-liens path[data-flux] { fill: none; stroke: rgba(255, 255, 255, .5); stroke-width: 1.6; }
+  .bs-toile[data-cours] .bs-liens path[data-flux] { stroke-dasharray: 5 7; animation: bs-coule .9s linear infinite; }
+  @keyframes bs-coule { to { stroke-dashoffset: -24; } }
+  .bs-nd[data-genre="fait"] .bs-rond { width: 54px; height: 54px; }
+  .bs-nd[data-genre="source"] .bs-rond { width: 54px; height: 54px; }
+  .bs-nd[data-genre="agent"] .bs-rond { width: 58px; height: 58px; background: var(--on-night); color: var(--night); }
+  .bs-nd[data-genre="savoir"] .bs-rond { width: 46px; height: 46px; }
+  .bs-nd[data-genre="fait"] .bs-lib, .bs-nd[data-genre="source"] .bs-lib, .bs-nd[data-genre="savoir"] .bs-lib, .bs-nd[data-genre="agent"] .bs-lib { top: 32px; width: 84px; margin-left: -42px; }
+  .bs-nd[data-genre="fait"] .bs-lib small, .bs-nd[data-genre="source"] .bs-lib small, .bs-nd[data-genre="savoir"] .bs-lib small, .bs-nd[data-genre="agent"] .bs-lib small { display: none; }
+  .bs-nd[data-genre="fait"] .bs-lib strong, .bs-nd[data-genre="source"] .bs-lib strong, .bs-nd[data-genre="savoir"] .bs-lib strong { font-size: 11px; font-weight: 400; color: var(--on-night-2); }
+  .bs-nd[data-genre="reponse"] .bs-rond { width: 70px; height: 70px; background: var(--on-night); color: var(--night); }
+  .bs-nd[data-genre="reponse"] .bs-lib { top: 43px; }
+  .bs-nd[data-genre="reponse"] .bs-lib strong { font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
+  /* le panneau de réponse : fixe à droite, toujours à taille lisible, il ne zoome pas avec le graphe */
+  .bs-panneau { position: absolute; right: 0; top: 0; bottom: 0; z-index: 2; width: min(400px, 100%); box-sizing: border-box; padding: 26px 26px 30px; overflow-y: auto; background: var(--paper); color: var(--ink); border-left: 1px solid var(--line); cursor: auto; user-select: text; -webkit-user-select: text; }
+  .bs-panneau .bs-rep { position: static; width: auto; padding: 0; border: 0; animation: bs-fondu .5s; }
+  .bs-panneau .bs-rep-cols { display: block; }
+  .bs-panneau .bs-rep-chiffres { flex-direction: row; gap: 18px; }
+  .bs-panneau .bs-rep-chiffres div { flex: 1; }
+  .bs-pan-attente { margin: 18px 0 0; font-size: 14px; line-height: 1.5; color: var(--muted); }
+  .bs-pan-etape { display: flex; align-items: center; gap: 10px; margin: 22px 0 0; font-size: 14px; }
+  .bs-pan-etape::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--ink); animation: bs-bat 1s ease-in-out infinite; }
+  @keyframes bs-bat { 50% { opacity: .2; } }
+  .bs-fiche { width: min(400px, 100%) !important; }
+  .bs-aide { display: none; }
+  /* ---------- la barre de recherche : grande et centrée à l'accueil, elle monte en haut quand la recherche part ---------- */
+  .bs-recherche { position: absolute; z-index: 4; left: calc((100% - 400px) / 2); top: 18px; width: min(640px, calc(100% - 460px)); transform: translate(-50%, 0); transition: top .7s var(--ease), left .7s var(--ease), width .7s var(--ease), transform .7s var(--ease); cursor: auto; }
+  .bs-toile[data-accueil] .bs-recherche { left: 50%; top: 46%; width: min(780px, 88%); transform: translate(-50%, -50%); }
+  .bs-rech-titre { margin: 0 0 26px; font-weight: 400; font-size: clamp(30px, 4.2vw, 52px); line-height: 1.05; letter-spacing: -0.03em; text-align: center; color: var(--on-night); text-wrap: balance; }
+  .bs-rech-barre { display: flex; align-items: center; gap: 12px; height: 52px; padding: 0 8px 0 20px; border-radius: 999px; background: var(--paper); color: var(--ink); box-shadow: 0 0 0 1px rgba(255, 255, 255, .5), 0 18px 60px -18px rgba(0, 0, 0, .9); transition: height .7s var(--ease), box-shadow .25s; }
+  .bs-rech-barre:focus-within { box-shadow: 0 0 0 3px rgba(255, 255, 255, .55), 0 18px 60px -18px rgba(0, 0, 0, .9); }
+  .bs-toile[data-accueil] .bs-rech-barre { height: 68px; padding: 0 10px 0 26px; }
+  .bs-rech-barre > svg { flex: none; width: 20px; height: 20px; fill: none; stroke: var(--muted); stroke-width: 1.8; stroke-linecap: round; }
+  .bs-rech-barre input { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: none; font: inherit; font-size: 15px; color: var(--ink); }
+  .bs-toile[data-accueil] .bs-rech-barre input { font-size: 18px; }
+  .bs-rech-barre input::placeholder { color: var(--muted); }
+  .bs-rech-barre button { flex: none; display: grid; place-items: center; width: 38px; height: 38px; padding: 0; border: 0; border-radius: 50%; background: var(--ink); color: var(--paper); cursor: pointer; transition: transform .15s, width .7s var(--ease), height .7s var(--ease); }
+  .bs-toile[data-accueil] .bs-rech-barre button { width: 50px; height: 50px; }
+  .bs-rech-barre button:hover { transform: scale(1.06); }
+  .bs-rech-barre button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .bs-toile[data-cours] .bs-rech-barre button svg { animation: bs-tourne 1s linear infinite; }
+  .bs-toile[data-cours] .bs-rech-barre button svg path { d: path('M12 3a9 9 0 1 0 9 9'); }
+  @keyframes bs-tourne { to { transform: rotate(360deg); } }
+  .bs-rech-plus { overflow: hidden; max-height: 0; opacity: 0; transition: max-height .6s var(--ease), opacity .3s; pointer-events: none; }
+  .bs-toile[data-accueil] .bs-rech-plus { max-height: 220px; opacity: 1; pointer-events: auto; transition: max-height .6s var(--ease), opacity .6s .2s; }
+  .bs-toile[data-accueil] .bs-rech-cadre { display: none; }
+  .bs-toile:not([data-accueil]) .bs-rech-titre { display: none; }
+  .bs-rech-idees { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 22px 0 0; }
+  .bs-rech-idees button { padding: 8px 14px; border: 1px solid rgba(255, 255, 255, .22); border-radius: 999px; background: rgba(255, 255, 255, .04); font: inherit; font-size: 13px; color: var(--on-night-2); cursor: pointer; transition: border-color .2s, color .2s, background .2s; }
+  .bs-rech-idees button:hover { border-color: var(--on-night); color: var(--on-night); background: rgba(255, 255, 255, .1); }
+  .bs-rech-lien { display: block; margin: 26px auto 0; padding: 4px; border: 0; background: none; font: inherit; font-size: 13px; color: var(--on-night-2); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  .bs-rech-lien:hover { color: var(--on-night); }
+  .bs-rech-cadre { margin: 9px 0 0; font-size: 12.5px; text-align: center; color: var(--on-night-2); min-height: 1em; }
+  .bs-panneau, .bs-outils { transition: transform .6s var(--ease), opacity .4s; }
+  .bs-toile[data-accueil] .bs-panneau { transform: translateX(100%); }
+  .bs-toile[data-accueil] .bs-outils { opacity: 0; pointer-events: none; }
+  .bs-toile.bs-sans-question .bs-carte-q, .bs-toile.bs-sans-question path[data-flux] { display: none; }
+  @media (max-width: 900px) { .bs-recherche { left: 50%; width: calc(100% - 32px); } }
+  /* ---------- verre : la barre, le panneau de réponse et la fiche laissent voir le fond à points ---------- */
+  .bs-rech-barre { background: rgba(255, 255, 255, .07); color: var(--on-night); -webkit-backdrop-filter: blur(18px) saturate(1.3); backdrop-filter: blur(18px) saturate(1.3); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .26), 0 18px 60px -18px rgba(0, 0, 0, .9); }
+  .bs-rech-barre:focus-within { background: rgba(255, 255, 255, .11); box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .7), 0 18px 60px -18px rgba(0, 0, 0, .9); }
+  .bs-rech-barre input { color: var(--on-night); caret-color: var(--on-night); }
+  .bs-rech-barre input::placeholder { color: rgba(255, 255, 255, .5); }
+  .bs-rech-barre > svg { stroke: rgba(255, 255, 255, .6); }
+  .bs-rech-barre button { background: var(--on-night); color: var(--night); }
+  .bs-panneau, .bs-fiche {
+    --paper: transparent; --ink: var(--on-night); --ink-2: #fff; --muted: rgba(255, 255, 255, .62); --faint: rgba(255, 255, 255, .4); --line: rgba(255, 255, 255, .16);
+    background: rgba(18, 18, 22, .58); color: var(--on-night); border-left: 1px solid rgba(255, 255, 255, .16);
+    -webkit-backdrop-filter: blur(22px) saturate(1.2); backdrop-filter: blur(22px) saturate(1.2);
+  }
+  .bs-panneau .bs-rep { background: none; color: inherit; }
+  .bs-panneau .bs-rep li button, .bs-fiche button, .bs-fiche textarea, .bs-fiche input { color: var(--on-night); }
+  .bs-fiche .bs-btn[data-plein], .bs-fiche .bs-btn:hover:not(:disabled) { background: var(--on-night); color: var(--night); }
+  .bs-fiche a { color: var(--on-night); }
+  .bs-fiche { background: rgba(20, 20, 24, .96); }   /* la fiche recouvre le panneau : elle doit le cacher */
+  /* ---------- plus de bandeau en haut : tout se trouve dans l'arbre ---------- */
+  .bs-barre { display: none; }
+  .bs-nd[data-genre="sortie"] { display: block; }
+  .bs-liens line[data-vers="sortie"] { display: inline; stroke: rgba(255, 255, 255, .58); stroke-width: 1.6; }
+  .bs-nd[data-genre="sortie"] .bs-rond { width: 62px; height: 62px; }
+  .bs-nd[data-genre="sortie"] .bs-lib { top: 38px; }
+  .bs-nd[data-genre="sortie"][data-etat="trouve"] .bs-rond { background: var(--on-night); color: var(--night); }
+  .bs-toile .bs-carte-q, .bs-toile path[data-flux] { display: none; }
+  .bs-retour { position: fixed; left: 18px; top: 18px; z-index: 20; padding: 10px 16px 10px 12px; border: 1px solid rgba(255, 255, 255, .3); border-radius: 999px; background: rgba(18, 18, 22, .82); color: #fff; font: inherit; font-size: 14px; cursor: pointer; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+  .bs-retour:hover { background: rgba(40, 40, 46, .9); }
+  .bs-pan-bilan { margin: 18px 0 0; padding-top: 12px; border-top: 1px solid var(--line); font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+  @media print { .bs-retour { display: none; } }
+  /* ---------- une couleur par type d'information, pour que le client les distingue d'un coup d'œil ---------- */
+  .bs-toile { --c-terrain: #FFFFFF; --c-sources: #FFFFFF; --c-agents: #FFFFFF; --c-sorties: #FFFFFF; }   /* pas de couleur : les types d'information se distinguent par leur zone et leur titre */
+  .bs-legende-cat { display: none !important; }
+  [data-cat="terrain"] { --cat: var(--c-terrain); } [data-cat="sources"] { --cat: var(--c-sources); } [data-cat="agents"] { --cat: var(--c-agents); } [data-cat="sorties"] { --cat: var(--c-sorties); }
+  .bs-nd[data-cat] .bs-rond { border-color: var(--cat); }
+  .bs-nd[data-cat][data-etat="attente"] .bs-rond, .bs-nd[data-cat][data-etat="rien"] .bs-rond { border-color: color-mix(in srgb, var(--cat) 55%, transparent); color: color-mix(in srgb, var(--cat) 70%, transparent); }
+  .bs-nd[data-cat][data-genre="pilier"] .bs-rond, .bs-nd[data-cat][data-genre="agent"] .bs-rond { background: var(--cat); border-color: var(--cat); color: var(--night); }
+  .bs-nd[data-cat][data-genre="pilier"] .bs-lib strong { color: var(--cat); font-size: 14px; }
+  .bs-nd[data-cat][data-genre="agent"] .bs-lib strong { color: var(--cat); }
+  .bs-liens line[data-cat] { stroke: color-mix(in srgb, var(--cat) 62%, transparent); }
+  .bs-liens line[data-cat][data-vers="pilier"] { stroke: var(--cat); }
+  .bs-liens line[data-cat][data-vers="agent"] { stroke: color-mix(in srgb, var(--cat) 82%, transparent); }
+  .bs-legende-cat { position: absolute; left: 196px; bottom: 16px; z-index: 2; display: flex; flex-wrap: wrap; gap: 6px 18px; max-width: calc(100% - 640px); margin: 0; padding: 9px 14px; border: 1px solid rgba(255, 255, 255, .14); border-radius: 999px; background: rgba(18, 18, 22, .6); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); font-size: 12.5px; color: var(--on-night-2); list-style: none; transition: opacity .4s; }
+  .bs-legende-cat li { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+  .bs-legende-cat li::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--cat); }
+  .bs-legende-cat b { font-weight: 500; color: var(--on-night); }
+  .bs-toile[data-accueil] .bs-legende-cat { opacity: 0; pointer-events: none; }
+  /* ---------- une zone par type d'information : un secteur délimité et un grand titre, sans couleur ---------- */
+  .bs-secteur { fill: rgba(255, 255, 255, .035); stroke: rgba(255, 255, 255, .2); stroke-width: 1; stroke-dasharray: 3 6; }
+  .bs-zone { position: absolute; width: 230px; pointer-events: none; color: var(--on-night); animation: bs-fondu .6s; }
+  .bs-zone b { display: block; font-weight: 500; font-size: 19px; letter-spacing: .1em; text-transform: uppercase; }
+  .bs-zone span { display: block; margin-top: 4px; font-size: 13px; line-height: 1.35; color: var(--on-night-2); }
+  .bs-zone em { display: inline-block; margin-top: 8px; padding: 3px 10px; border: 1px solid rgba(255, 255, 255, .3); border-radius: 999px; font-style: normal; font-size: 12px; }
+  .bs-nd[data-genre="pilier"] .bs-lib small { display: none; }
+  /* ---------- les trois résultats mis en avant : grandes pastilles dans leur propre zone, et trois boutons dans le panneau ---------- */
+  .bs-nd[data-genre="sortie"] .bs-rond { width: 92px; height: 92px; border-width: 2.5px; }
+  .bs-nd[data-genre="sortie"] .bs-rond svg { width: 40%; height: 40%; }
+  .bs-nd[data-genre="sortie"] .bs-lib { top: 54px; width: 150px; margin-left: -75px; }
+  .bs-nd[data-genre="sortie"] .bs-lib strong { font-size: 16px; font-weight: 500; letter-spacing: .02em; }
+  .bs-nd[data-genre="sortie"] .bs-lib small { font-size: 12.5px; }
+  .bs-nd[data-genre="sortie"][data-etat="trouve"] .bs-rond { box-shadow: 0 0 0 7px rgba(255, 255, 255, .14); }
+  .bs-nd[data-genre="sortie"][data-etat="trouve"] .bs-rond:hover { box-shadow: 0 0 0 11px rgba(255, 255, 255, .24); }
+  .bs-liens line[data-vers="sortie"] { stroke: rgba(255, 255, 255, .9); stroke-width: 2.4; }
+  .bs-pan-sorties { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 22px 0 0; }
+  .bs-pan-sorties button { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 6px 13px; border: 1px solid rgba(255, 255, 255, .34); border-radius: 14px; background: rgba(255, 255, 255, .07); font: inherit; font-size: 14px; color: var(--on-night); cursor: pointer; transition: background .2s, border-color .2s, transform .15s; }
+  .bs-pan-sorties button:hover { background: var(--on-night); border-color: var(--on-night); color: var(--night); transform: translateY(-2px); }
+  .bs-pan-sorties svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .bs-pan-sorties-titre { margin: 26px 0 0; font-size: 12px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  /* ---------- moteur Argos : le corpus en ligne (HUMINT reformulé, sources, veille). Pas d'agents ni de vues locales. ---------- */
+  .bs-argos .bs-nd[data-cat="sorties"], .bs-argos .bs-liens line[data-cat="sorties"], .bs-argos [data-zone="3"] { display: none !important; }
+  .bs-nd[data-cite] .bs-rond { box-shadow: 0 0 0 5px rgba(255, 255, 255, .22); }
+  .bs-nd[data-argos]:not([data-cite]) { opacity: .5; }
+  .bs-rech-moteur { display: flex; justify-content: center; gap: 6px; margin: 18px 0 0; }
+  .bs-rech-moteur button { padding: 7px 14px; border: 1px solid rgba(255, 255, 255, .22); border-radius: 999px; background: none; font: inherit; font-size: 13px; color: var(--on-night-2); cursor: pointer; }
+  .bs-rech-moteur button[aria-pressed="true"] { border-color: var(--on-night); background: var(--on-night); color: var(--night); }
+  .bs-argos-texte { margin: 18px 0 0; font-size: 15px; line-height: 1.6; }
+  .bs-argos-texte p { margin: 0 0 12px; }
+  .bs-argos-texte button { margin: 0 2px; min-width: 22px; height: 20px; padding: 0 5px; border: 1px solid rgba(255, 255, 255, .4); border-radius: 999px; background: none; font: inherit; font-size: 11px; line-height: 1; color: var(--on-night); cursor: pointer; vertical-align: 2px; }
+  .bs-argos-texte button:hover { background: var(--on-night); color: var(--night); }
+  .bs-pan-ia { margin: 22px 0 0; padding-top: 12px; border-top: 1px solid var(--line); font-size: 12px; line-height: 1.5; color: var(--muted); }
+  .bs-vers-argos { position: absolute; left: 16px; top: 18px; z-index: 4; display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border: 1px solid rgba(255, 255, 255, .22); border-radius: 999px; background: rgba(18, 18, 22, .6); color: var(--on-night); font-size: 13px; text-decoration: none; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+  .bs-vers-argos:hover { border-color: var(--on-night); }
+  .bs-vers-argos + .bs-vers-argos { left: 112px; cursor: pointer; font: inherit; font-size: 13px; }
+</style>
+</head>
+<body>
+
+
+<button class="bs-retour" id="bs-retour" type="button" hidden>← Retour à l'arbre</button>
+<section class="bs-toile" id="bs-toile" hidden>
+  <div class="bs-monde" id="bs-monde"><svg class="bs-liens" id="bs-liens" width="1" height="1" aria-hidden="true"></svg></div>
+  <div class="bs-outils">
+    <button type="button" id="bs-moins" aria-label="Dézoomer">−</button>
+    <button type="button" id="bs-plus" aria-label="Zoomer">+</button>
+    <button type="button" id="bs-cadrer">Recadrer</button>
+  </div>
+  <a class="bs-vers-argos" href="/argos/">← Argos</a>
+  <button class="bs-vers-argos site-login" type="button" data-algor-login>Connexion</button>
+  <div class="bs-recherche" id="bs-recherche">
+    <p class="bs-rech-titre">Que voulez-vous savoir ?</p>
+    <form class="bs-rech-barre" id="bs-rech-form" autocomplete="off">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+      <input id="bs-rech-champ" type="text" maxlength="600" aria-label="Votre question" placeholder="Nommez la zone et ce que vous voulez y faire" />
+      <button type="submit" aria-label="Lancer la recherche"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </form>
+    <p class="bs-rech-cadre" id="bs-rech-cadre"></p>
+    <div class="bs-rech-plus">
+      <div class="bs-rech-idees" id="bs-rech-idees">
+        <button type="button">Nos camions relient Bamako à Mopti par Ségou : quel risque sur ces routes ?</button>
+        <button type="button">Que se passe-t-il autour de Tillabéri ces dernières semaines ?</button>
+        <button type="button">Quels incidents entre Gao et Tombouctou depuis un mois ?</button>
+      </div>
+    </div>
+  </div>
+  <p class="bs-q" id="bs-q" hidden></p>
+  <aside class="bs-panneau" id="bs-panneau" aria-live="polite"></aside>
+  <ul class="bs-legende-cat" aria-label="Types d'information">
+    <li data-cat="terrain"><b>Terrain</b> ce que rapporte le flux HUMINT</li>
+    <li data-cat="sources"><b>Sources publiques</b> ce qui est publié</li>
+    <li data-cat="agents"><b>Agents IA</b> ce que sait le socle</li>
+    <li data-cat="sorties"><b>Sorties</b> notes, théâtre, statistiques</li>
+  </ul>
+  <p class="bs-aide">Glissez le fond ou une pastille. Molette pour zoomer.</p>
+  <aside class="bs-fiche" id="bs-fiche" hidden></aside>
+</section>
+
+
+<script>window.addEventListener('algorAuthReady', function () { window.__algorAuthGranted = true; });</script>
+<script type="module" src="/shared/site-auth.js?v=20261020a"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id) || document.createElement('div'); };
+  var EN_LIGNE = true;   /* passé à true par outils/construire-argos.mjs pour la page du site */
+  var NS = 'http://www.w3.org/2000/svg';
+  var toile = $('bs-toile'), monde = $('bs-monde'), svg = $('bs-liens');
+  var noeuds = [], liens = [], faits = {};
+  var carteRep = null, borne = { x0: -800, y0: -400, x1: 700, y1: 400 }, couloirs = {}, flux = [], carteQ = null;
+  var vue = { x: 0, y: 0, k: 1 }, suivre = true, jeu = 0, B = {}, agents = {}, parUrl = {}, nbSources = 0;
+
+  /* pictogrammes dessinés au trait (aucune image inventée : seules les sources ont une vraie image) */
+  var PICTO = {
+    flux: '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h7"/>',
+    loupe: '<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.6-4.6"/>',
+    attaque: '<circle cx="12" cy="12" r="7"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/>',
+    convoi: '<path d="M2 7h11v9H2zM13 10h5l3 3v3h-8z"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
+    mouvement: '<path d="M3 12h16M14 6l6 6-6 6"/>',
+    explosif: '<path d="M12 2l2.2 5.6L20 5l-2.4 5.6L23 13l-5.6 1.6L19 21l-5-3.6L10 22l-.6-6L4 17l3.4-4.6L2 9l6 .2z"/>',
+    humint: '<circle cx="12" cy="8" r="3.500"/><path d="M5 20c0-3.900 3.100-6.500 7-6.500s7 2.600 7 6.500"/>',
+    osint: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.200 3 14.800 0 18M12 3c-3 3.200-3 14.800 0 18"/>',
+    agents: '<rect x="7" y="7" width="10" height="10" rx="1.500"/><path d="M10 2v5M14 2v5M10 17v5M14 17v5M2 10h5M2 14h5M17 10h5M17 14h5"/>',
+    militaire: '<path d="M12 3l7 3v5.500c0 4.300-3 7.800-7 9.500-4-1.700-7-5.200-7-9.500V6z"/>',
+    histoire: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.500 2"/>',
+    politique: '<path d="M3 21h18M5 21V10M9.500 21V10M14.500 21V10M19 21V10M2.500 10L12 4l9.500 6z"/>',
+    economie: '<path d="M4 20V11M10 20V5M16 20v-7M22 20H2"/>',
+    ethnies: '<circle cx="8" cy="9" r="2.800"/><circle cx="16.500" cy="9.500" r="2.300"/><path d="M2.500 19c0-3 2.400-5 5.500-5s5.500 2 5.500 5M15 14.300c3.200-.5 6.500 1.300 6.500 4.700"/>',
+    sortie: '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 14l2.200 2.200L15.500 12"/>',
+    note: '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h7M9 8h3"/>',
+    carte: '<path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/>',
+    stats: '<path d="M4 20V11M10 20V5M16 20v-7M22 20H2"/>',
+    lieu: '<path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.500C5 14.800 12 21 12 21z"/><circle cx="12" cy="9.500" r="2.500"/>'
+  };
+  function pictoDuType(t) {
+    t = String(t || '').toLowerCase();
+    if (/explos|ied|engin|mine|bombe/.test(t)) return 'explosif';
+    if (/convoi|intercep|embuscade|v[ée]hicule/.test(t)) return 'convoi';
+    if (/mouvement|d[ée]placement|d[ée]ploiement/.test(t)) return 'mouvement';
+    if (/attaque|assaut|accroch|combat|tir|frappe|assassinat|enl[èe]vement/.test(t)) return 'attaque';
+    return 'lieu';
+  }
+
+  function el(tag, attrs, enfants) {
+    var n = document.createElement(tag);
+    for (var k in (attrs || {})) { if (k === 'text') n.textContent = attrs[k]; else n.setAttribute(k, attrs[k]); }
+    (enfants || []).forEach(function (c) { if (c) n.appendChild(c); });
+    return n;
+  }
+  function maj(s) { s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1); }
+  function jour(d) { d = String(d || '').slice(0, 10); return /^\d{4}-\d\d-\d\d$/.test(d) ? d.split('-').reverse().join('/') : d; }
+  function attendre(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function domaine(u) { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return ''; } }
+
+  /* ---------- vue : glisser, zoomer, recadrer ---------- */
+  function appliquer() { monde.style.transform = 'translate(' + vue.x + 'px,' + vue.y + 'px) scale(' + vue.k + ')'; }
+  function aLaMain(actif) { if (actif) toile.setAttribute('data-main', ''); else toile.removeAttribute('data-main'); }
+  function cadrer() {
+    if (!noeuds.length) return;
+    var x0 = borne.x0, y0 = borne.y0, x1 = borne.x1, y1 = borne.y1;
+    noeuds.forEach(function (n) { if (!n.libre) return; x0 = Math.min(x0, n.x - 60); x1 = Math.max(x1, n.x + 60); y0 = Math.min(y0, n.y - 50); y1 = Math.max(y1, n.y + 70); });
+    var L = toile.clientWidth - Math.min(400, toile.clientWidth * .5), H = toile.clientHeight;
+    var k = Math.max(.1, Math.min(1.15, (L - 40) / (x1 - x0), (H - 124) / (y1 - y0)));
+    vue.k = k; vue.x = L / 2 - k * (x0 + x1) / 2; vue.y = 84 + (H - 84) / 2 - k * (y0 + y1) / 2;
+    aLaMain(false); appliquer();
+  }
+  function zoomer(f, cx, cy) {
+    var k = Math.max(.1, Math.min(2.5, vue.k * f));
+    vue.x = cx - (cx - vue.x) * k / vue.k; vue.y = cy - (cy - vue.y) * k / vue.k; vue.k = k;
+    suivre = false; appliquer();
+  }
+  toile.addEventListener('wheel', function (e) {
+    if (e.target.closest('.bs-fiche, .bs-panneau, .bs-recherche')) return;
+    e.preventDefault(); aLaMain(true);
+    var r = toile.getBoundingClientRect();
+    zoomer(Math.exp(-e.deltaY * (e.ctrlKey ? .012 : .0018)), e.clientX - r.left, e.clientY - r.top);
+  }, { passive: false });
+  $('bs-plus').addEventListener('click', function () { aLaMain(false); zoomer(1.3, toile.clientWidth / 2, toile.clientHeight / 2); });
+  $('bs-moins').addEventListener('click', function () { aLaMain(false); zoomer(1 / 1.3, toile.clientWidth / 2, toile.clientHeight / 2); });
+  $('bs-cadrer').addEventListener('click', function () { suivre = true; cadrer(); });
+  window.addEventListener('resize', function () { if (suivre) cadrer(); });
+
+  /* un seul gestionnaire pour glisser le fond et déplacer une pastille */
+  var geste = null;
+  toile.addEventListener('pointerdown', function (e) {
+    if (e.button !== 0 || e.target.closest('.bs-fiche, .bs-outils, .bs-recherche, .bs-panneau')) return;
+    var rond = e.target.closest('.bs-rond');
+    geste = { x: e.clientX, y: e.clientY, bouge: false, n: rond ? rond.parentNode.__n : null, vx: vue.x, vy: vue.y };
+    if (geste.n) { geste.nx = geste.n.x; geste.ny = geste.n.y; }
+    toile.setPointerCapture(e.pointerId);
+  });
+  toile.addEventListener('pointermove', function (e) {
+    if (!geste) return;
+    var dx = e.clientX - geste.x, dy = e.clientY - geste.y;
+    if (!geste.bouge && Math.abs(dx) + Math.abs(dy) < 5) return;
+    geste.bouge = true; aLaMain(true); toile.setAttribute('data-glisse', '');
+    if (geste.n) { geste.n.libre = true; placer(geste.n, geste.nx + dx / vue.k, geste.ny + dy / vue.k); }
+    else { vue.x = geste.vx + dx; vue.y = geste.vy + dy; suivre = false; appliquer(); }
+  });
+  function finGeste() {
+    if (!geste) return;
+    toile.removeAttribute('data-glisse');
+    if (!geste.bouge && geste.n) ouvrirFiche(geste.n);
+    else if (!geste.bouge) fermerFiche();
+    geste = null;
+  }
+  toile.addEventListener('pointerup', finGeste);
+  toile.addEventListener('pointercancel', function () { geste = null; toile.removeAttribute('data-glisse'); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') fermerFiche(); });
+
+  /* ---------- noeuds et liens ---------- */
+  function placer(n, x, y) {
+    n.x = x; n.y = y; n.el.style.left = x + 'px'; n.el.style.top = y + 'px';
+    liens.forEach(function (l) {
+      if (l.croise) { if (l.de === n || l.vers === n) courbe(l); return; }
+      if (l.de === n) { l.trait.setAttribute('x1', x); l.trait.setAttribute('y1', y); }
+      if (l.vers === n) { l.trait.setAttribute('x2', x); l.trait.setAttribute('y2', y); }
+    });
+  }
+  /* L'arbre, structuré : Algor au centre, la question au-dessus, puis des anneaux réguliers.
+       anneau 1 : les trois branches (Agents IA à droite, Sources publiques en bas, Terrain à gauche) ;
+       anneau 2 : les faits, les sources, les cinq agents ;  anneau 3 : les fiches de chaque agent.
+     Chaque branche reçoit un secteur d'angle proportionnel à ce qu'elle porte, donc rien ne se chevauche.
+     Les positions sont recalculées à chaque pastille créée, et les pastilles glissent vers leur place (les traits suivent). */
+  var R1 = 170, R2 = 330, R3 = 470, PAS = 84, anneaux = [], anime = 0, secteurs = [], zones = [];
+  /* un secteur d'anneau entre deux angles et deux rayons */
+  function coin(a0, a1, r0, r1) {
+    var g = (a1 - a0) > Math.PI ? 1 : 0, p = function (a, r) { return (Math.cos(a) * r).toFixed(1) + ',' + (Math.sin(a) * r).toFixed(1); };
+    return 'M' + p(a0, r0) + ' L' + p(a0, r1) + ' A' + r1 + ',' + r1 + ' 0 ' + g + ' 1 ' + p(a1, r1) + ' L' + p(a1, r0) + ' A' + r0 + ',' + r0 + ' 0 ' + g + ' 0 ' + p(a0, r0) + ' Z';
+  }
+  function zone(i, s2, r1, titre, sous, compte) {
+    if (!secteurs[i] || !secteurs[i].isConnected) { secteurs[i] = document.createElementNS(NS, 'path'); secteurs[i].setAttribute('class', 'bs-secteur'); secteurs[i].setAttribute('data-zone', i); svg.insertBefore(secteurs[i], svg.firstChild); }
+    if (!zones[i] || !zones[i].isConnected) { zones[i] = el('div', { class: 'bs-zone', 'data-zone': i }, [el('b'), el('span'), el('em')]); monde.appendChild(zones[i]); }
+    secteurs[i].setAttribute('d', coin(s2[0] - .03, s2[1] + .03, R1 - 58, r1 + 62));
+    var m = (s2[0] + s2[1]) / 2, c = Math.cos(m), z = zones[i], r = r1 + 86;
+    z.style.left = (c * r) + 'px'; z.style.top = (Math.sin(m) * r) + 'px';
+    z.style.textAlign = c > .35 ? 'left' : c < -.35 ? 'right' : 'center';
+    z.style.transform = c > .35 ? 'translate(0, -50%)' : c < -.35 ? 'translate(-100%, -50%)' : Math.sin(m) < 0 ? 'translate(-50%, -100%)' : 'translate(-50%, 0)';
+    z.children[0].textContent = titre; z.children[1].textContent = sous; z.children[2].textContent = compte; z.children[2].style.display = compte ? '' : 'none';
+  }
+  function viser(n, x, y) { n.tx = x; n.ty = y; if (!anime) anime = setTimeout(glisser, 16); }
+  function glisser() {
+    var encore = false;
+    noeuds.forEach(function (n) {
+      if (n.tx === undefined || n.libre) return;
+      var dx = n.tx - n.x, dy = n.ty - n.y;
+      if (Math.abs(dx) + Math.abs(dy) < .6) { if (dx || dy) placer(n, n.tx, n.ty); return; }
+      placer(n, n.x + dx * .16, n.y + dy * .16); encore = true;
+    });
+    anime = encore ? setTimeout(glisser, 16) : 0;
+  }
+  /* répartit des pastilles dans un secteur, sur autant d'anneaux qu'il faut à partir du rayon r0 */
+  function repartir(liste, a0, a1, r0) {
+    var i = 0, r = r0, rmax = r0;
+    while (i < liste.length) {
+      var place = Math.max(1, Math.floor((a1 - a0) * r / PAS)), n = Math.min(place, liste.length - i), pas = (a1 - a0) / n;
+      for (var k = 0; k < n; k++) { var a = a0 + pas * (k + .5); viser(liste[i + k], Math.cos(a) * r, Math.sin(a) * r); }
+      i += n; rmax = r; r += 104;
+    }
+    return rmax;
+  }
+  function ranger() {
+    if (!B.algor) return;
+    var F = [], S = [], A = [], K = [];
+    noeuds.forEach(function (n) { if (n.genre === 'fait') F.push(n); else if (n.genre === 'source') S.push(n); else if (n.genre === 'agent') A.push(n); else if (n.genre === 'savoir') K.push(n); });
+    var fichesDe = function (a) { return K.filter(function (k) { return k.parent === a; }); };
+    /* poids de chaque branche = ce qu'elle doit loger sur son anneau le plus chargé */
+    var argos = toile.classList.contains('bs-argos'), pA = Math.max(14, K.length * .9), pS = Math.max(8, Math.min(S.length, 12)), pT = Math.max(8, Math.min(F.length, 14));
+    var trou = argos ? .5 : 1.3, libre = Math.PI * 2 - trou, somme = pA + pS + pT, a = -Math.PI / 2 + trou / 2, rmax = R2;
+    var secteur = function (p) { var d = a, f = a + libre * p / somme; a = f; return [d + .05, f - .05]; };
+    var sA = secteur(pA), sS = secteur(pS), sT = secteur(pT);
+    var poser = function (n, s, r) { if (n) viser(n, Math.cos((s[0] + s[1]) / 2) * r, Math.sin((s[0] + s[1]) / 2) * r); };
+    [[B.humint, 'terrain'], [B.osint, 'sources'], [B.agents, 'agents']].forEach(function (x) { if (!x[0] || x[0].el.hasAttribute('data-cat')) return; x[0].el.setAttribute('data-cat', x[1]); liens.forEach(function (l) { if (l.vers === x[0]) l.trait.setAttribute('data-cat', x[1]); }); });
+    viser(B.algor, 0, 0);
+    poser(B.agents, sA, R1); poser(B.osint, sS, R1); poser(B.humint, sT, R1);
+    poser(B.veille, sS, R1); poser(B.surikat, sT, R1);
+    /* les trois sorties, dans l'ouverture du haut : Notes, Théâtre, Statistiques */
+    [[B.note, -.42], [B.carte, 0], [B.stats, .42]].forEach(function (x) { if (x[0]) viser(x[0], Math.cos(-Math.PI / 2 + x[1]) * R2 * .94, Math.sin(-Math.PI / 2 + x[1]) * R2 * .94); });
+    zone(3, [-Math.PI / 2 - .6, -Math.PI / 2 + .6], R2 * .94, 'Résultats', 'Ce qu\'Algor vous remet', '');
+    var rT = F.length ? repartir(F, sT[0], sT[1], R2) : R1, rS = S.length ? repartir(S, sS[0], sS[1], R2) : R1, rA = R2;
+    rmax = Math.max(rmax, rT, rS);
+    /* les agents : chacun reçoit une part du secteur à la mesure de ses fiches, qui se rangent derrière lui */
+    var parts = A.map(function (ag) { return fichesDe(ag).length + .6; }), tot = parts.reduce(function (x, y) { return x + y; }, 0) || 1, b = sA[0];
+    A.forEach(function (ag, i) {
+      var f = b + (sA[1] - sA[0]) * parts[i] / tot, fiches = fichesDe(ag);
+      viser(ag, Math.cos((b + f) / 2) * R2, Math.sin((b + f) / 2) * R2);
+      if (fiches.length) { rA = Math.max(rA, repartir(fiches, b, f, R3)); rmax = Math.max(rmax, rA); }
+      b = f;
+    });
+    if (B.humint) libelle(B.humint, 'Terrain', F.length ? F.length + ' fait' + (F.length > 1 ? 's' : '') : 'en attente');
+    if (B.osint) libelle(B.osint, argos ? 'Sources et veille' : 'Sources publiques', S.length ? S.length + ' source' + (S.length > 1 ? 's' : '') : 'en attente');
+    if (B.agents) libelle(B.agents, 'Agents IA', K.length ? K.length + ' fiche' + (K.length > 1 ? 's' : '') : 'cinq piliers');
+    zone(0, sT, rT, 'Terrain', argos ? 'HUMINT du corpus, reformulé' : 'Ce que rapporte le flux HUMINT', F.length ? F.length + ' fait' + (F.length > 1 ? 's' : '') : '');
+    zone(1, sS, rS, argos ? 'Sources et veille' : 'Sources publiques', argos ? 'Presse, références, notes d\'analyse' : 'Ce qui est publié et vérifiable', S.length ? S.length + ' source' + (S.length > 1 ? 's' : '') : '');
+    zone(2, sA, rA, 'Agents IA', argos ? 'Socle de connaissance, non validé par un analyste' : 'Ce que sait le socle de connaissance', K.length ? K.length + ' fiche' + (K.length > 1 ? 's' : '') : 'cinq piliers');
+    /* la question, au-dessus d'Algor, et les anneaux de repère */
+    var hautQ = -215;
+    if (carteQ) { carteQ.style.left = '0px'; carteQ.style.top = hautQ + 'px'; }
+    if (flux[0]) flux[0].setAttribute('d', 'M0,' + hautQ + ' L0,-52');
+    [R1, R2, R3].forEach(function (r, i) { if (anneaux[i]) { anneaux[i].setAttribute('r', r); anneaux[i].style.display = (i < 2 || K.length) ? '' : 'none'; } });
+    var bord = Math.max(rmax, R2) + 80;
+    borne = { x0: -bord - 250, y0: -(R2 + 190), x1: bord + 250, y1: bord + 90 };
+    if (suivre) cadrer();
+  }
+  function enTete(c, titre, sous, compte) { var h = couloirs[c].firstChild; h.children[0].textContent = titre; h.children[1].textContent = sous; h.children[2].textContent = compte; }
+  function carteQuestion(etiquette, texte, detail) {
+    if (!carteQ) return;
+    carteQ.textContent = ''; carteQ.appendChild(el('small', { text: etiquette })); carteQ.appendChild(el('p', { text: texte })); if (detail) carteQ.appendChild(el('em', { text: detail }));
+  }
+  function noeud(genre, x, y, contenu, titre, sous, parent, faible) {
+    var rond = el('button', { class: 'bs-rond', type: 'button', 'aria-label': titre });
+    rond.innerHTML = contenu;
+    var n = { genre: genre, x: x, y: y, parent: parent || null, rond: rond, titre: titre, donnees: {} };
+    n.lib = el('div', { class: 'bs-lib' }, [el('strong', { text: titre }), el('small', { text: sous || '' })]);
+    n.el = el('div', { class: 'bs-nd', 'data-genre': genre, style: 'left:' + x + 'px;top:' + y + 'px' }, [rond, n.lib]);
+    var CAT = { fait: 'terrain', source: 'sources', agent: 'agents', savoir: 'agents', sortie: 'sorties' }; if (CAT[genre]) n.el.setAttribute('data-cat', CAT[genre]);
+    n.el.__n = n;
+    rond.addEventListener('pointerenter', function () { if (!geste) { survol = n; eclairer(); } });
+    rond.addEventListener('pointerleave', function () { if (survol === n) { survol = null; eclairer(); } });
+    if (parent) {
+      var t = document.createElementNS(NS, 'line');
+      t.setAttribute('pathLength', '1'); if (faible) t.setAttribute('data-faible', '');
+      t.setAttribute('x1', parent.x); t.setAttribute('y1', parent.y); t.setAttribute('x2', x); t.setAttribute('y2', y);
+      t.setAttribute('data-vers', genre); if (CAT[genre]) t.setAttribute('data-cat', CAT[genre]);
+      svg.appendChild(t); liens.push({ de: parent, vers: n, trait: t });
+    }
+    monde.appendChild(n.el); noeuds.push(n);
+    if (parent) placer(n, parent.x, parent.y);
+    ranger();
+    return n;
+  }
+  function libelle(n, titre, sous) { n.titre = titre; n.lib.firstChild.textContent = titre; n.lib.lastChild.textContent = sous || ''; n.rond.setAttribute('aria-label', titre); }
+  function svgPicto(nom) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + PICTO[nom] + '</svg>'; }
+
+  /* image d'une source : la vraie image de l'article, sinon l'icône du site, sinon ses initiales */
+  function chargerImage(n) {
+    if (EN_LIGNE) return;   /* sur le site, pas de serveur local pour aller chercher l'image d'une page */
+    var s = n.donnees.s, d = domaine(s.url);
+    var poser = function (src, suite) {
+      var img = new Image();
+      img.referrerPolicy = 'no-referrer'; img.alt = '';
+      img.onload = function () { if (img.naturalWidth < 8) return suite && suite(); n.rond.textContent = ''; n.rond.appendChild(img); n.donnees.image = src; n.donnees.vraieImage = !suite ? false : true; };
+      img.onerror = function () { if (suite) suite(); };
+      img.src = src;
+    };
+    var icone = function () { if (d) poser('https://' + d + '/favicon.ico', null); };
+    fetch('/api/image?u=' + encodeURIComponent(s.url)).then(function (r) { return r.json(); }).then(function (j) { if (j.image) poser(j.image, icone); else icone(); }).catch(icone);
+  }
+
+  /* ---------- fiche de détail ---------- */
+  function fermerFiche() {
+    if ($('bs-fiche').hidden) return;
+    $('bs-fiche').hidden = true;
+    noeuds.forEach(function (n) { n.el.removeAttribute('data-choisi'); });
+    focusSur = null; eclairer();
+    if (suivre) cadrer();
+  }
+  function texteControle(c) {
+    if (!c) return '';
+    var ecarts = [];
+    if (c.sans_citation) ecarts.push(c.sans_citation + ' sans citation retrouvée dans la page');
+    if (c.speculatives) ecarts.push(c.speculatives + ' formulée' + (c.speculatives > 1 ? 's' : '') + ' au conditionnel');
+    if (c.infideles) ecarts.push(c.infideles + ' qui disai' + (c.infideles > 1 ? 'ent' : 't') + ' plus que la source');
+    return c.pages_ouvertes + ' pages ouvertes sur ' + c.pages_trouvees + ' trouvées. ' + c.proposees + ' connaissances proposées, ' + c.gardees + ' gardées.' + (ecarts.length ? ' Écartées : ' + ecarts.join(', ') + '.' : '');
+  }
+  /* ---------- interroger un agent Hermès ---------- */
+  function texteFait(f) { return 'Fait ' + f.id + ' : ' + [f.pays, f.date, f.lieu, f.acteur, f.type].filter(Boolean).join(', ') + '. ' + f.fait; }
+  /* affichage simple de la réponse : titres, puces, et les fiches citées [agent/fiche] en discret */
+  function rendre(texte) {
+    var bloc = document.createDocumentFragment();
+    texte.split('\n').forEach(function (ligne) {
+      var l = ligne.trim(); if (!l || /^[-─=_*]{3,}$/.test(l)) return;
+      var titre = /^#{1,6}\s/.test(l) || /^\*\*[^*]+\*\*:?$/.test(l) || /^\d+\.\s+\*\*/.test(l), puce = /^[-•*]\s+/.test(l);
+      var p = el('p', { class: titre ? 't' : puce ? 'l' : '' });
+      l = l.replace(/^#{1,6}\s+/, '').replace(/^[-•*]\s+/, '· ').replace(/\*\*/g, '').replace(/`/g, '');
+      l.split(/(\[[a-z]+\/[a-z0-9-]+\])/).forEach(function (m) { p.appendChild(/^\[[a-z]+\/[a-z0-9-]+\]$/.test(m) ? el('code', { text: m }) : document.createTextNode(m)); });
+      bloc.appendChild(p);
+    });
+    return bloc;
+  }
+  function blocReponse(r) {
+    var b = el('div', { class: 'bs-rep' }, [el('header', { text: (r.erreur ? 'Sans réponse' : 'Réponse de l\'agent ' + r.nom.toLowerCase() + ' sur Hermès, ' + r.duree_s + ' s') + ' · ' + r.question })]);
+    if (r.erreur) b.appendChild(el('p', { text: r.erreur })); else b.appendChild(rendre(r.reponse));
+    return b;
+  }
+  async function demander(cle, faitId, libre, zone, bouton) {
+    var na = agents[cle]; if (!na) return;
+    var concernes = faitId ? [faits[faitId].f] : Object.keys(faits).map(function (i) { return faits[i].f; });
+    var demande = libre || (faitId ? 'Que sais-tu qui aide à comprendre ce fait ?' : 'Que sais-tu qui aide à comprendre ces faits ?');
+    var question = concernes.map(texteFait).join('\n') + '\n\n' + demande;
+    var attente = el('div', { class: 'bs-rep' }, [el('header', { text: 'L\'agent ' + na.nom.toLowerCase() + ' consulte son socle sur Hermès…' })]);
+    zone.insertBefore(attente, zone.firstChild); bouton.disabled = true;
+    var t0 = Date.now(), tic = setInterval(function () { attente.firstChild.textContent = 'L\'agent ' + na.nom.toLowerCase() + ' consulte son socle sur Hermès… ' + Math.round((Date.now() - t0) / 1000) + ' s'; }, 1000);
+    var r;
+    try { r = await fetch('/api/agent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ agent: cle, question: question }) }).then(function (x) { return x.json(); }); }
+    catch (e) { r = { erreur: 'Serveur local injoignable.' }; }
+    clearInterval(tic); bouton.disabled = false;
+    r.nom = na.nom; r.question = (faitId ? 'fait ' + faitId : 'tous les faits') + (libre ? ' · ' + libre : '');
+    (na.donnees.reponses = na.donnees.reponses || []).unshift(r);
+    if (attente.parentNode) attente.parentNode.replaceChild(blocReponse(r), attente);
+  }
+  function blocQuestion(cle, faitChoisi, lancer) {
+    var na = agents[cle], choix = el('select', { 'aria-label': 'Faits concernés' }, [el('option', { value: '', text: 'Sur tous les faits du bulletin' })].concat(Object.keys(faits).map(function (i) { var o = el('option', { value: i, text: 'Sur le fait ' + i + ' : ' + maj(faits[i].f.type) + ', ' + faits[i].f.pays }); if (String(faitChoisi) === i) o.setAttribute('selected', ''); return o; })));
+    var libre = el('textarea', { placeholder: 'Votre question (facultatif). Par défaut : que sais-tu qui aide à comprendre ?', 'aria-label': 'Question' });
+    var bouton = el('button', { class: 'bs-btn', type: 'button', 'data-plein': '', text: 'Interroger l\'agent ' + na.nom.toLowerCase() });
+    var zone = el('div');
+    (na.donnees.reponses || []).forEach(function (r) { zone.appendChild(blocReponse(r)); });
+    bouton.addEventListener('click', function () { demander(cle, choix.value, libre.value.trim(), zone, bouton); });
+    var bloc = el('div', { class: 'bs-ask' }, [el('h4', { text: 'Interroger l\'agent sur Hermès' }), el('small', { text: 'L\'agent hébergé sur le VPS relit son socle et croise ses fiches pour répondre. Comptez 30 à 60 secondes. Il ne donne pas de conseil et cite ses fiches.' }), choix, libre, bouton, zone]);
+    if (lancer) setTimeout(function () { bouton.click(); }, 50);
+    return bloc;
+  }
+  function blocAgents(f) {
+    var rang = el('div', { class: 'bs-agents' }, AGENTS.filter(function (a) { return agents[a.cle]; }).map(function (a) {
+      var b = el('button', { class: 'bs-btn', type: 'button', text: a.nom });
+      b.addEventListener('click', function () { aLancer = { cle: a.cle, fait: f.id }; ouvrirFiche(agents[a.cle]); });
+      return b;
+    }));
+    return el('div', { class: 'bs-ask' }, [el('h4', { text: 'Demander à un agent ce qu\'il sait de ce fait' }), el('small', { text: 'La question part vers l\'agent hébergé sur Hermès, qui consulte son socle.' }), rang]);
+  }
+  var aLancer = null;
+
+  function lien(u) { return el('a', { href: u, target: '_blank', rel: 'noopener noreferrer', text: u }); }
+  function ouvrirFiche(n) {
+    if (n.genre === 'sortie') { montrerVue(n.donnees.vue); return; }
+    if (n.genre === 'reponse') { fermerFiche(); return; }
+    var f = $('bs-fiche'), d = n.donnees, lignes = [], genre = '', image = '';
+    var g = d.argos ? 'argos' : n.genre;
+    if (g === 'argos') {
+      var x = d.argos, hum = x.categorie === 'humint';
+      genre = 'Extrait n° ' + x.n + ' · ' + (STATUTS_ARGOS[x.statut] || x.statut);
+      lignes = [['Type', maj(x.type)], ['Lieu', [x.lieu, x.pays].filter(Boolean).join(', ')], ['Date', x.date || x.periode], ['Théâtre', x.theatre],
+        ['Statut', STATUTS_ARGOS[x.statut] || x.statut], ['Titre', x.titre || ''],
+        ['Source', hum ? 'Source humaine protégée. Le texte n\'est jamais affiché tel quel : Argos le reformule dans sa réponse.' : (x.fiche ? el('a', { href: x.fiche, target: '_blank', rel: 'noopener', text: 'Ouvrir la fiche Algor Acces' }) : '')],
+        ['Cité dans la réponse', d.cite ? 'Oui' : 'Non, extrait retrouvé mais pas utilisé']];
+    }
+    if (g === 'algor') { genre = 'Centre'; lignes = [['Rôle', 'Algor relie les trois branches : ce que dit le terrain, ce que disent les sources ouvertes, et la lecture des agents IA.'], ['État', $('bs-etat').textContent]]; }
+    if (g === 'pilier') { genre = 'Branche'; lignes = [['Rôle', d.role]]; if (n === B.agents && !EN_LIGNE) lignes.push(['Socle de connaissance', el('a', { href: '../socle/', text: 'Relire et valider les fiches du socle' })]); }
+    if (g === 'flux') { genre = d.genre; lignes = [['Rôle', d.role], ['Contenu', d.sous]]; }
+    if (g === 'fait') {
+      var x = faits[d.f.id], src = Object.keys(x.sources).map(function (u) { var s = x.sources[u].donnees; return el('li', {}, [document.createTextNode(s.s.nom), el('small', { text: !s.verif ? 'vérification en attente' : s.verif.confirme ? 'page ouverte, même événement' : 'écartée par la vérification' })]); });
+      genre = 'Fait HUMINT ' + d.f.id;
+      lignes = [['Fait', d.f.fait], ['Date', d.f.date], ['Lieu', [d.f.lieu, d.f.pays].filter(Boolean).join(', ')], ['Acteur', d.f.acteur], ['Coordonnées', d.f.coords],
+        ['Recoupement', x.qualite ? ({ solide: 'Solide. ', a_confirmer: 'À confirmer. ', aucune: 'Aucun. ' })[x.qualite.niveau] + x.qualite.raison : ''],
+        ['Recherches lancées', (d.f.requetes || []).join(' · ')], ['Sources publiques reliées', src.length ? src : ''], ['Avis du moteur', x.raison], ['Texte qui peut sortir', x.qualite && x.qualite.niveau !== 'solide' ? '' : x.texte]];
+    }
+    if (g === 'source') {
+      var v = d.verif; genre = 'Source publique'; image = d.vraieImage ? d.image : '';
+      lignes = [['Page', lien(d.s.url)], ['Publiée le', jour(d.s.date)], ['Relevé par la veille sur la zone', d.zone || ''], ['Recoupe', d.faits.length ? 'Fait ' + d.faits.join(', fait ') : d.zone ? 'Aucun fait de terrain pour l\'instant : article de contexte sur la zone.' : ''],
+        ['Vérification', !v ? 'Pas encore faite' : v.fetch_ok === false ? 'La page n\'a pas pu être ouverte.' : v.confirme ? 'Page ouverte : elle rapporte le même événement.' : 'Page ouverte : elle ne rapporte pas le même événement.'],
+        ['Détail', v && v.raison],
+        ['Qualité de la source', d.qualite ? (d.qualite.statut === 'ecartee' ? 'Écartée du recoupement : ' + d.qualite.motif + '.' : d.qualite.statut === 'partie' ? 'Voix d\'une partie (' + d.qualite.partie + ') : ' + d.qualite.motif + '. Compte comme une déclaration, pas comme une confirmation.' : (d.qualite.origine === 'declaration' ? 'Reprend une déclaration' + (d.qualite.partie_citee ? ' de : ' + d.qualite.partie_citee : '') + '. ' : d.qualite.origine === 'independante' ? 'S\'appuie sur des éléments indépendants. ' : '') + (d.qualite.cote ? 'Cote ' + d.qualite.cote + ' dans le registre.' : 'Non cotée dans le registre.')) : ''],
+        ['Qui parle dans l\'article', d.qualite && (d.qualite.attributions || []).length ? d.qualite.attributions.map(function (t) { return el('li', { text: t }); }) : ''],
+        ['Autres sources citées par l\'article', d.qualite && (d.qualite.autres_sources || []).length ? d.qualite.autres_sources.map(function (t) { return el('li', { text: t }); }) : ''],
+        ['Raisonnement du juge', d.qualite ? d.qualite.raisonnement : ''],
+        ['Cote OTAN', d.s.cote ? d.s.cote + '. ' + (d.s.cote_motif || '') : '']];
+    }
+    if (g === 'agent') {
+      var r = d.r; genre = 'Agent IA, pilier de connaissance';
+      lignes = !r ? [['Sous-question traitée', d.sous_question || ''], ['Rôle', 'Spécialiste de son domaine. Il se documente en sources ouvertes sur les acteurs, les lieux et les pays du bulletin, puis rend des connaissances de fond.'], ['État', 'Il attend la fin des recherches sur les faits.']] : [['Sous-question traitée', d.sous_question || ''], ['Ce que ce domaine apporte', r.synthese], ['Socle de connaissance', r.base ? r.base + ' fiche' + (r.base > 1 ? 's' : '') + ' piochée' + (r.base > 1 ? 's' : '') + ' dans son socle pour ces faits. Le socle est rédigé par Claude, Mistral choisit les fiches et les points, sans rien réécrire.' : 'Aucune fiche de son socle ne correspond : recherche en direct.'],
+        ['Connaissances', r.connaissances.map(function (c) { return el('li', {}, [document.createTextNode(c.titre), el('small', { text: (c.socle ? 'fiche du socle, ' + c.pioche.length + ' points retenus' : c.sources.length + ' source' + (c.sources.length > 1 ? 's' : '')) + (c.faits.length ? ' · éclaire le fait ' + c.faits.join(', ') : '') })]); })],
+        ['Sous-agents', r.sous_agents ? r.sous_agents.lances + ' sous-agents lancés en même temps, un par fiche du domaine (' + r.sous_agents.modele + '). ' + r.sous_agents.repondu + ' ont répondu en ' + String((r.sous_agents.ms / 1000).toFixed(1)).replace('.', ',') + ' s, ' + r.sous_agents.utiles + ' ont proposé leur fiche' + (r.sous_agents.chef ? ', le chef de file (' + r.sous_agents.chef + ') en a gardé ' + r.sous_agents.gardees : '') + '.' : ''],
+        ['Recherches menées', (r.requetes || []).join(' · ')], ['Non évaluable', r.non_evaluable], ['Contrôle', texteControle(r.controle)],
+        ['Traçabilité', (r.base ? 'Pioche : ' + [r.modele_pioche, r.prompt_pioche, jour(r.date)].filter(Boolean).join(' · ') : [r.modele, r.prompt, jour(r.date), r.pages_lues ? r.pages_lues + ' pages lues' : ''].filter(Boolean).join(' · ')) + '. À valider par l\'analyste.']];
+    }
+    if (g === 'savoir') {
+      image = d.vraieImage ? d.image : '';
+      if (d.c.socle) {
+        /* fiche du socle : d'abord ce que Mistral a pioché pour ces faits, puis la fiche entière */
+        var c = d.c;
+        genre = 'Fiche du socle · agent ' + d.agent.toLowerCase();
+        lignes = [['En bref', c.texte], ['Pourquoi cette fiche', c.raison + ' Éclaire le fait ' + c.faits.join(', ') + '.'],
+          ['Retenu pour ces faits', c.pioche.map(function (p) { return el('li', {}, [document.createTextNode(p.texte), el('small', {}, [document.createTextNode(p.rubrique)].concat((p.sources || []).slice(0, 1).map(function (s2) { return el('a', { href: s2.url, target: '_blank', rel: 'noopener noreferrer', text: ' · ' + domaine(s2.url) }); })))]); })]];
+        if ((c.veille || []).length) lignes.push(['Derniers faits de la veille', c.veille.slice(0, 10).map(function (p) { return el('li', {}, [document.createTextNode(p.texte), el('small', {}, [document.createTextNode(jour(p.date) + ' · ' + p.origine + ' · '), el('a', { href: p.sources[0].url, target: '_blank', rel: 'noopener noreferrer', text: domaine(p.sources[0].url) }), document.createTextNode(' · rattaché automatiquement')])]); })]);
+        var act = c.actualisation;
+        if (act) {
+          lignes.push(['À jour au ' + String(act.a_jour_au || '').split('-').reverse().join('/'), (act.points || []).map(function (p) { return el('li', {}, [document.createTextNode(p.texte), el('small', {}, [document.createTextNode(jour(p.date) + ' · ')].concat((p.sources || []).slice(0, 2).map(function (s2, i) { return el('a', { href: s2.url, target: '_blank', rel: 'noopener noreferrer', text: (i ? ', ' : '') + domaine(s2.url) }); })))]); })]);
+          lignes.push(['Corrigé depuis la rédaction', (act.corrections || []).map(function (k) { return el('li', {}, [document.createTextNode(k.correction), el('small', { text: 'Remplace : ' + k.point })]); })]);
+          if (!(act.points || []).length && act.note) lignes.push(['À jour', act.note]);
+        }
+        c.rubriques.forEach(function (r) { lignes.push([r.rubrique, (r.points || []).map(function (p) { return el('li', { text: p }); })]); });
+        lignes.push(['Repères datés', c.reperes.map(function (r) { return el('li', {}, [document.createTextNode(r.fait), el('small', { text: r.date })]); })]);
+        lignes.push(['Incertitudes', c.incertitudes.map(function (x) { return el('li', { text: x }); })]);
+        lignes.push(['Recoupé par des pages publiques', c.preuves.map(function (e) { return el('li', {}, [document.createTextNode(e.texte), el('small', {}, [document.createTextNode('« ' + e.citation + ' » '), el('a', { href: e.url, target: '_blank', rel: 'noopener noreferrer', text: domaine(e.url) })])]); })]);
+        lignes.push(['Origine', 'Fiche rédigée par ' + (c.auteur || 'Claude') + '. Fond rédigé de mémoire jusqu\'à ' + c.connaissance_arretee.split('-').reverse().join('/') + (act && act.a_jour_au ? ', puis mis à jour par recherche sourcée jusqu\'à ' + act.a_jour_au.split('-').reverse().join('/') : '') + '. ' + (c.valide ? 'Validée par l\'analyste.' : 'Pas encore validée par l\'analyste.')]);
+      } else {
+        genre = 'Connaissance trouvée en direct · agent ' + d.agent.toLowerCase();
+        lignes = [['Apport', d.c.texte], ['Passages à l\'appui', (d.c.citations || []).map(function (q) { return el('li', {}, [document.createTextNode('« ' + q.citation.replace(/^[«"“”\s]+|[»"“”\s]+$/g, '') + ' »'), el('small', { text: domaine(q.url) })]); })], ['Sources', d.c.sources.map(function (p) { return el('li', {}, [el('a', { href: p.url, target: '_blank', rel: 'noopener noreferrer', text: p.titre || p.url }), el('small', { text: domaine(p.url) + (p.date ? ' · ' + jour(p.date) : '') })]); })],
+          ['Éclaire', d.c.faits.length ? 'Fait ' + d.c.faits.join(', fait ') : ''], ['Contrôle', 'Citation retrouvée mot pour mot dans la page. ' + (d.c.relu ? 'Relue par un second passage. ' : '') + 'Reste à valider par l\'analyste.']];
+      }
+    }
+    if (g === 'sortie') {
+      genre = 'Sortie'; var textes = [], lectures = [];
+      for (var id in faits) if (faits[id].texte && faits[id].fait.el.getAttribute('data-etat') === 'trouve') textes.push(el('li', {}, [document.createTextNode(faits[id].texte), el('small', { text: 'Fait ' + id + ', attribué aux sources publiques' })]));
+      AGENTS.forEach(function (a) { var r = agents[a.cle] && agents[a.cle].donnees.r; if (r && r.synthese) lectures.push(el('li', {}, [document.createTextNode(r.synthese), el('small', { text: 'Agent ' + a.nom.toLowerCase() })])); });
+      lignes = [['Bilan', maj(bilan()) + '.'], ['Ce qui peut sortir', textes.length ? textes : 'Rien pour l\'instant : aucun fait recoupé.'], ['Apport des agents', lectures.length ? lectures : ''], ['Rappel', 'Un fait sans source publique reste interne. Rien n\'est publié depuis cet écran.']];
+    }
+    f.textContent = '';
+    if (image) f.appendChild(el('figure', {}, [el('img', { src: image, alt: '', referrerpolicy: 'no-referrer' })]));
+    var fermer = el('button', { class: 'bs-fermer', type: 'button', 'aria-label': 'Fermer', text: '×' });
+    fermer.addEventListener('click', fermerFiche);
+    f.appendChild(el('header', {}, [el('div', {}, [el('small', { text: genre }), el('h3', { text: n.titre })]), fermer]));
+    lignes.forEach(function (l) {
+      if (!l[1] || (Array.isArray(l[1]) && !l[1].length)) return;
+      if (Array.isArray(l[1])) { f.appendChild(el('p', {}, [el('b', { text: l[0] })])); f.appendChild(el('ul', {}, l[1])); }
+      else f.appendChild(el('p', {}, [el('b', { text: l[0] }), typeof l[1] === 'string' ? document.createTextNode(l[1]) : l[1]]));
+    });
+    if (g === 'agent' && Object.keys(faits).length) { var auto = aLancer && aLancer.cle === n.cle ? aLancer.fait : null; aLancer = null; f.appendChild(blocQuestion(n.cle, auto, !!auto)); }
+    if (g === 'fait') f.appendChild(blocAgents(d.f));
+    f.hidden = false; f.scrollTop = 0;
+    noeuds.forEach(function (x2) { if (x2 === n) x2.el.setAttribute('data-choisi', ''); else x2.el.removeAttribute('data-choisi'); });
+    focusSur = n; eclairer();
+    if (suivre) cadrer();
+  }
+
+  /* ---------- état en haut de page ---------- */
+  function etat(texte, actif) { $('bs-etat').textContent = texte; $('bs-point').hidden = !actif; }
+  function bilan() {
+    var n = 0, c = 0, t = 0;
+    for (var id in faits) { t++; var e = faits[id].fait.el.getAttribute('data-etat'); if (e === 'trouve') n++; if (e === 'partiel') c++; }
+    return n + ' fait' + (n > 1 ? 's' : '') + ' sur ' + t + ' recoupé' + (n > 1 ? 's' : '') + ' solidement' + (c ? ', ' + c + ' à confirmer' : '');
+  }
+
+  /* ---------- disposition : chaque branche ouvre son éventail ---------- */
+  var AGENTS = [{ cle: 'militaire', nom: 'Militaire' }, { cle: 'histoire', nom: 'Histoire' }, { cle: 'politique', nom: 'Politique' }, { cle: 'economie', nom: 'Économie' }, { cle: 'ethnies', nom: 'Ethnies' }];
+  var POS = { reponse: [520, 0], algor: [0, 0], humint: [-250, 30], surikat: [-430, 30], osint: [0, 250], veille: [0, 410], agents: [400, -10], note: [-210, -230], carte: [0, -270], stats: [210, -230] };
+  var ORDRE = [0, -1, 1, -2, 2, -3, 3];
+  /* place le k-ième élément d'un éventail : au centre d'abord, puis de part et d'autre, puis un cercle plus loin */
+  function eventail(centre, versDeg, k, pasDeg, rayon) {
+    var a = (versDeg + ORDRE[k % 7] * pasDeg) * Math.PI / 180, r = rayon + Math.floor(k / 7) * 112;
+    return [centre.x + Math.cos(a) * r, centre.y + Math.sin(a) * r];
+  }
+  function courbe(l) {
+    /* trait légèrement courbé, pour ne pas se confondre avec les branches droites */
+    var mx = (l.de.x + l.vers.x) / 2, my = (l.de.y + l.vers.y) / 2, dx = l.vers.x - l.de.x, dy = l.vers.y - l.de.y;
+    l.trait.setAttribute('d', 'M' + l.de.x + ',' + l.de.y + ' Q' + (mx - dy * .16) + ',' + (my + dx * .16) + ' ' + l.vers.x + ',' + l.vers.y);
+  }
+  function croiser(de, vers) {
+    var t = document.createElementNS(NS, 'path');
+    t.setAttribute('data-croise', ''); t.setAttribute('data-montre', '');
+    var l = { de: de, vers: vers, trait: t, croise: true };
+    svg.appendChild(t); liens.push(l); courbe(l);
+    setTimeout(function () { if (focusSur !== de && focusSur !== vers) t.removeAttribute('data-montre'); }, 2800);
+  }
+  /* mise en avant : la pastille visée, ses liens croisés et les pastilles au bout de ces liens */
+  var focusSur = null, survol = null;
+  function voisins(n) { var v = [n]; liens.forEach(function (l) { if (l.croise && l.de === n) v.push(l.vers); if (l.croise && l.vers === n) v.push(l.de); }); return v; }
+  function eclairer() {
+    var n = survol || focusSur, v = n ? voisins(n) : [];
+    liens.forEach(function (l) { if (l.croise) { if (n && (l.de === n || l.vers === n)) l.trait.setAttribute('data-montre', ''); else l.trait.removeAttribute('data-montre'); } });
+    noeuds.forEach(function (x) { if (v.indexOf(x) >= 0) x.el.setAttribute('data-lie', ''); else x.el.removeAttribute('data-lie'); });
+    if (n && v.length > 1) toile.setAttribute('data-focus', ''); else toile.removeAttribute('data-focus');
+  }
+  function marque(n, texte, titre) {
+    var m = n.el.querySelector('.bs-marque');
+    if (!m) { m = el('span', { class: 'bs-marque' }); n.el.appendChild(m); }
+    m.textContent = texte; m.title = titre || '';
+  }
+
+  /* ---------- le graphe pousse : un événement, un geste ---------- */
+  function panneauAttente(titre, question) {
+    var p = $('bs-panneau'); p.textContent = '';
+    p.appendChild(el('div', { class: 'bs-rep' }, [el('h3', { text: titre }), question ? el('p', { class: 'bs-rep-q', text: question }) : null,
+      el('p', { class: 'bs-pan-attente', text: 'La réponse s\'écrit ici quand les trois branches sont remplies : le terrain, les sources publiques, puis les agents.' }),
+      el('p', { class: 'bs-pan-etape', id: 'bs-pan-etape', text: 'Démarrage' })]));
+  }
+  /* La vue vient se poser sur la carte de réponse, à une taille lisible. « Recadrer » remontre tout l'arbre. */
+  function montrerReponse() {}
+  function surEvenement(ev) {
+    if (ev.type === 'etape') { etat(ev.texte, true); var pe = $('bs-pan-etape'); if (pe) pe.textContent = ev.texte; var ca = /agent/i.test(ev.texte) ? 'agent' : /Recherche :|sources/i.test(ev.texte) ? 'source' : /bulletin|question/i.test(ev.texte) ? 'fait' : ''; ['fait', 'source', 'agent'].forEach(function (c) { if (couloirs[c]) { if (c === ca) couloirs[c].setAttribute('data-actif', ''); else couloirs[c].removeAttribute('data-actif'); } }); return; }
+
+    /* mode question : la question s'affiche en tête, et chaque branche porte la sous-question à laquelle elle répond */
+    if (ev.type === 'question') {
+      var c = ev.cadre;
+      /* la question reste dans la barre, en haut : pas besoin de la répéter dans l'arbre */
+      toile.classList.add('bs-sans-question'); $('bs-rech-cadre').textContent = [c.pays.join(', '), c.lieux.join(', '), c.activite, c.jours + ' derniers jours'].filter(Boolean).join(' · ');
+      panneauAttente('Réponse à votre question', ev.question);
+      libelle(B.algor, 'Algor', 'votre question'); B.algor.donnees.role = ev.question;
+      ev.sous_questions.forEach(function (sq) {
+        var n = sq.branche === 'humint' ? B.humint : sq.branche === 'osint' ? B.osint : agents[sq.branche];
+        if (!n) return;
+        n.donnees.sous_question = sq.texte; if (n.genre === 'agent') n.rond.title = sq.texte;
+      });
+      ranger();
+      return;
+    }
+    if (ev.type === 'reponse') {
+      if (ev.echec) return;
+      var dc = ev.decompte, pl = function (n, mot) { return n + ' ' + mot + (n > 1 ? 's' : ''); };
+      var refFait = function (id) { var b = el('button', { type: 'button', text: 'fait ' + id, title: 'Voir ce fait sur l\'arbre' }); b.addEventListener('click', function () { if (faits[id]) ouvrirFiche(faits[id].fait); }); return b; };
+      var refFiche = function (e) { var b = el('button', { type: 'button', text: 'agent ' + e.agent, title: e.fiche }); b.addEventListener('click', function () { if (agents[e.agent]) ouvrirFiche(agents[e.agent]); }); return b; };
+      var c = el('div', { class: 'bs-rep' }, [
+        el('h3', { text: ev.bulletin ? 'Bilan du flux' : 'Réponse à votre question' }), ev.question ? el('p', { class: 'bs-rep-q', text: ev.question }) : null,
+        el('div', { class: 'bs-rep-cols' }, [el('div', {}, [
+        el('div', { class: 'bs-rep-chiffres' }, [
+          el('div', {}, [el('b', { text: String(dc.incidents) }), document.createTextNode(pl(dc.incidents, 'incident') + ' armé' + (dc.incidents > 1 ? 's' : '') + ' relevé' + (dc.incidents > 1 ? 's' : ''))]),
+          el('div', {}, [el('b', { text: String(dc.faits) }), document.createTextNode(pl(dc.faits, 'fait') + ' de terrain' + (dc.jours ? ' en ' + dc.jours + ' jours' : ''))]),
+          el('div', {}, [el('b', { text: String(dc.solides) }), document.createTextNode('confirmé' + (dc.solides > 1 ? 's' : '') + ' par une source publique')])]),
+        dc.par_lieu.length ? el('table', {}, dc.par_lieu.map(function (l) { return el('tr', {}, [el('td', { text: l.lieu }), el('td', { text: l.faits ? pl(l.incidents, 'incident') + ' sur ' + pl(l.faits, 'fait') + (l.dernier ? ', dernier le ' + l.dernier : '') : 'aucun fait dans les bulletins' })]); })) : document.createTextNode('')]), el('div', {}, [
+        ev.etabli.length ? el('h4', { text: 'Ce que montre le terrain' }) : document.createTextNode(''),
+        el('ul', {}, ev.etabli.map(function (e) { return el('li', {}, [document.createTextNode(e.texte)].concat(e.faits.map(refFait))); })),
+        ev.contexte.length ? el('h4', { text: 'Ce que savent les agents' }) : document.createTextNode(''),
+        el('ul', {}, ev.contexte.map(function (e) { return el('li', {}, [document.createTextNode(e.texte), refFiche(e)]); })),
+        ev.limites.length ? el('h4', { text: ev.bulletin ? 'À savoir' : 'Ce que cette réponse ne couvre pas' }) : null,
+        el('ul', { class: 'bs-rep-lim' }, ev.limites.map(function (t) { return el('li', { text: t }); }))])]),
+        ev.bulletin ? null : el('p', { class: 'bs-rep-pied', text: 'Décompte fait par règles. Phrases rédigées par ' + ev.modele + ' (' + ev.prompt + '), chacune adossée à un fait ou à une fiche' + (ev.ecartees ? ' ; ' + ev.ecartees + ' phrase' + (ev.ecartees > 1 ? 's' : '') + ' sans appui écartée' + (ev.ecartees > 1 ? 's' : '') : '') + '. La décision reste à l\'analyste.' })]);
+      var pan = $('bs-panneau'); pan.textContent = ''; pan.appendChild(c); pan.scrollTop = 0;
+      if (B.reponse) B.reponse.el.setAttribute('data-etat', 'trouve');
+      return;
+    }
+    if (ev.type === 'veille_zone') {
+      ev.sources.forEach(function (s0, i) {
+        setTimeout(function () {
+          if (parUrl[s0.url]) return;
+          var p = eventail(B.veille, 90, nbSources++, 24, 215), d = domaine(s0.url);
+          var ini = (s0.nom || d || '?').replace(/[^A-Za-zÀ-ÿ0-9 ]/g, '').split(/\s+/).map(function (m) { return m.charAt(0); }).join('').slice(0, 2).toUpperCase();
+          var ns = noeud('source', p[0], p[1], '<b>' + ini + '</b>', s0.nom || d, jour(s0.date) || d, B.veille, true);
+          ns.donnees = { s: s0, verif: null, faits: [], zone: s0.texte }; parUrl[s0.url] = ns; chargerImage(ns);
+          libelle(B.veille, 'Veille journalière', nbSources + ' source' + (nbSources > 1 ? 's' : ''));
+        }, i * 200);
+      });
+      return;
+    }
+
+    if (ev.type === 'faits') {
+      var N = ev.faits.length;
+      libelle(B.surikat, 'Surikat', N + ' fait' + (N > 1 ? 's' : '') + ' lu' + (N > 1 ? 's' : ''));
+      B.surikat.donnees.sous = N + ' faits extraits du bulletin.'; B.surikat.el.setAttribute('data-etat', 'trouve');
+      etat('Bulletin lu : ' + N + ' faits. Recherche des sources', true);
+      ev.faits.forEach(function (f, i) {
+        setTimeout(function () {
+          var p = eventail(B.surikat, 180, i, 24, 215);
+          var nf = noeud('fait', p[0], p[1], svgPicto(pictoDuType(f.type)), maj(f.type) || 'Fait ' + f.id, [f.pays, f.date].filter(Boolean).join(' · '), B.surikat);
+          nf.donnees = { f: f }; nf.el.setAttribute('data-etat', 'attente');
+          faits[f.id] = { f: f, fait: nf, sources: {}, raison: '', texte: '' };
+        }, i * 170);
+      });
+      return;
+    }
+
+    if (ev.type === 'agent_debut') { agents[ev.cle].el.setAttribute('data-etat', 'cours'); libelle(agents[ev.cle], agents[ev.cle].nom, 'pioche dans son socle'); return; }
+    if (ev.type === 'agent_requetes') { libelle(agents[ev.cle], agents[ev.cle].nom, 'cherche'); return; }
+    if (ev.type === 'agent_lecture') { libelle(agents[ev.cle], agents[ev.cle].nom, 'lit ' + ev.pages + ' pages'); return; }
+    if (ev.type === 'agent') {
+      var na = agents[ev.cle], liste = ev.connaissances || []; na.donnees.r = ev;
+      na.el.setAttribute('data-etat', liste.length ? 'trouve' : 'rien');
+      libelle(na, na.nom, ev.echec ? 'sans réponse' : liste.length ? (ev.base ? ev.base + ' fiche' + (ev.base > 1 ? 's' : '') + (ev.sous_agents ? ' · ' + ev.sous_agents.lances + ' sous-agents' : ' de son socle') + (liste.length > ev.base ? ' + ' + (liste.length - ev.base) : '') : liste.length + ' connaissance' + (liste.length > 1 ? 's' : '')) : 'non évaluable');
+      /* chaque connaissance devient une pastille, avec l'image de sa première source */
+      liste.forEach(function (c, k) {
+        setTimeout(function () {
+          var a = (na.versDeg + ORDRE[k % 7] * 22) * Math.PI / 180, ray = 150 + (Math.abs(ORDRE[k % 7]) % 2) * 58;
+          var ini = c.titre.split(/\s+/).map(function (m) { return m.charAt(0); }).join('').slice(0, 2).toUpperCase();
+          var nc = noeud('savoir', na.x + Math.cos(a) * ray, na.y + Math.sin(a) * ray, '<b>' + ini + '</b>', c.titre, c.socle ? 'fiche du socle' : domaine(c.sources[0].url), na);
+          if (c.socle) nc.el.setAttribute('data-base', '');
+          nc.donnees = { c: c, s: c.sources[0], agent: na.nom };
+          if (c.sources[0]) chargerImage(nc);
+          c.faits.forEach(function (id) { if (faits[id]) croiser(nc, faits[id].fait); });
+        }, k * 260);
+      });
+      return;
+    }
+    if (ev.type === 'fin') {
+      if (!$('bs-panneau').querySelector('.bs-rep-chiffres')) {
+        var tF = 0, tS = 0, tC = 0, tI = 0;
+        for (var idF in faits) { tF++; var eF = faits[idF].fait.el.getAttribute('data-etat'); if (eF === 'trouve') tS++; if (eF === 'partiel') tC++; if (/attaque|embuscade|engin|explos|enl[eè]vement|accrochage|frappe|assassinat|assaut|tirs?/i.test(faits[idF].f.type || '')) tI++; }
+        surEvenement({ type: 'reponse', bulletin: true, question: '', decompte: { incidents: tI, faits: tF, solides: tS, jours: 0, par_lieu: [] }, etabli: [], contexte: [],
+          limites: [tC ? tC + ' fait' + (tC > 1 ? 's' : '') + ' à confirmer : une seule voix, ou une source non cotée A ou B.' : '', (tF - tS - tC) ? (tF - tS - tC) + ' fait' + (tF - tS - tC > 1 ? 's' : '') + ' sans source publique.' : '', 'Les notes, le théâtre et les statistiques s\'ouvrent depuis les trois grandes pastilles, en haut de l\'arbre.'].filter(Boolean) });
+      }
+      [['note', 'Notes'], ['carte', 'Théâtre'], ['stats', 'Statistiques']].forEach(function (x) { B[x[0]].el.setAttribute('data-etat', 'trouve'); libelle(B[x[0]], x[1], 'ouvrir'); }); termine = true; majOnglets(); B.veille.el.setAttribute('data-etat', nbSources ? 'trouve' : 'rien'); return; }
+
+    var x = faits[ev.id];
+    if (!x) return;
+
+    if (ev.type === 'recherche') { x.fait.el.setAttribute('data-etat', 'cours'); B.veille.el.setAttribute('data-etat', 'cours'); return; }
+
+    if (ev.type === 'sources') {
+      var n = ev.sources.length;
+      x.raison = ev.raison; x.texte = ev.texte_publiable;
+      x.fait.el.setAttribute('data-etat', n ? 'trouve' : 'rien');
+      if (n) marque(x.fait, String(n), n + ' source' + (n > 1 ? 's' : '') + ' publique' + (n > 1 ? 's' : ''));
+      ev.sources.forEach(function (s, i) {
+        setTimeout(function () {
+          var ns = parUrl[s.url];
+          if (!ns) {
+            var p = eventail(B.veille, 90, nbSources++, 24, 215);
+            var d = domaine(s.url), ini = (s.nom || d || '?').replace(/[^A-Za-zÀ-ÿ0-9 ]/g, '').split(/\s+/).map(function (m) { return m.charAt(0); }).join('').slice(0, 2).toUpperCase();
+            ns = noeud('source', p[0], p[1], '<b>' + ini + '</b>', s.nom || d, jour(s.date) || d, B.veille, true);
+            ns.donnees = { s: s, verif: null, faits: [] }; ns.el.setAttribute('data-verif', x.verifEnCours ? 'cours' : 'attente');
+            parUrl[s.url] = ns; chargerImage(ns);
+            libelle(B.veille, 'Veille journalière', nbSources + ' source' + (nbSources > 1 ? 's' : ''));
+          }
+          ns.donnees.faits.push(ev.id); x.sources[s.url] = ns;
+          croiser(x.fait, ns);   /* le lien qui compte : ce fait de terrain est rapporté par cette source publique */
+        }, i * 240);
+      });
+      etat(bilan(), true);
+      return;
+    }
+
+    if (ev.type === 'qualite_debut') { x.fait.el.setAttribute('data-etat', 'cours'); return; }
+    if (ev.type === 'qualite') {
+      x.qualite = ev;
+      x.fait.el.setAttribute('data-etat', ev.niveau === 'solide' ? 'trouve' : ev.niveau === 'a_confirmer' ? 'partiel' : 'rien');
+      var bons = (ev.sources || []).filter(function (q) { return q.statut !== 'ecartee'; }).length;
+      marque(x.fait, ev.niveau === 'solide' ? String(bons) : ev.niveau === 'a_confirmer' ? '?' : '0', ev.raison);
+      (ev.sources || []).forEach(function (q) {
+        var ns = x.sources[q.url]; if (!ns) return;
+        ns.donnees.qualite = q; ns.el.setAttribute('data-qualite', q.statut);
+        if (q.statut === 'ecartee') marque(ns, '×', 'Écartée : ' + q.motif);
+        else if (q.statut === 'partie' || q.origine === 'declaration') marque(ns, '!', q.statut === 'partie' ? 'Voix d\'une partie : ' + q.motif : 'Reprend une déclaration' + (q.partie_citee ? ' (' + q.partie_citee + ')' : ''));
+      });
+      etat(bilan(), true);
+      return;
+    }
+
+    if (ev.type === 'verification_debut') {
+      x.verifEnCours = true;
+      for (var u in x.sources) x.sources[u].el.setAttribute('data-verif', 'cours');
+      return;
+    }
+
+    if (ev.type === 'verification') {
+      x.verifEnCours = false;
+      var noter = function (liste, cle, signe) {
+        liste.forEach(function (v, i) {
+          var ns = x.sources[v.url]; if (!ns) return;
+          ns.donnees.verif = v;
+          setTimeout(function () { ns.el.setAttribute('data-verif', cle); marque(ns, signe, cle === 'validee' ? 'Page ouverte, même événement' : 'Écartée par la vérification'); }, i * 170);
+        });
+      };
+      noter(ev.validees, 'validee', '✓'); noter(ev.rejetees, 'rejetee', '×');
+      for (var u2 in x.sources) if (!x.sources[u2].donnees.verif) x.sources[u2].el.setAttribute('data-verif', 'attente');
+      var garde = ev.validees.length;
+      if (!ev.echec) { x.fait.el.setAttribute('data-etat', garde ? 'trouve' : 'rien'); marque(x.fait, String(garde), garde + ' source' + (garde > 1 ? 's' : '') + ' validée' + (garde > 1 ? 's' : '')); etat(bilan(), true); }
+      return;
+    }
+  }
+
+  function terminer(texte) { etat(texte, false); setTimeout(function () { var pb = $('bs-panneau').querySelector('.bs-pan-bilan'); if (pb) pb.remove(); if (!toile.hasAttribute('data-accueil')) {
+      var anc = $('bs-panneau').querySelectorAll('.bs-pan-sorties, .bs-pan-sorties-titre'); anc.forEach(function (x) { x.remove(); });
+      if (Object.keys(faits).length) {
+        var bloc = el('div', { class: 'bs-pan-sorties' }, [['note', 'Notes'], ['carte', 'Théâtre'], ['stats', 'Statistiques']].map(function (x) { var b = el('button', { type: 'button' }); b.innerHTML = svgPicto(x[0]); b.appendChild(document.createTextNode(x[1])); b.addEventListener('click', function () { montrerVue(x[0]); }); return b; }));
+        var tete = $('bs-panneau').querySelector('.bs-rep-chiffres'), titre = el('p', { class: 'bs-pan-sorties-titre', text: 'Vos résultats' });
+        if (tete) { tete.parentNode.insertBefore(bloc, tete.nextSibling); tete.parentNode.insertBefore(titre, bloc); } else { $('bs-panneau').appendChild(titre); $('bs-panneau').appendChild(bloc); }
+      }
+      $('bs-panneau').appendChild(el('p', { class: 'bs-pan-bilan', text: texte }));
+    } }, 50); toile.removeAttribute('data-cours'); var pe = $('bs-pan-etape'); if (pe) pe.remove(); ['fait', 'source', 'agent'].forEach(function (c) { if (couloirs[c]) couloirs[c].removeAttribute('data-actif'); }); }
+
+  /* ---------- onglets : Graphe, Théâtre, Notes, Statistiques ---------- */
+  var termine = false, vueCourante = 'graphe';
+  function majOnglets() { [].forEach.call(document.querySelectorAll('#bs-onglets button'), function (b) { b.setAttribute('aria-selected', String(b.getAttribute('data-vue') === vueCourante)); }); }
+  function montrerVue(v) {
+    if (v !== 'graphe' && !Object.keys(faits).length) return;
+    vueCourante = v; fermerFiche();
+    toile.hidden = v !== 'graphe'; $('bs-retour').hidden = v === 'graphe';
+    ['carte', 'note', 'stats'].forEach(function (x) { $('bs-vue-' + x).hidden = v !== x; });
+    majOnglets();
+    if (v === 'graphe') { if (suivre) cadrer(); return; }
+    if (window.AlgorVues) window.AlgorVues[v]($('bs-vue-' + v), donnees(), { el: el, jour: jour, maj: maj, domaine: domaine, voirFait: function (id) { montrerVue('graphe'); ouvrirFiche(faits[id].fait); } });
+  }
+  [].forEach.call(document.querySelectorAll('#bs-onglets button'), function (b) { b.addEventListener('click', function () { montrerVue(b.getAttribute('data-vue')); }); });
+  /* cotes du registre des sources (A à D), chargées une fois ; un site absent du registre est « non coté » */
+  var cotes = {};
+  if (!EN_LIGNE) fetch('/api/cotes').then(function (r) { return r.json(); }).then(function (c) { cotes = c || {}; }).catch(function () {});
+  function coteDe(u) { var h = domaine(u), p = h.split('.'); while (p.length >= 2) { var k = p.join('.'); if (cotes[k]) return cotes[k].cote; p.shift(); } return ''; }
+  /* même typologie que la carte (shared/typologie-acled.js), pour regrouper « frappe de drone », « frappes de drones »… */
+  function typeClasse(f) { try { var t = window.AlgorTypologie && window.AlgorTypologie.classer(f.type, f.acteur, f.fait); return (t && t.type) || maj(f.type); } catch (e) { return maj(f.type); } }
+
+  /* tout ce que le graphe sait, mis à plat pour les trois vues */
+  function donnees() {
+    return {
+      termine: termine,
+      faits: Object.keys(faits).map(function (id) {
+        var x = faits[id], e = x.fait.el.getAttribute('data-etat');
+        var src = Object.keys(x.sources).map(function (u) { var d = x.sources[u].donnees; var q = d.qualite || {}; return { nom: d.s.nom, url: d.s.url, date: d.s.date, cote: q.cote || coteDe(d.s.url), qualite: q.statut || 'recevable', motif: q.motif || '', origine: q.origine || '', verif: d.verif ? (d.verif.confirme ? 'validee' : 'rejetee') : 'attente' }; });
+        /* sans contrôle de qualité (démonstration), on retombe sur la cote : A ou B = solide */
+        var bonnes = src.filter(function (z) { return z.verif !== 'rejetee' && z.qualite !== 'ecartee'; });
+        var niveau = x.qualite ? x.qualite.niveau : (e === 'trouve' ? (bonnes.some(function (z) { return /^[AB]$/.test(z.cote); }) ? 'solide' : 'a_confirmer') : 'aucune');
+        e = niveau === 'solide' ? 'trouve' : niveau === 'a_confirmer' ? 'partiel' : 'rien';
+        return Object.assign({}, x.f, { type_classe: typeClasse(x.f), niveau: niveau, raison_qualite: x.qualite ? x.qualite.raison : '', etat: e, recoupe: e === 'trouve', sources: src, texte_publiable: x.texte, raison: x.raison });
+      }),
+      agents: AGENTS.map(function (a) { var r = agents[a.cle] && agents[a.cle].donnees.r; return { cle: a.cle, nom: a.nom, connaissances: r ? (r.connaissances || []) : [] }; })
+    };
+  }
+
+  /* ---------- départ ---------- */
+  /* l'accueil : la toile vide, la grande barre au centre */
+  function accueil() {
+    jeu++; noeuds = []; liens = []; faits = {}; B = {}; agents = {}; parUrl = {}; nbSources = 0; termine = false;
+    monde.querySelectorAll('.bs-nd, .bs-rep, .bs-couloir, .bs-carte-q, .bs-zone').forEach(function (n) { n.remove(); }); svg.textContent = '';
+    $('bs-retour').hidden = true;
+    $('bs-fiche').hidden = true; $('bs-saisie').hidden = true; toile.hidden = false; $('bs-nouveau').hidden = true; $('bs-onglets').hidden = true;
+    ['carte', 'note', 'stats'].forEach(function (x) { $('bs-vue-' + x).hidden = true; });
+    toile.removeAttribute('data-cours'); toile.setAttribute('data-accueil', ''); etat('', false);
+    $('bs-rech-champ').value = ''; $('bs-rech-cadre').textContent = '';
+    setTimeout(function () { $('bs-rech-champ').focus(); }, 60);
+  }
+  function ouvrirToile(sous) {
+    toile.removeAttribute('data-accueil'); toile.classList.remove('bs-sans-question'); toile.classList.remove('bs-argos'); $('bs-rech-cadre').textContent = '';
+    jeu++; noeuds = []; liens = []; faits = {}; suivre = true; B = {}; agents = {}; parUrl = {}; nbSources = 0;
+    monde.querySelectorAll('.bs-nd, .bs-rep, .bs-couloir, .bs-carte-q, .bs-zone').forEach(function (n) { n.remove(); }); svg.textContent = ''; carteRep = null;
+    couloirs = {}; flux = []; toile.setAttribute('data-cours', '');
+    carteQ = el('div', { class: 'bs-carte-q' }); monde.appendChild(carteQ); carteQuestion('Flux HUMINT', 'Bulletin donné à l\'outil', sous);
+    anneaux = [0, 1, 2].map(function () { var c = document.createElementNS(NS, 'circle'); c.setAttribute('class', 'bs-anneau'); c.setAttribute('cx', 0); c.setAttribute('cy', 0); svg.appendChild(c); return c; });
+    var tf = document.createElementNS(NS, 'path'); tf.setAttribute('data-flux', ''); svg.appendChild(tf); flux.push(tf);
+    panneauAttente('Bilan du flux');
+    $('bs-fiche').hidden = true; $('bs-q').hidden = true;
+    $('bs-saisie').hidden = true; toile.hidden = false; $('bs-nouveau').hidden = false; $('bs-onglets').hidden = false;
+    termine = false; vueCourante = 'graphe'; ['carte', 'note', 'stats'].forEach(function (x) { $('bs-vue-' + x).hidden = true; }); majOnglets();
+    vue = { x: toile.clientWidth / 2, y: toile.clientHeight / 2, k: 1 }; aLaMain(true); appliquer();
+    /* le squelette du croquis : Algor au centre, trois branches, une sortie */
+    var pose = function (cle, genre, parent, contenu, titre, sousTitre, donnees, attente, delai) {
+      setTimeout(function () {
+        if (monJeu !== jeu) return;
+        var n = noeud(genre, POS[cle][0], POS[cle][1], contenu, titre, sousTitre, parent ? B[parent] : null);
+        n.donnees = donnees || {}; if (attente) n.el.setAttribute('data-etat', 'attente');
+        B[cle] = n;
+      }, delai);
+    };
+    var monJeu = jeu;
+    pose('algor', 'algor', null, '<img src="/favicon.jpg" alt="">', 'Algor', 'fusion', {}, false, 0);
+    pose('humint', 'pilier', 'algor', svgPicto('humint'), 'HUMINT', 'terrain', { role: 'Ce que rapporte le terrain. Cette branche pilote la recherche : chaque fait est confronté aux sources ouvertes.' }, false, 180);
+    pose('osint', 'pilier', 'algor', svgPicto('osint'), 'OSINT', 'sources ouvertes', { role: 'Ce que disent les sources publiques. Une source n\'est reliée à un fait que si sa page a été ouverte et rapporte le même événement.' }, false, 300);
+    pose('agents', 'pilier', 'algor', svgPicto('agents'), 'Agents IA', 'cinq piliers', { role: 'Les piliers de connaissance. Cinq spécialistes se documentent en sources ouvertes sur le sujet du bulletin et apportent le fond qui aide à comprendre les faits. Chaque connaissance renvoie à ses sources.' }, false, 420);
+    pose('surikat', 'flux', 'humint', svgPicto('flux'), 'Surikat', sous, { genre: 'Flux HUMINT', role: 'Le bulletin de terrain donné à l\'outil.', sous: sous }, false, 560);
+    pose('veille', 'flux', 'osint', svgPicto('loupe'), 'Veille journalière', 'en attente', { genre: 'Flux OSINT', role: 'Recherche web, presse suivie et sources locales du théâtre.', sous: '' }, true, 680);
+    /* les trois sorties d'Algor : chacune ouvre son onglet */
+    pose('reponse', 'reponse', null, svgPicto('sortie'), 'Réponse', 'panneau de droite', {}, false, 120);
+    pose('note', 'sortie', 'algor', svgPicto('note'), 'Notes', 'en attente', { vue: 'note' }, true, 760);
+    pose('carte', 'sortie', 'algor', svgPicto('carte'), 'Théâtre', 'en attente', { vue: 'carte' }, true, 820);
+    pose('stats', 'sortie', 'algor', svgPicto('stats'), 'Statistiques', 'en attente', { vue: 'stats' }, true, 880);
+    AGENTS.forEach(function (a, i) {
+      setTimeout(function () {
+        if (monJeu !== jeu) return;
+        var p = eventail(B.agents, 0, i, 44, 300);
+        var n = noeud('agent', p[0], p[1], svgPicto(a.cle), a.nom, 'en attente', B.agents);
+        n.nom = a.nom; n.cle = a.cle; n.versDeg = ORDRE[i] * 44; n.donnees = {}; n.el.setAttribute('data-etat', 'attente'); agents[a.cle] = n;
+      }, 900 + i * 110);
+    });
+  }
+
+  /* vraie recherche : le serveur local renvoie une ligne JSON par événement */
+  function chercher() {
+    var texte = $('bs-texte').value.trim();
+    if (texte.length < 40) { $('bs-note').textContent = 'Collez d\'abord un bulletin (au moins quelques lignes).'; $('bs-texte').focus(); return; }
+    return lancerFlux('/api/recouper', { texte: texte, pays: $('bs-pays').value.trim() }, 'Lecture en cours', 'Lecture du bulletin');
+  }
+  /* ---------- Argos : la question part vers la fonction en ligne du site, avec la session de l'abonné ----------
+     Rien de local ici : ni bulletin du Mac, ni clé. La fonction contrôle l'abonnement, cherche dans le corpus indexé,
+     rédige avec Mistral et vérifie chaque phrase. Elle ne renvoie jamais le texte d'un extrait HUMINT. */
+  var URL_AGENTS = 'https://lwgrjdpuagnvvzmdbyzb.supabase.co/functions/v1/argos-agents';
+  var URL_ARGOS = 'https://lwgrjdpuagnvvzmdbyzb.supabase.co/functions/v1/assistant-renseignement', CLE_PUBLIQUE = 'sb_publishable_xxnL12zd9o5N30y1-Oi-0Q_YGYKMjh2';
+  var STATUTS_ARGOS = { corrobore: 'HUMINT corroboré', non_corrobore: 'HUMINT non corroboré', osint: 'OSINT', reference: 'Référence', analyse: 'Note d\'analyse' };
+  var moteur = 'argos', clientSb = null;
+  async function jetonArgos() {
+    try {
+      /* sur le site, la session est celle du portail d'accès (site-auth.js) */
+      if (EN_LIGNE) { if (!window.algorAuth || !window.algorAuth.supabase) return null; var rs = await window.algorAuth.supabase.auth.getSession(); return rs && rs.data && rs.data.session ? rs.data.session.access_token : null; }
+      if (!clientSb) { var m = await import('https://esm.sh/@supabase/supabase-js@2.49.4'); clientSb = m.createClient('https://lwgrjdpuagnvvzmdbyzb.supabase.co', CLE_PUBLIQUE, { auth: { storageKey: 'carto-admin-auth', persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } }); }
+      var r = await clientSb.auth.getSession();
+      return r && r.data && r.data.session ? r.data.session.access_token : null;
+    } catch (e) { return null; }
+  }
+  function panneauArgos(question) {
+    var p = $('bs-panneau'); p.textContent = '';
+    p.appendChild(el('div', { class: 'bs-rep' }, [el('h3', { text: 'Réponse d\'Argos' }), el('p', { class: 'bs-rep-q', text: question }),
+      el('div', { class: 'bs-argos-texte', id: 'bs-argos-texte' }), el('p', { class: 'bs-pan-etape', id: 'bs-pan-etape', text: 'Recherche dans le corpus' })]));
+    p.appendChild(el('p', { class: 'bs-pan-ia', text: 'Réponse rédigée par une intelligence artificielle (Mistral AI) à partir du seul corpus d\'Algor Acces, puis vérifiée phrase par phrase. Elle peut contenir des erreurs : ouvrez les extraits cités. Les fiches des agents IA ne sont pas encore validées par un analyste.' }));
+  }
+  function ecrireArgos(texte, parN) {
+    var z = $('bs-argos-texte'); if (!z) return; z.textContent = '';
+    texte.trim().split(/\n+/).forEach(function (par) {
+      var p = el('p'), reste = par, m;
+      while ((m = reste.match(/\[(\d{1,3}(?:,\s*\d{1,3})*)\]/))) {
+        p.appendChild(document.createTextNode(reste.slice(0, m.index)));
+        m[1].split(/,\s*/).forEach(function (num) { var b = el('button', { type: 'button', text: num, title: 'Voir l\'extrait ' + num + ' sur l\'arbre' }); b.addEventListener('click', function () { if (parN[num]) ouvrirFiche(parN[num]); }); p.appendChild(b); });
+        reste = reste.slice(m.index + m[0].length);
+      }
+      p.appendChild(document.createTextNode(reste)); z.appendChild(p);
+    });
+  }
+  async function lancerArgos(question) {
+    ouvrirToile('Argos'); toile.classList.add('bs-argos'); toile.classList.add('bs-sans-question');
+    etat('Recherche dans le corpus', true); panneauArgos(question);
+    var monJeu = jeu, parN = {}, texte = '', nbH = 0, nbS = 0;
+    var arret = function (msg) { if (monJeu !== jeu) return; var z = $('bs-argos-texte'); if (z && !texte) z.appendChild(el('p', { text: msg })); terminer(msg); };
+    await attendre(1500);
+    var j = await jetonArgos();
+    if (monJeu !== jeu) return;
+    if (!j && EN_LIGNE && window.algorAuth && window.algorAuth.openLogin) window.algorAuth.openLogin('login');   /* le portail du site ouvre la connexion */
+    if (!j) { arret(EN_LIGNE ? 'Connectez-vous avec votre compte abonné pour interroger Argos.' : 'Session abonné absente sur cette adresse. Ouvrez la carte (localhost:8768/carte/), connectez-vous, puis revenez poser la question.'); return; }
+    try {
+      var rep = await fetch(URL_ARGOS, { method: 'POST', headers: { Authorization: 'Bearer ' + j, 'Content-Type': 'application/json' }, body: JSON.stringify({ question: question }) });
+      if (rep.status === 401) { arret('Session expirée : reconnectez-vous sur la carte, puis revenez.'); return; }
+      if (rep.status === 403) { arret('Ce compte n\'a pas l\'accès premium : Argos est réservé aux abonnés.'); return; }
+      if (rep.status === 429) { arret('Plafond de questions atteint pour aujourd\'hui, ou trop de questions d\'affilée.'); return; }
+      if (!rep.ok || !rep.body) { arret('Argos ne répond pas (code ' + rep.status + ').'); return; }
+      var lecteur = rep.body.getReader(), dec = new TextDecoder(), reste = '', fin = null;
+      for (;;) {
+        var lu = await lecteur.read(); if (lu.done) break;
+        if (monJeu !== jeu) { lecteur.cancel(); return; }
+        reste += dec.decode(lu.value, { stream: true });
+        var blocs = reste.split('\n\n'); reste = blocs.pop();
+        blocs.forEach(function (bl) {
+          var ev = (bl.match(/^event: (.*)$/m) || [])[1], d = (bl.match(/^data: (.*)$/m) || [])[1]; if (!ev || !d) return;
+          var donnee = JSON.parse(d);
+          if (ev === 'extraits') {
+            var pe = $('bs-pan-etape'); if (pe) pe.textContent = donnee.length + ' extraits retrouvés, rédaction';
+            etat(donnee.length + ' extraits retrouvés, rédaction de la réponse', true);
+            donnee.forEach(function (x) { if (x.categorie === 'humint') nbH++; else nbS++; });
+            /* les agents piochent dans leur socle, à partir de la question et des métadonnées des extraits (jamais leur texte) */
+            fetch(EN_LIGNE ? URL_AGENTS : '/api/pioche', { method: 'POST', headers: EN_LIGNE ? { Authorization: 'Bearer ' + j, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: question, extraits: donnee.map(function (x) { return { type: x.type, lieu: x.lieu, pays: x.pays, date: x.date }; }) }) })
+              .then(function (r) { return r.ok ? r.json() : null; }).then(function (j2) {
+                if (!j2 || monJeu !== jeu) return;
+                Object.keys(j2.agents).forEach(function (cle) { if (agents[cle]) surEvenement(Object.assign({ type: 'agent', cle: cle, requetes: [], synthese: '', date: j2.date }, j2.agents[cle])); });
+              }).catch(function () {});
+            donnee.forEach(function (x, k) {
+              setTimeout(function () {
+                if (monJeu !== jeu) return;
+                var hum = x.categorie === 'humint', n2;
+                if (hum) { n2 = noeud('fait', 0, 0, svgPicto(pictoDuType(x.type)), maj(x.type) || 'Fait', [x.pays, x.date].filter(Boolean).join(' · '), B.surikat); n2.el.setAttribute('data-etat', x.statut === 'corrobore' ? 'trouve' : 'partiel'); marque(n2, String(x.n), STATUTS_ARGOS[x.statut] || ''); }
+                else { var ti = x.titre || STATUTS_ARGOS[x.statut] || 'Source'; n2 = noeud('source', 0, 0, '<b>' + String(x.n) + '</b>', ti, x.date || '', B.veille, true); n2.el.setAttribute('data-verif', 'validee'); }
+                n2.donnees = { argos: x, cite: false, faits: [] }; n2.el.setAttribute('data-argos', ''); parN[x.n] = n2;
+                (texte.match(/\[(\d{1,3}(?:,\s*\d{1,3})*)\]/g) || []).join(',').replace(/\d+/g, function (num) { if (parN[num]) { parN[num].donnees.cite = true; parN[num].el.setAttribute('data-cite', ''); } });
+              }, k * 140);
+            });
+          } else if (ev === 'texte') {
+            texte += donnee.t; ecrireArgos(texte, parN);
+            (donnee.t.match(/\d{1,3}(?=[\],])/g) || []).forEach(function (num) { if (parN[num]) { parN[num].donnees.cite = true; parN[num].el.setAttribute('data-cite', ''); } });
+          } else if (ev === 'fin') fin = donnee;
+          else if (ev === 'erreur') texte += (texte ? '\n' : '') + 'Incident : ' + donnee.message;
+        });
+      }
+      ecrireArgos(texte, parN);
+      var ISSUES = { repondu: 'réponse citée', non_documente: 'le corpus ne documente pas ce point', refus_source: 'question refusée : elle vise une source protégée', hors_champ: 'question hors du champ d\'Argos', refuse_citation: 'réponse écartée par le vérificateur de citations' };
+      var cites = fin && fin.cites ? fin.cites.length : 0;
+      terminer('Argos : ' + (nbH + nbS) + ' extraits retrouvés (' + nbH + ' de terrain, ' + nbS + ' sources et veille), ' + cites + ' cités. ' + (fin ? maj(ISSUES[fin.issue] || fin.issue) + '.' : 'Flux interrompu.') + (fin && fin.rejets ? ' ' + fin.rejets + ' phrase' + (fin.rejets > 1 ? 's' : '') + ' écartée' + (fin.rejets > 1 ? 's' : '') + ' par le vérificateur.' : '') + (fin && fin.quota_restant !== null && fin.quota_restant !== undefined ? ' Questions restantes aujourd\'hui : ' + fin.quota_restant + '.' : ''));
+    } catch (e) { arret('Argos est injoignable depuis cette machine (' + e.message + ').'); }
+  }
+  function poser(posee) {
+    if (EN_LIGNE || moteur === 'argos') { var qa = String(posee || $('bs-question').value || '').trim(); if (qa.length >= 3) lancerArgos(qa); return; }
+    var q = $('bs-question').value.trim();
+    if (q.length < 12) return;
+    return lancerFlux('/api/question', { question: q }, 'Bulletins récents', 'Lecture de la question');
+  }
+  async function lancerFlux(adresse, corps, sous, premier) {
+    ouvrirToile(sous);
+    etat(premier, true);
+    var monJeu = jeu, fini = false, avis = '', avisQ = '';
+    await attendre(1700);   /* le temps que le squelette se dessine */
+    try {
+      var rep = await fetch(adresse, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corps) });
+      if (!rep.ok || !rep.body) throw new Error('moteur');
+      var lecteur = rep.body.getReader(), dec = new TextDecoder(), tampon = '';
+      while (true) {
+        var bloc = await lecteur.read();
+        if (bloc.done) break;
+        if (monJeu !== jeu) { lecteur.cancel(); return; }
+        tampon += dec.decode(bloc.value, { stream: true });
+        var lignes = tampon.split('\n'); tampon = lignes.pop();
+        lignes.forEach(function (l) {
+          if (!l.trim()) return;
+          var ev = JSON.parse(l);
+          if (ev.type === 'fin') { fini = true; surEvenement(ev); terminer('Terminé en ' + ev.duree_s + ' s. ' + avisQ + maj(bilan()) + '.' + (avis ? ' ' + avis : '')); }
+          else if (ev.type === 'avis') { avis = ev.texte; }
+          else if (ev.type === 'avis_recherche') { avis = 'Recoupement : ' + ev.veille + ' fait' + (ev.veille > 1 ? 's' : '') + ' par la veille déjà collectée (' + ev.corpus + ' faits en réserve), ' + ev.web + ' envoyé' + (ev.web > 1 ? 's' : '') + ' au web. ' + avis; }
+          else if (ev.type === 'avis_question') { avisQ = 'Question : ' + ev.faits + ' fait' + (ev.faits > 1 ? 's' : '') + ' de terrain sur la zone dans ' + ev.bulletins + ' bulletin' + (ev.bulletins > 1 ? 's' : '') + ' récent' + (ev.bulletins > 1 ? 's' : '') + ' (' + ev.jours + ' derniers jours), ' + ev.presse + ' article' + (ev.presse > 1 ? 's' : '') + ' de veille. '; }
+          else if (ev.type === 'erreur') { fini = true; terminer(ev.texte); }
+          else surEvenement(ev);
+        });
+      }
+      if (!fini) terminer('Recherche interrompue avant la fin.');
+    } catch (e) {
+      if (monJeu === jeu) terminer('Moteur injoignable. Lancez le serveur du bac à sable (serveur.mjs), ou rejouez la démonstration.');
+    }
+  }
+
+  /* démonstration : rejoue, avec des délais, le résultat réel obtenu le 18/11 sur le bulletin fictif */
+  async function rejouer() {
+    var d = await fetch('exemple.json').then(function (r) { return r.json(); });
+    ouvrirToile('Démonstration');
+    var monJeu = jeu, vivant = function () { return monJeu === jeu; };
+    etat('Démonstration : lecture du bulletin', true);
+    await attendre(2300); if (!vivant()) return;
+    surEvenement({ type: 'faits', faits: d.faits });
+    await attendre(1700);
+    var suivant = 0;
+    async function ouvrier() {
+      while (suivant < d.faits.length && vivant()) {
+        var f = d.faits[suivant++];
+        surEvenement({ type: 'recherche', id: f.id });
+        await attendre(1500 + Math.random() * 1400); if (!vivant()) return;
+        surEvenement({ type: 'sources', id: f.id, raison: f.raison, texte_publiable: f.texte_publiable, sources: f.sources });
+        if (f.sources.length) {
+          await attendre(2200); if (!vivant()) return;
+          surEvenement({ type: 'verification_debut', id: f.id });
+          await attendre(2600); if (!vivant()) return;
+          var forme = function (s) { return { url: s.url, confirme: s.confirme, raison: s.motif, fetch_ok: s.ouverte }; };
+          surEvenement({ type: 'verification', id: f.id, validees: f.sources.filter(function (s) { return s.confirme; }).map(forme), rejetees: f.sources.filter(function (s) { return !s.confirme; }).map(forme) });
+        }
+      }
+    }
+    await Promise.all([ouvrier(), ouvrier()]);
+    if (!vivant()) return;
+    etat('Démonstration : les agents IA se documentent', true);
+    await Promise.all(AGENTS.map(async function (a, i) {
+      await attendre(300 + i * 250); if (!vivant()) return;
+      surEvenement({ type: 'agent_debut', cle: a.cle });
+      await attendre(1200); if (!vivant()) return;
+      var r = (d.agents || {})[a.cle] || { synthese: '', connaissances: [], non_evaluable: 'Absent de la démonstration.' };
+      surEvenement({ type: 'agent_requetes', cle: a.cle, requetes: r.requetes || [] });
+      await attendre(2200 + Math.random() * 2200); if (!vivant()) return;
+      surEvenement(Object.assign({ type: 'agent', cle: a.cle }, r));
+    }));
+    if (vivant()) { await attendre(900); surEvenement({ type: 'fin' }); terminer('Démonstration terminée. ' + maj(bilan()) + '.'); }
+  }
+
+  $('bs-lancer').addEventListener('click', chercher);
+
+  $('bs-rejouer').addEventListener('click', rejouer);
+  $('bs-exemple').addEventListener('click', function () {
+    fetch('bulletin-fictif-novembre.txt').then(function (r) { return r.text(); }).then(function (t) { $('bs-texte').value = t; $('bs-texte').focus(); });
+  });
+  /* fichier : lu par le serveur local, son texte est versé dans la zone pour que vous le voyiez avant de lancer */
+  async function lireFichier(f) {
+    if (!f) return;
+    $('bs-note').textContent = 'Lecture de ' + f.name + '…';
+    try {
+      var rep = await fetch('/api/lire?nom=' + encodeURIComponent(f.name), { method: 'POST', body: f });
+      var j = await rep.json();
+      if (!rep.ok) throw new Error(j.erreur || 'lecture impossible');
+      $('bs-texte').value = j.texte;
+      $('bs-note').textContent = f.name + ' lu : ' + j.texte.length.toLocaleString('fr-FR') + ' caractères. Relisez, puis lancez la recherche.';
+    } catch (e) { $('bs-note').textContent = 'Fichier non lu : ' + e.message; }
+  }
+  /* bulletins récents du dossier Téléchargements : un clic verse le texte dans la zone */
+  if (!EN_LIGNE) fetch('/api/bulletins').then(function (r) { return r.json(); }).then(function (j) {
+    if (!(j.bulletins || []).length) return;
+    var zone = $('bs-recents'); zone.hidden = false; zone.appendChild(document.createTextNode('Bulletins récents :'));
+    j.bulletins.forEach(function (b) {
+      var court = (b.nom.match(/S\d{1,2}/i) || [b.nom.replace(/\.[a-z]+$/i, '').slice(0, 28)])[0];
+      var bouton = el('button', { type: 'button', title: b.nom + ' · modifié le ' + jour(b.modifie), text: court });
+      bouton.addEventListener('click', async function () {
+        $('bs-note').textContent = 'Lecture de ' + b.nom + '…';
+        try { var x = await fetch('/api/bulletin?nom=' + encodeURIComponent(b.nom)).then(function (r) { return r.json(); }); if (x.erreur) throw new Error(x.erreur);
+          $('bs-texte').value = x.texte; $('bs-note').textContent = b.nom + ' lu : ' + x.texte.length.toLocaleString('fr-FR') + ' caractères. Choisissez un pays si le bulletin est long, puis lancez la recherche.'; }
+        catch (e) { $('bs-note').textContent = 'Bulletin non lu : ' + e.message; }
+      });
+      zone.appendChild(bouton);
+    });
+  }).catch(function () {});
+  $('bs-fichier').addEventListener('click', function () { $('bs-fichier-champ').click(); });
+  $('bs-fichier-champ').addEventListener('change', function () { lireFichier(this.files[0]); this.value = ''; });
+  $('bs-texte').addEventListener('dragover', function (e) { e.preventDefault(); });
+  $('bs-texte').addEventListener('drop', function (e) { if (e.dataTransfer.files.length) { e.preventDefault(); lireFichier(e.dataTransfer.files[0]); } });
+
+  $('bs-nouveau').addEventListener('click', function () {
+    try { localStorage.removeItem('algor-enquete'); } catch (e) {}   /* les faits passés à la carte ne restent pas dans le navigateur */
+    $('bs-carte').removeAttribute('src');
+    accueil();
+  });
+  $('bs-rech-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var q = $('bs-rech-champ').value.trim();
+    if (q.length < (moteur === 'argos' ? 3 : 12)) { $('bs-rech-cadre').textContent = 'Écrivez votre question en nommant la zone : un pays, une ville, un axe.'; $('bs-rech-champ').focus(); return; }
+    $('bs-question').value = q; poser(q); $('bs-rech-champ').blur();
+  });
+  $('bs-rech-idees').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; $('bs-rech-champ').value = b.textContent; $('bs-rech-form').requestSubmit(); });
+  $('bs-rech-moteur').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; moteur = b.getAttribute('data-moteur'); this.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); $('bs-rech-champ').focus(); });
+  $('bs-rech-flux').addEventListener('click', function () { jeu++; toile.hidden = true; $('bs-saisie').hidden = false; });
+  $('bs-retour-question').addEventListener('click', accueil);
+  $('bs-retour').addEventListener('click', function () { montrerVue('graphe'); });
+
+
+  /* le bouton de vraie recherche n'est actif que si le moteur local répond */
+  if (!EN_LIGNE) fetch('/api/etat').then(function (r) { return r.json(); }).then(function (e) {
+    if (!(e.moteur && e.mistral && e.recherche)) throw 0;
+    if (e.recherche_web && !e.recherche_web.ok) $('bs-note').textContent = 'Attention : recherche web indisponible, ' + e.recherche_web.detail + '. Le recoupement ne passera que par la presse suivie et les sources locales.';
+  }).catch(function () {
+    $('bs-lancer').disabled = true;
+    $('bs-note').textContent = 'Moteur local absent ou clés manquantes : seule la démonstration est disponible.';
+  });
+  accueil();
+})();
+</script>
+</body>
+</html>
