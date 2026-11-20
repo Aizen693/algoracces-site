@@ -1,0 +1,24 @@
+# Algor Acces
+
+> Algor Acces est une plateforme de cartographie OSINT éditée par Algor Int, structure indépendante d'analyse géopolitique. Six théâtres sont suivis en continu : Moyen-Orient, Sahel, République démocratique du Congo, Madagascar, Afrique maritime et Asie du Sud. Chaque événement cartographié est sourcé, daté et coté.
+
+Le site est en français, avec une version anglaise disponible par le sélecteur FR | EN. Les cartes complètes et les analyses sont réservées aux comptes abonnés ; les pages ci-dessous sont publiques.
+
+## Pages principales
+
+- [Accueil](https://algoracces.fr/): présentation de la plateforme et des six théâtres
+- [Théâtres](https://algoracces.fr/theatres/): les zones couvertes et ce qui y est suivi
+- [Méthodologie](https://algoracces.fr/methodologie/): collecte, datation, sourçage, croisement, cotation et restitution du renseignement de sources ouvertes
+- [Argos](https://algoracces.fr/argos/): assistant de renseignement qui répond à partir du seul corpus et cite chaque fait
+- [Débunkage](https://algoracces.fr/debunkage/): cartographie des campagnes de désinformation, avec un cas de démonstration
+- [Offres](https://algoracces.fr/offres/): formules d'accès, tarif sur devis
+
+## À propos
+
+- [À propos](https://algoracces.fr/a-propos/): Algor Int et Algor Acces, raison d'être et valeurs
+- [Contact](https://algoracces.fr/contact/): demande d'accès, devis, analyse sur mesure
+
+## Informations légales
+
+- [Mentions légales](https://algoracces.fr/mentions-legales/)
+- [Politique de confidentialité](https://algoracces.fr/confidentialite/)

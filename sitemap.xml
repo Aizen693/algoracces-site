@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://algoracces.fr/</loc></url>
-  <url><loc>https://algoracces.fr/theatres/</loc></url>
-  <url><loc>https://algoracces.fr/offres/</loc></url>
-  <url><loc>https://algoracces.fr/argos/</loc></url>
-  <url><loc>https://algoracces.fr/methodologie/</loc></url>
-  <url><loc>https://algoracces.fr/plateforme/</loc></url>
-  <url><loc>https://algoracces.fr/debunkage/</loc></url>
-  <url><loc>https://algoracces.fr/a-propos/</loc></url>
-  <url><loc>https://algoracces.fr/contact/</loc></url>
-  <url><loc>https://algoracces.fr/mentions-legales/</loc></url>
-  <url><loc>https://algoracces.fr/confidentialite/</loc></url>
+  <url><loc>https://algoracces.fr/</loc><lastmod>2026-11-08</lastmod></url>
+  <url><loc>https://algoracces.fr/theatres/</loc><lastmod>2026-11-13</lastmod></url>
+  <url><loc>https://algoracces.fr/offres/</loc><lastmod>2026-11-08</lastmod></url>
+  <url><loc>https://algoracces.fr/argos/</loc><lastmod>2026-11-19</lastmod></url>
+  <url><loc>https://algoracces.fr/methodologie/</loc><lastmod>2026-11-08</lastmod></url>
+  <url><loc>https://algoracces.fr/debunkage/</loc><lastmod>2026-11-08</lastmod></url>
+  <url><loc>https://algoracces.fr/a-propos/</loc><lastmod>2026-11-08</lastmod></url>
+  <url><loc>https://algoracces.fr/contact/</loc><lastmod>2026-11-08</lastmod></url>
+  <url><loc>https://algoracces.fr/mentions-legales/</loc><lastmod>2026-11-08</lastmod></url>
+  <url><loc>https://algoracces.fr/confidentialite/</loc><lastmod>2026-11-08</lastmod></url>
 </urlset>
