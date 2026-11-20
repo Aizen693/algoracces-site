@@ -235,7 +235,7 @@
       a.className = 'v5-case' + (it.image ? '' : ' v5-case--lieu');
       a.href = '/veille/?onglet=geo';
       a.style.cssText = 'left:' + (g.ox + c[0] * g.cell + 1) + 'px;top:' + (g.oy + c[1] * g.cell + 1) + 'px;width:' + (g.cell - 1) + 'px;height:' + (g.cell - 1) + 'px';
-      a.innerHTML = (it.image ? '<img src="' + esc(it.image) + '" alt="" referrerpolicy="no-referrer" loading="eager">' : '<b>' + esc(it.lieu || it.theatre || '') + '</b>') +
+      a.innerHTML = (it.image ? '<img src="' + esc(it.image) + '" alt="" referrerpolicy="no-referrer" decoding="async" fetchpriority="low">' : '<b>' + esc(it.lieu || it.theatre || '') + '</b>') +
         '<span class="v5-case__t"><i>' + esc(date(it.date)) + (it.lieu && it.image ? ' · ' + esc(it.lieu) : '') + '</i><em>' + esc(fr(it.titre)) + '</em></span>';
       a.setAttribute('aria-label', 'Note de veille : ' + (it.titre || ''));
       var img = a.querySelector('img'); if (img) img.onerror = function () { a.remove(); };
@@ -267,7 +267,16 @@
       if (!reduit) minuteur = setInterval(function () { if (vivantes.length < max) ouvrir(); }, 1400);
     }
     if ('IntersectionObserver' in window) new IntersectionObserver(function (es) { visible = es[0].isIntersecting; }).observe(host);
-    if (window.V5.veille) lancer(window.V5.veille); else d.addEventListener('v5:veille', function (e) { lancer(e.detail); });
+    /* Les images de veille ne s'ouvrent qu'au premier geste du visiteur (souris, défilement, toucher, clavier) :
+       elles ne retardent plus le premier affichage (LCP) et ne recouvrent plus le titre sur mobile. */
+    function auPremierGeste(fn) {
+      var evs = ['pointermove', 'pointerdown', 'scroll', 'wheel', 'touchstart', 'keydown'], fait = false;
+      var go = function () { if (fait) return; fait = true; evs.forEach(function (e) { removeEventListener(e, go, { passive: true }); }); fn(); };
+      evs.forEach(function (e) { addEventListener(e, go, { passive: true }); });
+    }
+    auPremierGeste(function () {
+      if (window.V5.veille) lancer(window.V5.veille); else d.addEventListener('v5:veille', function (e) { lancer(e.detail); });
+    });
   }
   window.V5.trame = trame;
 

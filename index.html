@@ -14,7 +14,7 @@
 <link rel="canonical" href="https://algoracces.fr/" />
 <meta property="og:site_name" content="Algor Acces" />
 <meta property="og:locale" content="fr_FR" />
-<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "Organization", "@id": "https://algoracces.fr/#organisation", "name": "Algor Acces", "url": "https://algoracces.fr/", "logo": "https://algoracces.fr/favicon.jpg", "description": "Plateforme de cartographie OSINT des théâtres à risque, éditée par Algor Int.", "parentOrganization": {"@type": "Organization", "name": "Algor Int"}, "contactPoint": {"@type": "ContactPoint", "contactType": "customer support", "url": "https://algoracces.fr/contact/", "availableLanguage": ["fr", "en"]}}, {"@type": "WebSite", "@id": "https://algoracces.fr/#site", "name": "Algor Acces", "url": "https://algoracces.fr/", "inLanguage": "fr-FR", "publisher": {"@id": "https://algoracces.fr/#organisation"}}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "Organization", "@id": "https://algoracces.fr/#organisation", "name": "Algor Acces", "url": "https://algoracces.fr/", "logo": "https://algoracces.fr/favicon.jpg", "description": "Plateforme de cartographie OSINT des théâtres à risque, éditée par Algor Int.", "email": "contact.algoracces@protonmail.com", "parentOrganization": {"@id": "https://algoracces.fr/#editeur"}, "contactPoint": {"@type": "ContactPoint", "contactType": "customer support", "email": "contact.algoracces@protonmail.com", "url": "https://algoracces.fr/contact/", "availableLanguage": ["fr", "en"]}}, {"@type": "Organization", "@id": "https://algoracces.fr/#editeur", "name": "Algor Int", "legalName": "DPAPG Holding", "alternateName": "Algor'Int", "url": "https://algoracces.fr/a-propos/", "vatID": "FR10799133400"}, {"@type": "WebSite", "@id": "https://algoracces.fr/#site", "name": "Algor Acces", "url": "https://algoracces.fr/", "inLanguage": "fr-FR", "publisher": {"@id": "https://algoracces.fr/#organisation"}}]}</script>
 <meta property="og:image" content="https://algoracces.fr/shared/home/assets/og-image-v5.jpg" />
 <meta property="og:image:width" content="1600" />
 <meta property="og:image:height" content="840" />
@@ -23,7 +23,7 @@
 <meta name="theme-color" content="#0F1013" />
 <link rel="icon" type="image/jpeg" href="/favicon.jpg" />
 <link rel="stylesheet" href="/shared/home/fonts-display.css?v=20261104c" />
-<link rel="stylesheet" href="/shared/v5/v5.css?v=20261104c" />
+<link rel="stylesheet" href="/shared/v5/v5.css?v=20261120a" />
 <style>
   /* Ouverture : recule sous la bande des théâtres */
   .hero { background: var(--night); color: var(--on-night); height: calc(100svh - var(--annonce-h, 0px)); min-height: 620px; margin-top: -78px; display: flex; flex-direction: column; justify-content: flex-end; position: sticky; top: 0; z-index: 0; padding: 120px var(--gutter) clamp(96px, 13vh, 150px); overflow: hidden; }
@@ -194,7 +194,7 @@
 
 <main>
   <section class="hero" data-nav="dark" id="hero" data-v5-reseau data-v5-trame data-trame-veille data-hachures="3,0;4,0;6,2">
-    <div class="hero__in" id="hero-in"><h1><span class="l"><span>Anticiper les risques</span></span><span class="l"><span>opérationnels</span></span></h1>
+    <div class="hero__in" id="hero-in"><h1><span class="l"><span>Anticiper les risques</span></span> <span class="l"><span>opérationnels</span></span></h1>
     </div>
     <a class="v5-defiler" href="#theatres" aria-label="Défiler pour explorer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 4v16M6 14l6 6 6-6"/></svg></a>
   </section>
@@ -218,10 +218,10 @@
 
   <section class="v5-sec" data-nav="light" aria-label="Capacités">
     <div class="v5-rows">
-      <a class="v5-row" href="/veille/"><span class="v5-row__name">Veille</span><span class="v5-row__d">Un flux OSINT consolidé sur les six théâtres, sélectionné, daté et sourcé.</span><span class="v5-row__peek"><img src="/shared/home/assets/v5/veille.jpg?v=20260922b" alt="" loading="lazy"></span></a>
-      <a class="v5-row" href="/theatres/"><span class="v5-row__name">Cartographie</span><span class="v5-row__d">Chaque pays suivi en carte de renseignement, filtrable par période, par typologie et par acteur.</span><span class="v5-row__peek"><img src="/shared/home/assets/v5/carte-benin.jpg?v=20260922b" alt="" loading="lazy"></span></a>
-      <a class="v5-row" href="/methodologie/"><span class="v5-row__name">Analyse</span><span class="v5-row__d">Pour chaque pays, la répartition des incidents par région, par typologie et par acteur.</span><span class="v5-row__peek"><img src="/shared/home/assets/v5/analyse-mali.jpg?v=20260922b" alt="" loading="lazy"></span></a>
-      <a class="v5-row" href="/offres/"><span class="v5-row__name">Brief</span><span class="v5-row__d">Une appréciation de situation sur les faits de la période, relue avant diffusion.</span><span class="v5-row__peek"><img src="/shared/home/assets/v5/note-analyse.jpg?v=20260922b" alt="" loading="lazy"></span></a>
+      <a class="v5-row" href="/veille/"><span class="v5-row__name">Veille</span><span class="v5-row__d">Un flux OSINT consolidé sur les six théâtres, sélectionné, daté et sourcé.</span><span class="v5-row__peek"><img width="1600" height="1000" src="/shared/home/assets/v5/veille.webp?v=20261120a" alt="" loading="lazy"></span></a>
+      <a class="v5-row" href="/theatres/"><span class="v5-row__name">Cartographie</span><span class="v5-row__d">Chaque pays suivi en carte de renseignement, filtrable par période, par typologie et par acteur.</span><span class="v5-row__peek"><img width="1600" height="1000" src="/shared/home/assets/v5/carte-benin.webp?v=20261120a" alt="" loading="lazy"></span></a>
+      <a class="v5-row" href="/methodologie/"><span class="v5-row__name">Analyse</span><span class="v5-row__d">Pour chaque pays, la répartition des incidents par région, par typologie et par acteur.</span><span class="v5-row__peek"><img width="1600" height="1000" src="/shared/home/assets/v5/analyse-mali.webp?v=20261120a" alt="" loading="lazy"></span></a>
+      <a class="v5-row" href="/offres/"><span class="v5-row__name">Brief</span><span class="v5-row__d">Une appréciation de situation sur les faits de la période, relue avant diffusion.</span><span class="v5-row__peek"><img width="1600" height="1000" src="/shared/home/assets/v5/note-analyse.webp?v=20261120a" alt="" loading="lazy"></span></a>
     </div>
   </section>
 
@@ -234,11 +234,11 @@
       <div>
         <div class="v5-epingle__sticky">
           <div class="v5-epingle__cadre">
-            <span class="v5-couche v5-couche--base"><img src="/shared/home/assets/v5/chaine-0.jpg?v=20260922b" alt="Carte Algor Acces du Mali : 287 événements, analyse par région, typologie et acteur (données fictives)" loading="lazy"></span>
-            <span class="v5-couche" data-couche="1"><img src="/shared/home/assets/v5/chaine-1.jpg?v=20260922b" alt="Carte du Mali filtrée du 1er avril au 31 juillet 2026 : 206 événements (données fictives)" loading="lazy"></span>
-            <span class="v5-couche" data-couche="2"><img src="/shared/home/assets/v5/chaine-2.jpg?v=20260922b" alt="Carte du Mali filtrée sur les attaques : 41 événements (données fictives)" loading="lazy"></span>
-            <span class="v5-couche" data-couche="3"><img src="/shared/home/assets/v5/chaine-3.jpg?v=20260922b" alt="Carte du Mali filtrée sur les attaques du GSIM : 12 événements (données fictives)" loading="lazy"></span>
-            <span class="v5-couche" data-couche="4"><img src="/shared/home/assets/v5/chaine-4.jpg?v=20260922b" alt="Région de Kayes : liste des 61 événements, datés et attribués (données fictives)" loading="lazy"></span>
+            <span class="v5-couche v5-couche--base"><img width="1600" height="1100" src="/shared/home/assets/v5/chaine-0.webp?v=20261120a" alt="Carte Algor Acces du Mali : 287 événements, analyse par région, typologie et acteur (données fictives)" loading="lazy"></span>
+            <span class="v5-couche" data-couche="1"><img width="1600" height="1100" src="/shared/home/assets/v5/chaine-1.webp?v=20261120a" alt="Carte du Mali filtrée du 1er avril au 31 juillet 2026 : 206 événements (données fictives)" loading="lazy"></span>
+            <span class="v5-couche" data-couche="2"><img width="1600" height="1100" src="/shared/home/assets/v5/chaine-2.webp?v=20261120a" alt="Carte du Mali filtrée sur les attaques : 41 événements (données fictives)" loading="lazy"></span>
+            <span class="v5-couche" data-couche="3"><img width="1600" height="1100" src="/shared/home/assets/v5/chaine-3.webp?v=20261120a" alt="Carte du Mali filtrée sur les attaques du GSIM : 12 événements (données fictives)" loading="lazy"></span>
+            <span class="v5-couche" data-couche="4"><img width="1600" height="1100" src="/shared/home/assets/v5/chaine-4.webp?v=20261120a" alt="Région de Kayes : liste des 61 événements, datés et attribués (données fictives)" loading="lazy"></span>
             <span class="v5-epingle__cap"><b>Mali · interface réelle, données fictives</b><span>Filtres appliqués dans l'ordre</span></span>
           </div>
         </div>
@@ -282,7 +282,7 @@
     <div class="veille-volets">
       <div class="v5-split v5-split--rev">
         <figure class="v5-split__media" data-trame-libre>
-          <img src="/shared/home/assets/v5/veille-fictif.jpg?v=20260922b" alt="Veille géopolitique d'Algor Acces : notes classées par théâtre et par gravité (interface réelle, données fictives)" loading="lazy">
+          <img width="1600" height="1000" src="/shared/home/assets/v5/veille-fictif.webp?v=20261120a" alt="Veille géopolitique d'Algor Acces : notes classées par théâtre et par gravité (interface réelle, données fictives)" loading="lazy">
           <figcaption>Veille géopolitique · interface réelle, données fictives</figcaption>
         </figure>
         <div>
@@ -295,7 +295,7 @@
       </div>
       <div class="v5-split v5-split--rev">
         <figure class="v5-split__media" data-trame-libre>
-          <img src="/shared/home/assets/v5/veille-cyber.jpg?v=20260922b" alt="Veille cyber d'Algor Acces : carte des attaques en cours, pays par pays (interface réelle, données fictives)" loading="lazy">
+          <img width="1600" height="1000" src="/shared/home/assets/v5/veille-cyber.webp?v=20261120a" alt="Veille cyber d'Algor Acces : carte des attaques en cours, pays par pays (interface réelle, données fictives)" loading="lazy">
           <figcaption>Veille cyber · interface réelle, données fictives</figcaption>
         </figure>
         <div>
@@ -313,7 +313,7 @@
   <section class="v5-sec v5-sec--band" data-nav="light">
     <div class="v5-duo">
       <figure class="v5-duo__media">
-        <video src="/shared/home/assets/v5/carte-mali.mp4?v=20260922b" poster="/shared/home/assets/v5/carte-mali.jpg?v=20260922b" muted loop playsinline preload="none" data-v5-play aria-label="Carte Algor Acces du Mali lue mois par mois (interface réelle, données fictives)"></video>
+        <video src="/shared/home/assets/v5/carte-mali.mp4?v=20260922b" poster="/shared/home/assets/v5/carte-mali.webp?v=20261120a" muted loop playsinline preload="none" data-v5-play aria-label="Carte Algor Acces du Mali lue mois par mois (interface réelle, données fictives)"></video>
       </figure>
       <div class="v5-duo__card">
         <h2>La rigueur du renseignement, appliquée aux sources ouvertes</h2>
@@ -330,7 +330,7 @@
     </div>
     <div class="v5-split">
       <figure class="v5-split__media cas-map">
-        <img src="/methodologie/assets/carte-yatakala.png?v=20260910b" alt="Extrait de carte : Yatakala, commune du Goroual, région de Tillabéri, Niger" loading="lazy">
+        <img width="1200" height="720" src="/methodologie/assets/carte-yatakala.webp?v=20261120a" alt="Extrait de carte : Yatakala, commune du Goroual, région de Tillabéri, Niger" loading="lazy">
         <figcaption>Yatakala-Bosiye · 14,79 N · 0,38 E · fond de carte Mapbox</figcaption>
       </figure>
       <div>
@@ -381,17 +381,17 @@
 <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 <script src="/shared/v5/accueil-reseau.js?v=20260922e" defer></script>
-<script src="/shared/v5/chrome.js?v=20261107a"></script>
+<script src="/shared/v5/chrome.js?v=20261120a"></script>
 <script>
 (function () {
   var V = window.V5, esc = V.esc, fr = V.fr, reduit = V.reduit;
   var THEATRES = [
-    { id: 'sahel', nom: 'Sahel', href: '/sahel/', img: '/theatres/assets/photos/sahel.jpg?v=20260923a', legende: 'Blindé en patrouille au Mali, mission de l’ONU', credit: 'Ministère néerlandais de la Défense, CC BY-SA 4.0', t: 'Groupes jihadistes, juntes militaires et corridors de trafic', pays: 'Mali · Burkina Faso · Niger · Tchad · Mauritanie' },
-    { id: 'rdc', nom: 'RDC, Grands Lacs', href: '/rdc/', img: '/theatres/assets/photos/rdc.jpg?v=20260923a', legende: 'Habitants de Mutaho fuyant vers Goma pendant les combats, mai 2013', credit: 'MONUSCO, CC BY-SA 2.0', t: "L'Est congolais sous la pression du M23", pays: 'Nord-Kivu · Sud-Kivu · Ituri' },
-    { id: 'moyen-orient', nom: 'Moyen-Orient', acces: 'libre', href: '/carte/?pays=Liban', img: '/theatres/assets/photos/moyen-orient.jpg?v=20260923a', legende: 'Obusier en appui pendant la bataille de Mossoul, Irak', credit: 'U.S. Army, Christopher Brecht, domaine public', t: 'Fronts confessionnels et influence iranienne, de 2005 à aujourd’hui', pays: 'Iraq · Syrie · Liban · Yémen' },
-    { id: 'madagascar', nom: 'Madagascar', acces: 'libre', href: '/carte/?pays=Madagascar', img: '/theatres/assets/photos/madagascar.jpg?v=20260923a', legende: 'Barricade à Antananarivo pendant les manifestations de 2025', credit: 'Raveloaritiana Mamisoa, CC BY-SA 4.0', t: 'Insécurité rurale et trafics du Grand Sud', pays: 'Grand Sud · SAVA · Analamanga · canal du Mozambique' },
-    { id: 'afrique', nom: 'Afrique maritime', href: '/afrique/', img: '/theatres/assets/photos/afrique-maritime.jpg?v=20260923a', legende: 'Abordage d’un bateau suspecté de piraterie au large de la Somalie', credit: 'Royal Navy, Dave Jenkins, Open Government Licence', t: 'Piraterie, détroits et suivi AIS en temps réel', pays: 'Suez · Bab-el-Mandeb · Ormuz · golfe de Guinée' },
-    { id: 'asie-sud', nom: 'Asie du Sud', acces: 'libre', href: '/carte/?pays=Pakistan', img: '/theatres/assets/photos/asie-sud.jpg?v=20260923a', legende: 'Soldats sous le feu en Afghanistan', credit: 'British Army, Dan Bardsley, Open Government Licence', t: 'Baloutchistan, Taliban et tensions au Cachemire', pays: 'Kaboul · Islamabad · Quetta · Cachemire' }
+    { id: 'sahel', nom: 'Sahel', href: '/sahel/', img: '/theatres/assets/photos/sahel.webp?v=20261120a', legende: 'Blindé en patrouille au Mali, mission de l’ONU', credit: 'Ministère néerlandais de la Défense, CC BY-SA 4.0', t: 'Groupes jihadistes, juntes militaires et corridors de trafic', pays: 'Mali · Burkina Faso · Niger · Tchad · Mauritanie' },
+    { id: 'rdc', nom: 'RDC, Grands Lacs', href: '/rdc/', img: '/theatres/assets/photos/rdc.webp?v=20261120a', legende: 'Habitants de Mutaho fuyant vers Goma pendant les combats, mai 2013', credit: 'MONUSCO, CC BY-SA 2.0', t: "L'Est congolais sous la pression du M23", pays: 'Nord-Kivu · Sud-Kivu · Ituri' },
+    { id: 'moyen-orient', nom: 'Moyen-Orient', acces: 'libre', href: '/carte/?pays=Liban', img: '/theatres/assets/photos/moyen-orient.webp?v=20261120a', legende: 'Obusier en appui pendant la bataille de Mossoul, Irak', credit: 'U.S. Army, Christopher Brecht, domaine public', t: 'Fronts confessionnels et influence iranienne, de 2005 à aujourd’hui', pays: 'Iraq · Syrie · Liban · Yémen' },
+    { id: 'madagascar', nom: 'Madagascar', acces: 'libre', href: '/carte/?pays=Madagascar', img: '/theatres/assets/photos/madagascar.webp?v=20261120a', legende: 'Barricade à Antananarivo pendant les manifestations de 2025', credit: 'Raveloaritiana Mamisoa, CC BY-SA 4.0', t: 'Insécurité rurale et trafics du Grand Sud', pays: 'Grand Sud · SAVA · Analamanga · canal du Mozambique' },
+    { id: 'afrique', nom: 'Afrique maritime', href: '/afrique/', img: '/theatres/assets/photos/afrique-maritime.webp?v=20261120a', legende: 'Abordage d’un bateau suspecté de piraterie au large de la Somalie', credit: 'Royal Navy, Dave Jenkins, Open Government Licence', t: 'Piraterie, détroits et suivi AIS en temps réel', pays: 'Suez · Bab-el-Mandeb · Ormuz · golfe de Guinée' },
+    { id: 'asie-sud', nom: 'Asie du Sud', acces: 'libre', href: '/carte/?pays=Pakistan', img: '/theatres/assets/photos/asie-sud.webp?v=20261120a', legende: 'Soldats sous le feu en Afghanistan', credit: 'British Army, Dan Bardsley, Open Government Licence', t: 'Baloutchistan, Taliban et tensions au Cachemire', pays: 'Kaboul · Islamabad · Quetta · Cachemire' }
   ];
   var NOMS = { sahel: 'Sahel', rdc: 'RDC, Grands Lacs', 'moyen-orient': 'Moyen-Orient', madagascar: 'Madagascar', afrique: 'Afrique maritime', 'asie-sud': 'Asie du Sud' };
   var FLECHE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M7 17L17 7M8 7h9v9"/></svg>';

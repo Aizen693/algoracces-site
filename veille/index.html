@@ -12,7 +12,7 @@
 <script>window.addEventListener('algorAuthReady', function () { window.__algorAuthGranted = true; });</script>
 <script type="module" src="../shared/site-auth.js?v=20261020a"></script>
 <link rel="stylesheet" href="/shared/home/fonts-display.css?v=20261104c" />
-<link rel="stylesheet" href="/shared/v5/v5.css?v=20261104c" />
+<link rel="stylesheet" href="/shared/v5/v5.css?v=20261120a" />
 <!-- Carte des attaques (onglet Cyber) : même Mapbox GL que /veille-carte/, chargé mais instancié seulement à l'ouverture de la vue carte -->
 <link href="https://api.mapbox.com/mapbox-gl-js/v3.24.0/mapbox-gl.css" rel="stylesheet">
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.24.0/mapbox-gl.js" defer></script>
@@ -682,7 +682,7 @@
   let geoItems = [], geoState = { zone: 'all', sev: 'all', q: '', limit: 24 };
 
   // Photo de la note ; à défaut (ou si elle ne charge pas), la photo de terrain du théâtre, assombrie, avec le lieu inscrit dessus
-  const PHOTO_THEATRE = { 'sahel': '/theatres/assets/photos/sahel.jpg?v=20260923a', 'rdc': '/theatres/assets/photos/rdc.jpg?v=20260923a', 'moyen-orient': '/theatres/assets/photos/moyen-orient.jpg?v=20260923a', 'madagascar': '/theatres/assets/photos/madagascar.jpg?v=20260923a', 'afrique': '/theatres/assets/photos/afrique-maritime.jpg?v=20260923a', 'asie-sud': '/theatres/assets/photos/asie-sud.jpg?v=20260923a' };
+  const PHOTO_THEATRE = { 'sahel': '/theatres/assets/photos/sahel.webp?v=20261120a', 'rdc': '/theatres/assets/photos/rdc.webp?v=20261120a', 'moyen-orient': '/theatres/assets/photos/moyen-orient.webp?v=20261120a', 'madagascar': '/theatres/assets/photos/madagascar.webp?v=20261120a', 'afrique': '/theatres/assets/photos/afrique-maritime.webp?v=20261120a', 'asie-sud': '/theatres/assets/photos/asie-sud.webp?v=20261120a' };
   function vcardImg(it) {
     const repli = PHOTO_THEATRE[it.theatre] || '';
     if (it.image) return `<img class="vcard__img" src="${esc(it.image)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-repli="${esc(repli)}" onerror="var r=this.dataset.repli;if(r&&this.src.indexOf(r)<0){var c=this.closest('.vcard');if(c)c.classList.add('vcard--repli');this.src=r}else this.remove()">`;
@@ -1656,7 +1656,7 @@
     loadRadio();
   });
 </script>
-<script src="/shared/v5/chrome.js?v=20261107a"></script>
+<script src="/shared/v5/chrome.js?v=20261120a"></script>
 <!-- Assistant de renseignement (premium) : bouton flottant. Additif : commenter pour retirer. -->
 <script src="/shared/assistant.js?v=20261116a"></script>
 </body>
