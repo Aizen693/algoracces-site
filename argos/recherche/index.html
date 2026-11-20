@@ -438,6 +438,23 @@
   .bs-fiab ul { margin: 0; padding-left: 18px; }
   .bs-fiab li { margin: 0 0 6px; font-size: 13.5px; line-height: 1.45; }
   .bs-fiab button { margin: 0 2px; min-width: 22px; height: 20px; padding: 0 5px; border: 1px solid currentColor; border-radius: 999px; background: none; font: inherit; font-size: 11px; color: inherit; cursor: pointer; }
+  .bs-enq { margin: 18px 0 0; padding: 12px 14px; border: 1px solid var(--line); font-size: 13.5px; }
+  .bs-enq p { margin: 0; }
+  .bs-enq-actions { margin: 10px 0 0; }
+  .bs-enq .bs-btn { border-color: var(--on-night); background: none; color: var(--on-night); font-size: 13px; padding: 7px 12px; }
+  .bs-enq .bs-btn:hover { background: var(--on-night); color: var(--night); }
+  .bs-enq-note { margin-top: 8px !important; font-size: 12px; color: var(--muted); }
+  .bs-mes-enq { position: absolute; left: 16px; top: 108px; z-index: 4; padding: 9px 14px; border: 1px solid rgba(255, 255, 255, .22); border-radius: 999px; background: rgba(18, 18, 22, .6); color: var(--on-night); font: inherit; font-size: 13px; cursor: pointer; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+  .bs-mes-enq:hover { border-color: var(--on-night); }
+  .bs-toile[data-accueil] .bs-mes-enq { top: 18px; left: auto; right: 16px; }
+  .bs-hist { position: absolute; left: 16px; top: 152px; z-index: 5; width: min(380px, calc(100% - 32px)); max-height: 60%; overflow-y: auto; padding: 14px 16px; border: 1px solid rgba(255, 255, 255, .2); border-radius: 14px; background: rgba(18, 18, 22, .94); color: var(--on-night); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+  .bs-toile[data-accueil] .bs-hist { top: 62px; left: auto; right: 16px; }
+  .bs-hist h3 { margin: 0 0 10px; font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--on-night-2); }
+  .bs-hist p { margin: 0; font-size: 13px; color: var(--on-night-2); }
+  .bs-hist ul { margin: 0; padding: 0; list-style: none; }
+  .bs-hist button { display: block; width: 100%; padding: 9px 0; border: 0; border-bottom: 1px solid rgba(255, 255, 255, .1); background: none; color: var(--on-night); font: inherit; font-size: 13.5px; text-align: left; cursor: pointer; }
+  .bs-hist button:hover span { text-decoration: underline; }
+  .bs-hist small { display: block; margin-top: 2px; font-size: 11.5px; color: var(--on-night-2); }
 </style>
 </head>
 <body>
@@ -469,6 +486,8 @@
       </div>
     </div>
   </div>
+  <button class="bs-mes-enq" id="bs-mes-enq" type="button">Mes enquêtes</button>
+  <aside class="bs-hist" id="bs-hist" hidden></aside>
   <p class="bs-q" id="bs-q" hidden></p>
   <aside class="bs-panneau" id="bs-panneau" aria-live="polite"></aside>
   <ul class="bs-legende-cat" aria-label="Types d'information">
@@ -1360,6 +1379,61 @@
     if (!lignes.length) return null;
     return el('div', { class: 'bs-fiab' }, [el('h4', { text: 'Fiabilité de la réponse' }), el('ul', {}, lignes)]);
   }
+  /* ---------- enquêtes (20/11/2026) : chaque recherche réussie est enregistrée pour son auteur ----------
+     On garde le flux rendu par Argos (étiquettes, cotes, réponse vérifiée) et les fiches des agents, pour rouvrir
+     l'enquête à l'identique. Table argos_enquetes, protégée par des règles d'accès en base (auteur, ou abonné si partagée). */
+  function baseSb() { return EN_LIGNE ? (window.algorAuth && window.algorAuth.supabase) : clientSb; }
+  function lienEnquete(id) { return location.origin + location.pathname + '?enquete=' + id; }
+  async function enregistrerEnquete(question, flux, promesseAgents) {
+    var sb = baseSb(); if (!sb) return;
+    var ag = null; try { ag = promesseAgents ? await Promise.race([promesseAgents.then(function () { return argosDonnees.agents; }), attendre(25000).then(function () { return argosDonnees.agents; })]) : null; } catch (e) {}
+    var r = await sb.from('argos_enquetes').insert({ question: question, contenu: { version: 1, flux: flux, agents: ag || {}, date: new Date().toISOString().slice(0, 10) } }).select('id, cree_le').single();
+    if (r.error || !r.data) { blocEnquete(null, 'Enquête non enregistrée (' + ((r.error && r.error.message) || 'erreur') + ').'); return; }
+    blocEnquete(r.data, 'Enquête enregistrée.');
+  }
+  function blocEnquete(ligne, message) {
+    var pan = $('bs-panneau'), ancien = pan.querySelector('.bs-enq'); if (ancien) ancien.remove();
+    var b = el('div', { class: 'bs-enq' }, [el('p', { text: message })]);
+    if (ligne) {
+      var part = el('button', { class: 'bs-btn', type: 'button', text: 'Partager le lien' });
+      part.addEventListener('click', async function () {
+        var r = await baseSb().from('argos_enquetes').update({ partagee: true }).eq('id', ligne.id);
+        if (r.error) { part.textContent = 'Partage impossible'; return; }
+        try { await navigator.clipboard.writeText(lienEnquete(ligne.id)); part.textContent = 'Lien copié'; } catch (e) { part.textContent = 'Lien : ' + lienEnquete(ligne.id); }
+      });
+      b.appendChild(el('div', { class: 'bs-enq-actions' }, [part]));
+      b.appendChild(el('p', { class: 'bs-enq-note', text: 'Le lien ouvre cette enquête pour tout abonné premium connecté. Sans partage, vous seul la voyez.' }));
+    }
+    var res = pan.querySelector('.bs-pan-sorties-titre') || pan.querySelector('.bs-pan-bilan');
+    if (res) res.parentNode.insertBefore(b, res); else pan.appendChild(b);
+  }
+  function bandeauEnquete(e) { blocEnquete(null, 'Enquête du ' + new Date(e.cree_le).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' }) + (e.mienne ? '' : ', partagée par un collègue') + ' : elle est rouverte telle qu\'elle était, sans nouvelle recherche. Le corpus a pu bouger depuis.'); }
+  async function ouvrirEnquete(id) {
+    var sb = baseSb(); if (!sb) return;
+    var moi = null; try { moi = ((await sb.auth.getUser()).data || {}).user; } catch (e) {}
+    var r = await sb.from('argos_enquetes').select('id, auteur, cree_le, question, contenu').eq('id', id).maybeSingle();
+    if (r.error || !r.data) { $('bs-rech-cadre').textContent = 'Enquête introuvable : elle a été supprimée, n\'a pas été partagée, ou votre compte n\'y a pas accès.'; return; }
+    var c = r.data.contenu || {};
+    $('bs-rech-champ').value = r.data.question;
+    lancerArgos(r.data.question, { flux: c.flux || '', agents: c.agents || {}, date: c.date, cree_le: r.data.cree_le, mienne: !!(moi && moi.id === r.data.auteur) });
+  }
+  async function historique() {
+    var sb = baseSb(), boite = $('bs-hist');
+    if (!boite.hidden) { boite.hidden = true; return; }
+    boite.textContent = ''; boite.hidden = false;
+    if (!sb) { boite.appendChild(el('p', { text: 'Connectez-vous pour voir vos enquêtes.' })); return; }
+    var moi = null; try { moi = ((await sb.auth.getUser()).data || {}).user; } catch (e) {}
+    if (!moi) { boite.appendChild(el('p', { text: 'Connectez-vous pour voir vos enquêtes.' })); return; }
+    var r = await sb.from('argos_enquetes').select('id, cree_le, question, partagee').eq('auteur', moi.id).order('cree_le', { ascending: false }).limit(30);
+    boite.appendChild(el('h3', { text: 'Mes enquêtes' }));
+    if (r.error) { boite.appendChild(el('p', { text: 'Historique indisponible.' })); return; }
+    if (!r.data.length) { boite.appendChild(el('p', { text: 'Aucune enquête pour l\'instant. Chaque recherche réussie est enregistrée ici, 180 jours.' })); return; }
+    boite.appendChild(el('ul', {}, r.data.map(function (x) {
+      var a = el('button', { type: 'button' }, [el('span', { text: x.question }), el('small', { text: new Date(x.cree_le).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }) + (x.partagee ? ' · partagée' : '') })]);
+      a.addEventListener('click', function () { boite.hidden = true; history.replaceState(null, '', '?enquete=' + x.id); ouvrirEnquete(x.id); });
+      return el('li', {}, [a]);
+    })));
+  }
   function panneauArgos(question) {
     var p = $('bs-panneau'); p.textContent = '';
     p.appendChild(el('div', { class: 'bs-rep' }, [el('h3', { text: 'Réponse d\'Argos' }), el('p', { class: 'bs-rep-q', text: question }),
@@ -1378,19 +1452,20 @@
       p.appendChild(document.createTextNode(reste)); z.appendChild(p);
     });
   }
-  async function lancerArgos(question) {
+  async function lancerArgos(question, rejeu) {
     centreArgos = true; ouvrirToile('Argos'); centreArgos = false; toile.classList.add('bs-argos'); toile.classList.add('bs-sans-question');
     etat('Recherche dans le corpus', true); panneauArgos(question);
     var monJeu = jeu, parN = {}, texte = '', nbH = 0, nbS = 0;
     argosDonnees = { question: question, extraits: [], texte: '', agents: {}, cites: [], fin: null, fiabilite: null };
     var arret = function (msg) { if (monJeu !== jeu) return; var z = $('bs-argos-texte'); if (z && !texte) z.appendChild(el('p', { text: msg })); terminer(msg); };
-    await attendre(1500);
-    var j = await jetonArgos();
+    await attendre(1500);   /* le temps que le squelette de l'arbre se pose, rejeu compris */
+    var j = rejeu ? 'rejeu' : await jetonArgos();
     if (monJeu !== jeu) return;
     if (!j && EN_LIGNE && window.algorAuth && window.algorAuth.openLogin) window.algorAuth.openLogin('login');   /* le portail du site ouvre la connexion */
     if (!j) { arret(EN_LIGNE ? 'Connectez-vous avec votre compte abonné pour interroger Argos.' : 'Session abonné absente sur cette adresse. Ouvrez la carte (localhost:8768/carte/), connectez-vous, puis revenez poser la question.'); return; }
     try {
-      var rep = await fetch(URL_ARGOS, { method: 'POST', headers: { Authorization: 'Bearer ' + j, 'Content-Type': 'application/json' }, body: JSON.stringify({ question: question }) });
+      var brut = '', promesseAgents = null;
+      var rep = rejeu ? new Response(rejeu.flux, { status: 200, headers: { 'Content-Type': 'text/event-stream' } }) : await fetch(URL_ARGOS, { method: 'POST', headers: { Authorization: 'Bearer ' + j, 'Content-Type': 'application/json' }, body: JSON.stringify({ question: question }) });
       if (rep.status === 401) { arret('Session expirée : reconnectez-vous sur la carte, puis revenez.'); return; }
       if (rep.status === 403) { arret('Ce compte n\'a pas l\'accès premium : Argos est réservé aux abonnés.'); return; }
       if (rep.status === 429) { arret('Plafond de questions atteint pour aujourd\'hui, ou trop de questions d\'affilée.'); return; }
@@ -1399,7 +1474,7 @@
       for (;;) {
         var lu = await lecteur.read(); if (lu.done) break;
         if (monJeu !== jeu) { lecteur.cancel(); return; }
-        reste += dec.decode(lu.value, { stream: true });
+        var morceau = dec.decode(lu.value, { stream: true }); brut += morceau; reste += morceau;
         var blocs = reste.split('\n\n'); reste = blocs.pop();
         blocs.forEach(function (bl) {
           var ev = (bl.match(/^event: (.*)$/m) || [])[1], d = (bl.match(/^data: (.*)$/m) || [])[1]; if (!ev || !d) return;
@@ -1410,8 +1485,8 @@
             argosDonnees.extraits = donnee;
             donnee.forEach(function (x) { if (x.categorie === 'humint') nbH++; else nbS++; });
             /* les agents piochent dans leur socle, à partir de la question et des métadonnées des extraits (jamais leur texte) */
-            fetch(EN_LIGNE ? URL_AGENTS : '/api/pioche', { method: 'POST', headers: EN_LIGNE ? { Authorization: 'Bearer ' + j, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: question, extraits: donnee.map(function (x) { return { type: x.type, lieu: x.lieu, pays: x.pays, date: x.date }; }) }) })
-              .then(function (r) { return r.ok ? r.json() : null; }).then(function (j2) {
+            promesseAgents = (rejeu ? Promise.resolve(new Response(JSON.stringify({ agents: rejeu.agents || {}, date: rejeu.date || '' }))) : fetch(EN_LIGNE ? URL_AGENTS : '/api/pioche', { method: 'POST', headers: EN_LIGNE ? { Authorization: 'Bearer ' + j, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: question, extraits: donnee.map(function (x) { return { type: x.type, lieu: x.lieu, pays: x.pays, date: x.date }; }) }) })
+              ).then(function (r) { return r.ok ? r.json() : null; }).then(function (j2) {
                 if (!j2 || monJeu !== jeu) return;
                 argosDonnees.agents = j2.agents;
                 Object.keys(j2.agents).forEach(function (cle) { if (agents[cle]) surEvenement(Object.assign({ type: 'agent', cle: cle, requetes: [], synthese: '', date: j2.date }, j2.agents[cle])); });
@@ -1442,7 +1517,8 @@
       [['note', 'Notes'], ['carte', 'Cartographie'], ['stats', 'Statistiques']].forEach(function (x) { if (B[x[0]]) { B[x[0]].el.setAttribute('data-etat', 'trouve'); libelle(B[x[0]], x[1], 'ouvrir'); } });
       var ISSUES = { repondu: 'réponse citée', non_documente: 'le corpus ne documente pas ce point', refus_source: 'question refusée : elle vise une source protégée', hors_champ: 'question hors du champ d\'Argos', refuse_citation: 'réponse écartée par le vérificateur de citations' };
       var cites = argosDonnees.cites.length;
-      terminer('Argos : ' + (nbH + nbS) + ' extraits retrouvés (' + nbH + ' de terrain, ' + nbS + ' sources et veille), ' + cites + ' cités. ' + (fin ? maj(ISSUES[fin.issue] || fin.issue) + '.' : 'Flux interrompu.') + (fin && fin.rejets ? ' ' + fin.rejets + ' phrase' + (fin.rejets > 1 ? 's' : '') + ' écartée' + (fin.rejets > 1 ? 's' : '') + ' par le vérificateur.' : '') + (fin && fin.quota_restant !== null && fin.quota_restant !== undefined ? ' Questions restantes aujourd\'hui : ' + fin.quota_restant + '.' : ''));
+      if (rejeu) bandeauEnquete(rejeu); else if (fin && fin.issue === 'repondu') enregistrerEnquete(question, brut, promesseAgents);
+      terminer((rejeu ? 'Enquête du ' + new Date(rejeu.cree_le).toLocaleDateString('fr-FR') + ', rouverte telle qu\'enregistrée. ' : '') + 'Argos : ' + (nbH + nbS) + ' extraits retrouvés (' + nbH + ' de terrain, ' + nbS + ' sources et veille), ' + cites + ' cités. ' + (fin ? maj(ISSUES[fin.issue] || fin.issue) + '.' : 'Flux interrompu.') + (fin && fin.rejets ? ' ' + fin.rejets + ' phrase' + (fin.rejets > 1 ? 's' : '') + ' écartée' + (fin.rejets > 1 ? 's' : '') + ' par le vérificateur.' : '') + (fin && fin.quota_restant !== null && fin.quota_restant !== undefined ? ' Questions restantes aujourd\'hui : ' + fin.quota_restant + '.' : ''));
     } catch (e) { arret('Argos est injoignable depuis cette machine (' + e.message + ').'); }
   }
   function poser(posee) {
@@ -1575,6 +1651,7 @@
   });
   $('bs-rech-idees').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; $('bs-rech-champ').value = b.textContent; $('bs-rech-form').requestSubmit(); });
   $('bs-rech-moteur').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; moteur = b.getAttribute('data-moteur'); this.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); $('bs-rech-champ').focus(); });
+  $('bs-mes-enq').addEventListener('click', historique);
   $('bs-rech-flux').addEventListener('click', function () { jeu++; toile.hidden = true; $('bs-saisie').hidden = false; });
   $('bs-retour-question').addEventListener('click', accueil);
   $('bs-retour').addEventListener('click', function () { montrerVue('graphe'); });
@@ -1589,6 +1666,7 @@
     $('bs-note').textContent = 'Moteur local absent ou clés manquantes : seule la démonstration est disponible.';
   });
   accueil();
+  (function () { var id = new URLSearchParams(location.search).get('enquete'); if (id && /^[0-9a-f-]{36}$/i.test(id)) setTimeout(function () { ouvrirEnquete(id); }, EN_LIGNE ? 1200 : 300); })();
 })();
 </script>
 </body>
