@@ -1,6 +1,6 @@
 # Algor Acces
 
-> Algor Acces est une plateforme de cartographie OSINT éditée par Algor Int, structure indépendante d'analyse géopolitique. Six théâtres sont suivis en continu : Moyen-Orient, Sahel, République démocratique du Congo, Madagascar, Afrique maritime et Asie du Sud. Chaque événement cartographié est sourcé, daté et coté.
+> Algor Acces est une plateforme de cartographie OSINT éditée par Algor Int, structure indépendante d'analyse géopolitique. Six théâtres sont suivis en continu : Moyen-Orient, Sahel, République démocratique du Congo, Madagascar, Afrique maritime et Asie du Sud. Chaque événement cartographié est sourcé et daté ; chaque note de veille est cotée selon la grille OTAN.
 
 Le site est en français, avec une version anglaise disponible par le sélecteur FR | EN. Les cartes complètes et les analyses sont réservées aux comptes abonnés ; les pages ci-dessous sont publiques.
 
