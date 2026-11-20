@@ -9,7 +9,7 @@
 <meta name="description" content="Argos, l'assistant de renseignement d'Algor Acces. Réservé aux abonnés." />
 <link rel="icon" type="image/jpeg" href="/favicon.jpg" />
 <link rel="stylesheet" href="/shared/home/fonts-display.css?v=20261104c" />
-<link rel="stylesheet" href="/shared/v5/v5.css?v=20261120a" />
+<link rel="stylesheet" href="/shared/v5/v5.css?v=20261104c" />
 <style>
   /* Bac à sable, v4 : un graphe d'enquête. On donne un flux HUMINT, l'outil cherche les sources publiques
      qui en parlent, et le graphe pousse autour du flux : faits, flux OSINT de chaque fait, sources avec leur image.
@@ -433,6 +433,11 @@
   .bs-nd[data-genre="pilier"] .bs-lib small b { display: inline-block; margin-top: 4px; padding: 1px 9px; border: 1px solid rgba(255, 255, 255, .3); border-radius: 999px; font-weight: 400; color: var(--on-night); }
   .bs-nd[data-genre="sortie"] .bs-lib small { display: none; }
   .bs-nd[data-genre="algor"] .bs-lib strong { font-size: 17px; }
+  .bs-fiab { margin: 18px 0 0; padding: 12px 14px; border: 1px solid var(--line); }
+  .bs-fiab h4 { margin: 0 0 8px; font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; }
+  .bs-fiab ul { margin: 0; padding-left: 18px; }
+  .bs-fiab li { margin: 0 0 6px; font-size: 13.5px; line-height: 1.45; }
+  .bs-fiab button { margin: 0 2px; min-width: 22px; height: 20px; padding: 0 5px; border: 1px solid currentColor; border-radius: 999px; background: none; font: inherit; font-size: 11px; color: inherit; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -824,7 +829,10 @@
       genre = 'Extrait n° ' + x.n + ' · ' + (STATUTS_ARGOS[x.statut] || x.statut);
       lignes = [['Type', maj(x.type)], ['Lieu', [x.lieu, x.pays].filter(Boolean).join(', ')], ['Date', x.date || x.periode], ['Théâtre', x.theatre],
         ['Statut', STATUTS_ARGOS[x.statut] || x.statut], ['Titre', x.titre || ''],
-        ['Source', hum ? 'Source humaine protégée. Le texte n\'est jamais affiché tel quel : Argos le reformule dans sa réponse.' : (x.fiche ? el('a', { href: x.fiche, target: '_blank', rel: 'noopener', text: 'Ouvrir la fiche Algor Acces' }) : '')],
+        ['Source', hum ? 'Source humaine protégée. Le texte n\'est jamais affiché tel quel : Argos le reformule dans sa réponse.' : (x.source ? (x.source.url ? el('a', { href: x.source.url, target: '_blank', rel: 'noopener noreferrer', text: x.source.nom || x.source.domaine }) : (x.source.nom || '')) : 'Aucune source publique indiquée pour cet extrait.')],
+        ['Fiabilité de la source', hum ? (x.statut === 'corrobore' ? 'Fait de terrain recoupé par au moins une source publique.' : 'Fait de terrain non recoupé : à confirmer.') : (x.source ? 'Cote ' + coteTexte(x.source.cote) + ' (grille OTAN).' : '')],
+        ['Fiche Algor Acces', x.fiche ? el('a', { href: x.fiche, target: '_blank', rel: 'noopener', text: 'Ouvrir la fiche' }) : ''],
+        ['Version à recouper', (argosDonnees && (argosDonnees.fiabilite || {}).divergences || []).filter(function (g2) { return g2.indexOf(x.n) >= 0; }).map(function (g2) { return 'Même lieu et mêmes dates que l\'extrait ' + g2.filter(function (k) { return k !== x.n; }).join(', ') + ', mais un auteur différent.'; }).join(' ')],
         ['Cité dans la réponse', d.cite ? 'Oui' : 'Non, extrait retrouvé mais pas utilisé']];
     }
     if (g === 'algor' && toile.classList.contains('bs-argos')) { genre = 'Centre'; lignes = [['Rôle', 'Argos relie les trois branches qui répondent à votre question : les faits de terrain et les sources du corpus d\'Algor Acces, et le fond apporté par les agents IA. Ses trois résultats s\'ouvrent en haut de l\'arbre.']]; }
@@ -1246,6 +1254,8 @@
      rédige avec Mistral et vérifie chaque phrase. Elle ne renvoie jamais le texte d'un extrait HUMINT. */
   var URL_AGENTS = 'https://lwgrjdpuagnvvzmdbyzb.supabase.co/functions/v1/argos-agents';
   var URL_ARGOS = 'https://lwgrjdpuagnvvzmdbyzb.supabase.co/functions/v1/assistant-renseignement', CLE_PUBLIQUE = 'sb_publishable_xxnL12zd9o5N30y1-Oi-0Q_YGYKMjh2';
+  var COTES_OTAN = { A: 'complètement fiable', B: 'habituellement fiable', C: 'plutôt fiable', D: 'pas toujours fiable', E: 'peu fiable', F: 'fiabilité impossible à juger' };
+  function coteTexte(c) { return c ? c + ' · ' + COTES_OTAN[c] : 'non cotée dans le registre des sources'; }
   var STATUTS_ARGOS = { corrobore: 'HUMINT corroboré', non_corrobore: 'HUMINT non corroboré', osint: 'OSINT', reference: 'Référence', analyse: 'Note d\'analyse' };
   var moteur = 'argos', clientSb = null;
   async function jetonArgos() {
@@ -1274,8 +1284,9 @@
         el('h1', { text: 'Note Argos' }), el('p', { class: 'bs-na-meta', text: 'Établie le ' + new Date().toLocaleDateString('fr-FR') + ' · ' + d.extraits.length + ' extraits retrouvés, ' + cites.length + ' cités' }),
         el('h2', { text: 'Question' }), el('p', { class: 'bs-na-q', text: d.question }),
         el('h2', { text: 'Réponse' })].concat(d.texte.trim().split(/\n+/).map(function (t) { return el('p', { text: t }); })).concat([
+        blocFiabilite(d, null),
         el('h2', { text: 'Extraits cités' }),
-        cites.length ? el('table', {}, [el('tr', {}, ['N°', 'Statut', 'Type', 'Lieu', 'Date'].map(function (t) { return el('th', { text: t }); }))].concat(cites.map(function (x) { return el('tr', {}, [String(x.n), STATUTS_ARGOS[x.statut] || x.statut, x.categorie === 'humint' ? maj(x.type) : (x.titre || maj(x.type)), [x.lieu, x.pays].filter(Boolean).join(', '), x.date || x.periode || ''].map(function (t) { return el('td', { text: t || '' }); })); }))) : el('p', { text: 'Aucun extrait cité.' }),
+        cites.length ? el('table', {}, [el('tr', {}, ['N°', 'Statut', 'Source', 'Lieu', 'Date'].map(function (t) { return el('th', { text: t }); }))].concat(cites.map(function (x) { return el('tr', {}, [String(x.n), STATUTS_ARGOS[x.statut] || x.statut, x.categorie === 'humint' ? 'Source protégée · ' + maj(x.type) : ((x.source ? x.source.nom + ' (cote ' + (x.source.cote || 'non cotée') + ')' : 'Sans source indiquée') + ' · ' + (x.titre || maj(x.type))), [x.lieu, x.pays].filter(Boolean).join(', '), x.date || x.periode || ''].map(function (t) { return el('td', { text: t || '' }); })); }))) : el('p', { text: 'Aucun extrait cité.' }),
         fond.length ? el('h2', { text: 'Connaissances de fond des agents IA' }) : null,
         fond.length ? el('p', {}, [el('small', { text: 'Fiches du socle de connaissance, non encore validées par un analyste.' })]) : null]).concat(fond).concat([
         el('p', { class: 'bs-na-avis', text: 'Réponse rédigée par une intelligence artificielle (Mistral AI) à partir du seul corpus d\'Algor Acces, puis vérifiée phrase par phrase. Elle peut contenir des erreurs et ne remplace pas l\'avis d\'un analyste. Les sources humaines sont protégées : leur texte n\'est jamais reproduit.' })])));
@@ -1291,6 +1302,7 @@
       c.textContent = '';
       c.appendChild(el('div', { class: 'bs-ns' }, [
         bloc('Sur quoi repose la réponse ?', e.length + ' extrait' + (e.length > 1 ? 's' : '') + ' retrouvé' + (e.length > 1 ? 's' : '') + ', dont ' + cites.length + ' cité' + (cites.length > 1 ? 's' : '') + ' et ' + terrain + ' de terrain.', parStatut),
+        bloc('Que valent les sources ouvertes ?', (function () { var o = e.filter(function (x) { return x.categorie !== 'humint'; }); var ab = o.filter(function (x) { return x.source && /^[AB]$/.test(x.source.cote); }).length; return ab + ' sur ' + o.length + ' viennent d\'une source cotée A ou B.'; })(), compter(e.filter(function (x) { return x.categorie !== 'humint'; }), function (x) { return x.source && x.source.cote ? 'Cote ' + x.source.cote : 'Non cotée'; }).sort(function (a, b) { return a[0] < b[0] ? -1 : 1; })),
         bloc('De quels types de faits parle-t-on ?', parType.length ? 'Le type le plus présent : ' + parType[0][0].toLowerCase() + '.' : '', parType),
         bloc('Où ?', parLieu.length ? 'Le lieu le plus cité : ' + parLieu[0][0] + '.' : '', parLieu),
         bloc('Quand ?', parMois.length ? 'Les extraits vont de ' + parMois[0][0] + ' à ' + parMois[parMois.length - 1][0] + '.' : '', parMois),
@@ -1327,6 +1339,27 @@
       if (cadre.getAttribute('data-adresse') !== adresse + '|' + d.question) { cadre.setAttribute('data-adresse', adresse + '|' + d.question); cadre.onload = poser; cadre.src = adresse; }
     }
   };
+  /* Ce qu'un analyste doit savoir pour juger la réponse : la valeur des sources, le terrain recoupé ou non,
+     les lieux demandés sans aucun extrait, et les versions à recouper. Rendu dans le panneau et dans la note. */
+  function blocFiabilite(d, ouvrir) {
+    var e = d.extraits, f = d.fiabilite || {}, ouv = e.filter(function (x) { return x.categorie !== 'humint'; }), hum = e.filter(function (x) { return x.categorie === 'humint'; });
+    var ab = ouv.filter(function (x) { return x.source && /^[AB]$/.test(x.source.cote); }).length, cf = ouv.filter(function (x) { return x.source && /^[C-F]$/.test(x.source.cote); }).length, nc = ouv.length - ab - cf;
+    var rec = hum.filter(function (x) { return x.statut === 'corrobore'; }).length;
+    var pl = function (n, m) { return n + ' ' + m + (n > 1 ? 's' : ''); };
+    var lignes = [];
+    if (ouv.length) lignes.push(el('li', { text: 'Sources ouvertes : ' + ab + ' cotée' + (ab > 1 ? 's' : '') + ' A ou B, ' + cf + ' cotée' + (cf > 1 ? 's' : '') + ' C à F, ' + nc + ' non cotée' + (nc > 1 ? 's' : '') + '.' }));
+    if (hum.length) lignes.push(el('li', { text: 'Terrain : ' + pl(hum.length, 'fait') + ', dont ' + rec + ' recoupé' + (rec > 1 ? 's' : '') + ' par une source publique' + (hum.length - rec ? ', ' + (hum.length - rec) + ' à confirmer' : '') + '.' }));
+    var manq = (f.couverture || {}).manquants || [];
+    if (manq.length) lignes.push(el('li', { text: 'Aucun extrait sur ' + manq.join(', ') + ' : la réponse ne dit rien de ' + (manq.length > 1 ? 'ces lieux' : 'ce lieu') + '.' }));
+    (f.divergences || []).forEach(function (g2) {
+      var li = el('li', {}, [document.createTextNode('Versions à recouper : extraits ')]);
+      g2.forEach(function (k, i) { if (i) li.appendChild(document.createTextNode(' et ')); if (ouvrir) { var b = el('button', { type: 'button', text: String(k) }); b.addEventListener('click', function () { ouvrir(k); }); li.appendChild(b); } else li.appendChild(document.createTextNode(String(k))); });
+      li.appendChild(document.createTextNode(' (même lieu, mêmes dates, auteurs différents).'));
+      lignes.push(li);
+    });
+    if (!lignes.length) return null;
+    return el('div', { class: 'bs-fiab' }, [el('h4', { text: 'Fiabilité de la réponse' }), el('ul', {}, lignes)]);
+  }
   function panneauArgos(question) {
     var p = $('bs-panneau'); p.textContent = '';
     p.appendChild(el('div', { class: 'bs-rep' }, [el('h3', { text: 'Réponse d\'Argos' }), el('p', { class: 'bs-rep-q', text: question }),
@@ -1349,7 +1382,7 @@
     centreArgos = true; ouvrirToile('Argos'); centreArgos = false; toile.classList.add('bs-argos'); toile.classList.add('bs-sans-question');
     etat('Recherche dans le corpus', true); panneauArgos(question);
     var monJeu = jeu, parN = {}, texte = '', nbH = 0, nbS = 0;
-    argosDonnees = { question: question, extraits: [], texte: '', agents: {}, cites: [], fin: null };
+    argosDonnees = { question: question, extraits: [], texte: '', agents: {}, cites: [], fin: null, fiabilite: null };
     var arret = function (msg) { if (monJeu !== jeu) return; var z = $('bs-argos-texte'); if (z && !texte) z.appendChild(el('p', { text: msg })); terminer(msg); };
     await attendre(1500);
     var j = await jetonArgos();
@@ -1388,7 +1421,7 @@
                 if (monJeu !== jeu) return;
                 var hum = x.categorie === 'humint', n2;
                 if (hum) { n2 = noeud('fait', 0, 0, svgPicto(pictoDuType(x.type)), maj(x.type) || 'Fait', [x.pays, x.date].filter(Boolean).join(' · '), B.surikat); n2.el.setAttribute('data-etat', x.statut === 'corrobore' ? 'trouve' : 'partiel'); marque(n2, String(x.n), STATUTS_ARGOS[x.statut] || ''); }
-                else { var ti = x.titre || STATUTS_ARGOS[x.statut] || 'Source'; n2 = noeud('source', 0, 0, '<b>' + String(x.n) + '</b>', ti, x.date || '', B.veille, true); n2.el.setAttribute('data-verif', 'validee'); }
+                else { var ti = (x.source && x.source.nom) || x.titre || STATUTS_ARGOS[x.statut] || 'Source'; n2 = noeud('source', 0, 0, '<b>' + String(x.n) + '</b>', ti, x.date || '', B.veille, true); n2.el.setAttribute('data-verif', 'validee'); marque(n2, (x.source && x.source.cote) || '?', 'Cote ' + coteTexte(x.source && x.source.cote)); }
                 n2.donnees = { argos: x, cite: false, faits: [] }; n2.el.setAttribute('data-argos', ''); parN[x.n] = n2;
                 (texte.match(/\[(\d{1,3}(?:,\s*\d{1,3})*)\]/g) || []).join(',').replace(/\d+/g, function (num) { if (parN[num]) { parN[num].donnees.cite = true; parN[num].el.setAttribute('data-cite', ''); } });
               }, k * 140);
@@ -1396,11 +1429,13 @@
           } else if (ev === 'texte') {
             texte += donnee.t; ecrireArgos(texte, parN);
             (donnee.t.match(/\d{1,3}(?=[\],])/g) || []).forEach(function (num) { if (parN[num]) { parN[num].donnees.cite = true; parN[num].el.setAttribute('data-cite', ''); } });
-          } else if (ev === 'fin') fin = donnee;
+          } else if (ev === 'fiabilite') { argosDonnees.fiabilite = donnee; }
+          else if (ev === 'fin') fin = donnee;
           else if (ev === 'erreur') texte += (texte ? '\n' : '') + 'Incident : ' + donnee.message;
         });
       }
       ecrireArgos(texte, parN);
+      var bf = blocFiabilite(argosDonnees, function (k) { if (parN[k]) ouvrirFiche(parN[k]); }); var zt = $('bs-argos-texte'); if (bf && zt) zt.parentNode.insertBefore(bf, zt.nextSibling);
       argosDonnees.texte = texte; argosDonnees.cites = (fin && Array.isArray(fin.cites) && fin.cites.length && typeof fin.cites[0] === 'number') ? fin.cites.slice() : [];
       (texte.match(/\[(\d{1,3}(?:,\s*\d{1,3})*)\]/g) || []).join(',').replace(/\d+/g, function (num) { num = Number(num); if (argosDonnees.cites.indexOf(num) < 0) argosDonnees.cites.push(num); }); argosDonnees.fin = fin || { issue: 'interrompu' };
       /* les trois résultats s'allument sur l'arbre */
