@@ -382,7 +382,6 @@
   .bs-pan-sorties svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
   .bs-pan-sorties-titre { margin: 26px 0 0; font-size: 12px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
   /* ---------- moteur Argos : le corpus en ligne (HUMINT reformulé, sources, veille). Pas d'agents ni de vues locales. ---------- */
-  .bs-argos .bs-nd[data-cat="sorties"], .bs-argos .bs-liens line[data-cat="sorties"], .bs-argos [data-zone="3"] { display: none !important; }
   .bs-nd[data-cite] .bs-rond { box-shadow: 0 0 0 5px rgba(255, 255, 255, .22); }
   .bs-nd[data-argos]:not([data-cite]) { opacity: .5; }
   .bs-rech-moteur { display: flex; justify-content: center; gap: 6px; margin: 18px 0 0; }
@@ -396,6 +395,31 @@
   .bs-vers-argos { position: absolute; left: 16px; top: 18px; z-index: 4; display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border: 1px solid rgba(255, 255, 255, .22); border-radius: 999px; background: rgba(18, 18, 22, .6); color: var(--on-night); font-size: 13px; text-decoration: none; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
   .bs-vers-argos:hover { border-color: var(--on-night); }
   .bs-vers-argos + .bs-vers-argos { left: 16px; top: 62px; cursor: pointer; font: inherit; font-size: 13px; }   /* sous le lien Argos, pour ne pas passer sous la barre de recherche */
+  /* ---------- les trois résultats en mode Argos : note, statistiques, cartographie ---------- */
+  .bs-na { max-width: 820px; margin: 0 auto; padding: 86px 28px 80px; color: var(--ink); }
+  .bs-na h1 { margin: 0 0 6px; font-weight: 400; font-size: clamp(28px, 3.4vw, 40px); letter-spacing: -0.02em; }
+  .bs-na .bs-na-meta { margin: 0 0 28px; font-size: 13px; color: var(--muted); }
+  .bs-na h2 { margin: 34px 0 10px; padding-top: 14px; border-top: 1px solid var(--ink); font-weight: 500; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; }
+  .bs-na p, .bs-na li { font-size: 15.5px; line-height: 1.6; }
+  .bs-na .bs-na-q { font-size: 19px; line-height: 1.4; margin: 0 0 8px; }
+  .bs-na table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .bs-na th { text-align: left; font-weight: 500; padding: 7px 8px 7px 0; border-bottom: 1px solid var(--ink); }
+  .bs-na td { padding: 7px 8px 7px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .bs-na h3 { margin: 18px 0 4px; font-weight: 500; font-size: 15.5px; }
+  .bs-na ul { margin: 4px 0 0; padding-left: 20px; }
+  .bs-na small { color: var(--muted); }
+  .bs-na .bs-na-avis { margin-top: 30px; padding: 12px 14px; border: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+  .bs-na-imprimer { position: fixed; right: 18px; top: 18px; z-index: 20; }
+  .bs-ns { max-width: 1040px; margin: 0 auto; padding: 86px 28px 80px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; color: var(--ink); }
+  .bs-ns section { padding: 20px 22px; border: 1px solid var(--line); background: var(--paper); }
+  .bs-ns h2 { margin: 0 0 4px; font-weight: 500; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .bs-ns p { margin: 0 0 16px; font-size: 18px; line-height: 1.35; }
+  .bs-ns-ligne { display: grid; grid-template-columns: 130px 1fr 28px; align-items: center; gap: 10px; margin: 7px 0; font-size: 13px; }
+  .bs-ns-ligne span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bs-ns-ligne i { display: block; height: 10px; background: var(--ink); min-width: 2px; }
+  .bs-ns-ligne b { font-weight: 500; text-align: right; }
+  .bs-vue-carte iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  @media print { .bs-retour, .bs-na-imprimer { display: none !important; } .bs-na { padding-top: 0; } }
 </style>
 </head>
 <body>
@@ -439,6 +463,9 @@
   <aside class="bs-fiche" id="bs-fiche" hidden></aside>
 </section>
 
+<section class="bs-vue bs-vue-carte" id="bs-vue-carte" hidden><iframe id="bs-carte" title="Carte du théâtre"></iframe><p class="bs-legende" id="bs-carte-note"></p></section>
+<section class="bs-vue" id="bs-vue-note" hidden></section>
+<section class="bs-vue" id="bs-vue-stats" hidden></section>
 
 <script>window.addEventListener('algorAuthReady', function () { window.__algorAuthGranted = true; });</script>
 <script type="module" src="/shared/site-auth.js?v=20261020a"></script>
@@ -608,7 +635,7 @@
     var fichesDe = function (a) { return K.filter(function (k) { return k.parent === a; }); };
     /* poids de chaque branche = ce qu'elle doit loger sur son anneau le plus chargé */
     var argos = toile.classList.contains('bs-argos'), pA = Math.max(14, K.length * .9), pS = Math.max(8, Math.min(S.length, 12)), pT = Math.max(8, Math.min(F.length, 14));
-    var trou = argos ? .5 : 1.3, libre = Math.PI * 2 - trou, somme = pA + pS + pT, a = -Math.PI / 2 + trou / 2, rmax = R2;
+    var trou = 1.3, libre = Math.PI * 2 - trou, somme = pA + pS + pT, a = -Math.PI / 2 + trou / 2, rmax = R2;
     var secteur = function (p) { var d = a, f = a + libre * p / somme; a = f; return [d + .05, f - .05]; };
     var sA = secteur(pA), sS = secteur(pS), sT = secteur(pT);
     var poser = function (n, s, r) { if (n) viser(n, Math.cos((s[0] + s[1]) / 2) * r, Math.sin((s[0] + s[1]) / 2) * r); };
@@ -1006,9 +1033,9 @@
         var tF = 0, tS = 0, tC = 0, tI = 0;
         for (var idF in faits) { tF++; var eF = faits[idF].fait.el.getAttribute('data-etat'); if (eF === 'trouve') tS++; if (eF === 'partiel') tC++; if (/attaque|embuscade|engin|explos|enl[eè]vement|accrochage|frappe|assassinat|assaut|tirs?/i.test(faits[idF].f.type || '')) tI++; }
         surEvenement({ type: 'reponse', bulletin: true, question: '', decompte: { incidents: tI, faits: tF, solides: tS, jours: 0, par_lieu: [] }, etabli: [], contexte: [],
-          limites: [tC ? tC + ' fait' + (tC > 1 ? 's' : '') + ' à confirmer : une seule voix, ou une source non cotée A ou B.' : '', (tF - tS - tC) ? (tF - tS - tC) + ' fait' + (tF - tS - tC > 1 ? 's' : '') + ' sans source publique.' : '', 'Les notes, le théâtre et les statistiques s\'ouvrent depuis les trois grandes pastilles, en haut de l\'arbre.'].filter(Boolean) });
+          limites: [tC ? tC + ' fait' + (tC > 1 ? 's' : '') + ' à confirmer : une seule voix, ou une source non cotée A ou B.' : '', (tF - tS - tC) ? (tF - tS - tC) + ' fait' + (tF - tS - tC > 1 ? 's' : '') + ' sans source publique.' : '', 'Les notes, la cartographie et les statistiques s\'ouvrent depuis les trois grandes pastilles, en haut de l\'arbre.'].filter(Boolean) });
       }
-      [['note', 'Notes'], ['carte', 'Théâtre'], ['stats', 'Statistiques']].forEach(function (x) { B[x[0]].el.setAttribute('data-etat', 'trouve'); libelle(B[x[0]], x[1], 'ouvrir'); }); termine = true; majOnglets(); B.veille.el.setAttribute('data-etat', nbSources ? 'trouve' : 'rien'); return; }
+      [['note', 'Notes'], ['carte', 'Cartographie'], ['stats', 'Statistiques']].forEach(function (x) { B[x[0]].el.setAttribute('data-etat', 'trouve'); libelle(B[x[0]], x[1], 'ouvrir'); }); termine = true; majOnglets(); B.veille.el.setAttribute('data-etat', nbSources ? 'trouve' : 'rien'); return; }
 
     var x = faits[ev.id];
     if (!x) return;
@@ -1080,8 +1107,8 @@
 
   function terminer(texte) { etat(texte, false); setTimeout(function () { var pb = $('bs-panneau').querySelector('.bs-pan-bilan'); if (pb) pb.remove(); if (!toile.hasAttribute('data-accueil')) {
       var anc = $('bs-panneau').querySelectorAll('.bs-pan-sorties, .bs-pan-sorties-titre'); anc.forEach(function (x) { x.remove(); });
-      if (Object.keys(faits).length) {
-        var bloc = el('div', { class: 'bs-pan-sorties' }, [['note', 'Notes'], ['carte', 'Théâtre'], ['stats', 'Statistiques']].map(function (x) { var b = el('button', { type: 'button' }); b.innerHTML = svgPicto(x[0]); b.appendChild(document.createTextNode(x[1])); b.addEventListener('click', function () { montrerVue(x[0]); }); return b; }));
+      if (Object.keys(faits).length || (argosDonnees && argosDonnees.fin)) {
+        var bloc = el('div', { class: 'bs-pan-sorties' }, [['note', 'Notes'], ['carte', 'Cartographie'], ['stats', 'Statistiques']].map(function (x) { var b = el('button', { type: 'button' }); b.innerHTML = svgPicto(x[0]); b.appendChild(document.createTextNode(x[1])); b.addEventListener('click', function () { montrerVue(x[0]); }); return b; }));
         var tete = $('bs-panneau').querySelector('.bs-rep-chiffres'), titre = el('p', { class: 'bs-pan-sorties-titre', text: 'Vos résultats' });
         if (tete) { tete.parentNode.insertBefore(bloc, tete.nextSibling); tete.parentNode.insertBefore(titre, bloc); } else { $('bs-panneau').appendChild(titre); $('bs-panneau').appendChild(bloc); }
       }
@@ -1092,12 +1119,14 @@
   var termine = false, vueCourante = 'graphe';
   function majOnglets() { [].forEach.call(document.querySelectorAll('#bs-onglets button'), function (b) { b.setAttribute('aria-selected', String(b.getAttribute('data-vue') === vueCourante)); }); }
   function montrerVue(v) {
-    if (v !== 'graphe' && !Object.keys(faits).length) return;
+    var enArgos = toile.classList.contains('bs-argos');
+    if (v !== 'graphe' && (enArgos ? !(argosDonnees && argosDonnees.fin) : !Object.keys(faits).length)) return;
     vueCourante = v; fermerFiche();
     toile.hidden = v !== 'graphe'; $('bs-retour').hidden = v === 'graphe';
     ['carte', 'note', 'stats'].forEach(function (x) { $('bs-vue-' + x).hidden = v !== x; });
     majOnglets();
     if (v === 'graphe') { if (suivre) cadrer(); return; }
+    if (enArgos) { vuesArgos[v]($('bs-vue-' + v)); return; }
     if (window.AlgorVues) window.AlgorVues[v]($('bs-vue-' + v), donnees(), { el: el, jour: jour, maj: maj, domaine: domaine, voirFait: function (id) { montrerVue('graphe'); ouvrirFiche(faits[id].fait); } });
   }
   [].forEach.call(document.querySelectorAll('#bs-onglets button'), function (b) { b.addEventListener('click', function () { montrerVue(b.getAttribute('data-vue')); }); });
@@ -1169,7 +1198,7 @@
     /* les trois sorties d'Algor : chacune ouvre son onglet */
     pose('reponse', 'reponse', null, svgPicto('sortie'), 'Réponse', 'panneau de droite', {}, false, 120);
     pose('note', 'sortie', 'algor', svgPicto('note'), 'Notes', 'en attente', { vue: 'note' }, true, 760);
-    pose('carte', 'sortie', 'algor', svgPicto('carte'), 'Théâtre', 'en attente', { vue: 'carte' }, true, 820);
+    pose('carte', 'sortie', 'algor', svgPicto('carte'), 'Cartographie', 'en attente', { vue: 'carte' }, true, 820);
     pose('stats', 'sortie', 'algor', svgPicto('stats'), 'Statistiques', 'en attente', { vue: 'stats' }, true, 880);
     AGENTS.forEach(function (a, i) {
       setTimeout(function () {
@@ -1203,6 +1232,69 @@
       return r && r.data && r.data.session ? r.data.session.access_token : null;
     } catch (e) { return null; }
   }
+  /* Ce qu'Argos a rendu pour la question en cours : c'est la matière des trois résultats (note, statistiques, carte). */
+  var argosDonnees = null;
+  function compter(liste, cle) { var c = {}; liste.forEach(function (x) { var k = cle(x); if (k) c[k] = (c[k] || 0) + 1; }); return Object.keys(c).map(function (k) { return [k, c[k]]; }).sort(function (a, b) { return b[1] - a[1]; }); }
+  function barres(paires, max) { var m = Math.max.apply(null, paires.map(function (x) { return x[1]; }).concat([1])); return paires.slice(0, max || 8).map(function (x) { var b = el('i'); b.style.width = Math.round(x[1] / m * 100) + '%'; return el('div', { class: 'bs-ns-ligne' }, [el('span', { text: x[0], title: x[0] }), el('div', {}, [b]), el('b', { text: String(x[1]) })]); }); }
+  var NOMS_AGENTS = { militaire: 'Militaire', histoire: 'Histoire', politique: 'Politique', economie: 'Économie', ethnies: 'Ethnies' };
+  var vuesArgos = {
+    /* la note : la réponse vérifiée d'Argos, les extraits qu'elle cite, puis le fond apporté par les agents */
+    note: function (c) {
+      var d = argosDonnees, cites = d.extraits.filter(function (x) { return d.cites.indexOf(x.n) >= 0; });
+      c.textContent = '';
+      var imp = el('button', { class: 'bs-btn bs-na-imprimer', type: 'button', text: 'Imprimer ou enregistrer en PDF' }); imp.addEventListener('click', function () { window.print(); });
+      var fond = [];
+      Object.keys(NOMS_AGENTS).forEach(function (a) { ((d.agents[a] || {}).connaissances || []).forEach(function (k) { fond.push(el('h3', { text: NOMS_AGENTS[a] + ' : ' + k.titre })); fond.push(el('ul', {}, (k.pioche || []).map(function (p) { return el('li', { text: p.texte }); }))); }); });
+      c.appendChild(el('article', { class: 'bs-na' }, [imp,
+        el('h1', { text: 'Note Argos' }), el('p', { class: 'bs-na-meta', text: 'Établie le ' + new Date().toLocaleDateString('fr-FR') + ' · ' + d.extraits.length + ' extraits retrouvés, ' + cites.length + ' cités' }),
+        el('h2', { text: 'Question' }), el('p', { class: 'bs-na-q', text: d.question }),
+        el('h2', { text: 'Réponse' })].concat(d.texte.trim().split(/\n+/).map(function (t) { return el('p', { text: t }); })).concat([
+        el('h2', { text: 'Extraits cités' }),
+        cites.length ? el('table', {}, [el('tr', {}, ['N°', 'Statut', 'Type', 'Lieu', 'Date'].map(function (t) { return el('th', { text: t }); }))].concat(cites.map(function (x) { return el('tr', {}, [String(x.n), STATUTS_ARGOS[x.statut] || x.statut, x.categorie === 'humint' ? maj(x.type) : (x.titre || maj(x.type)), [x.lieu, x.pays].filter(Boolean).join(', '), x.date || x.periode || ''].map(function (t) { return el('td', { text: t || '' }); })); }))) : el('p', { text: 'Aucun extrait cité.' }),
+        fond.length ? el('h2', { text: 'Connaissances de fond des agents IA' }) : null,
+        fond.length ? el('p', {}, [el('small', { text: 'Fiches du socle de connaissance, non encore validées par un analyste.' })]) : null]).concat(fond).concat([
+        el('p', { class: 'bs-na-avis', text: 'Réponse rédigée par une intelligence artificielle (Mistral AI) à partir du seul corpus d\'Algor Acces, puis vérifiée phrase par phrase. Elle peut contenir des erreurs et ne remplace pas l\'avis d\'un analyste. Les sources humaines sont protégées : leur texte n\'est jamais reproduit.' })])));
+    },
+    /* les statistiques : une question, une phrase, un visuel par carte */
+    stats: function (c) {
+      var d = argosDonnees, e = d.extraits, cites = e.filter(function (x) { return d.cites.indexOf(x.n) >= 0; });
+      var bloc = function (titre, phrase, paires) { return paires.length ? el('section', {}, [el('h2', { text: titre }), el('p', { text: phrase })].concat(barres(paires))) : null; };
+      var parStatut = compter(e, function (x) { return STATUTS_ARGOS[x.statut] || x.statut; }), parType = compter(e, function (x) { return maj(x.type); });
+      var parLieu = compter(e, function (x) { return x.lieu || x.pays; }), parMois = compter(e, function (x) { return String(x.date || '').slice(0, 7); }).sort(function (a, b) { return a[0] < b[0] ? -1 : 1; });
+      var parAgent = Object.keys(NOMS_AGENTS).map(function (a) { return [NOMS_AGENTS[a], ((d.agents[a] || {}).connaissances || []).length]; }).filter(function (x) { return x[1]; });
+      var terrain = e.filter(function (x) { return x.categorie === 'humint'; }).length;
+      c.textContent = '';
+      c.appendChild(el('div', { class: 'bs-ns' }, [
+        bloc('Sur quoi repose la réponse ?', e.length + ' extrait' + (e.length > 1 ? 's' : '') + ' retrouvé' + (e.length > 1 ? 's' : '') + ', dont ' + cites.length + ' cité' + (cites.length > 1 ? 's' : '') + ' et ' + terrain + ' de terrain.', parStatut),
+        bloc('De quels types de faits parle-t-on ?', parType.length ? 'Le type le plus présent : ' + parType[0][0].toLowerCase() + '.' : '', parType),
+        bloc('Où ?', parLieu.length ? 'Le lieu le plus cité : ' + parLieu[0][0] + '.' : '', parLieu),
+        bloc('Quand ?', parMois.length ? 'Les extraits vont de ' + parMois[0][0] + ' à ' + parMois[parMois.length - 1][0] + '.' : '', parMois),
+        bloc('Que savent les agents IA ?', parAgent.reduce(function (t, x) { return t + x[1]; }, 0) + ' fiches de fond, non validées par un analyste.', parAgent)]));
+    },
+    /* la cartographie : la vraie carte du site, telle quelle. Les extraits localisés y sont posés en repères numérotés. */
+    carte: function (c) {
+      var d = argosDonnees, pts = d.extraits.filter(function (x) { return isFinite(parseFloat(x.lat)) && isFinite(parseFloat(x.lon)); });
+      var cadre = $('bs-carte'), note = $('bs-carte-note');
+      if (note) note.textContent = pts.length ? pts.length + ' extrait' + (pts.length > 1 ? 's' : '') + ' localisé' + (pts.length > 1 ? 's' : '') + ' sur ' + d.extraits.length : 'Aucun extrait localisé pour cette question';
+      var poser = function () {
+        var w = cadre.contentWindow, essais = 0;
+        var t = setInterval(function () {
+          var carte = null; try { carte = w.HumintMap && w.HumintMap.getMap && w.HumintMap.getMap(); } catch (err) {}
+          if (++essais > 120) clearInterval(t);
+          if (!carte || !w.mapboxgl) return;
+          clearInterval(t);
+          var bornes = new w.mapboxgl.LngLatBounds();
+          pts.forEach(function (x) {
+            var m = w.document.createElement('div'); m.textContent = String(x.n); m.title = (STATUTS_ARGOS[x.statut] || '') + ' · ' + [x.lieu, x.pays].filter(Boolean).join(', ');
+            m.style.cssText = 'width:26px;height:26px;border-radius:50%;background:#fff;color:#111;border:2px solid #111;font:500 12px/22px sans-serif;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.5);cursor:default';
+            new w.mapboxgl.Marker({ element: m }).setLngLat([parseFloat(x.lon), parseFloat(x.lat)]).addTo(carte); bornes.extend([parseFloat(x.lon), parseFloat(x.lat)]);
+          });
+          if (pts.length) { try { carte.fitBounds(bornes, { padding: 80, maxZoom: 8, duration: 800 }); } catch (err) {} }
+        }, 500);
+      };
+      if (cadre.getAttribute('data-question') !== d.question) { cadre.setAttribute('data-question', d.question); cadre.onload = poser; cadre.src = '/carte/'; }
+    }
+  };
   function panneauArgos(question) {
     var p = $('bs-panneau'); p.textContent = '';
     p.appendChild(el('div', { class: 'bs-rep' }, [el('h3', { text: 'Réponse d\'Argos' }), el('p', { class: 'bs-rep-q', text: question }),
@@ -1225,6 +1317,7 @@
     ouvrirToile('Argos'); toile.classList.add('bs-argos'); toile.classList.add('bs-sans-question');
     etat('Recherche dans le corpus', true); panneauArgos(question);
     var monJeu = jeu, parN = {}, texte = '', nbH = 0, nbS = 0;
+    argosDonnees = { question: question, extraits: [], texte: '', agents: {}, cites: [], fin: null };
     var arret = function (msg) { if (monJeu !== jeu) return; var z = $('bs-argos-texte'); if (z && !texte) z.appendChild(el('p', { text: msg })); terminer(msg); };
     await attendre(1500);
     var j = await jetonArgos();
@@ -1249,11 +1342,13 @@
           if (ev === 'extraits') {
             var pe = $('bs-pan-etape'); if (pe) pe.textContent = donnee.length + ' extraits retrouvés, rédaction';
             etat(donnee.length + ' extraits retrouvés, rédaction de la réponse', true);
+            argosDonnees.extraits = donnee;
             donnee.forEach(function (x) { if (x.categorie === 'humint') nbH++; else nbS++; });
             /* les agents piochent dans leur socle, à partir de la question et des métadonnées des extraits (jamais leur texte) */
             fetch(EN_LIGNE ? URL_AGENTS : '/api/pioche', { method: 'POST', headers: EN_LIGNE ? { Authorization: 'Bearer ' + j, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: question, extraits: donnee.map(function (x) { return { type: x.type, lieu: x.lieu, pays: x.pays, date: x.date }; }) }) })
               .then(function (r) { return r.ok ? r.json() : null; }).then(function (j2) {
                 if (!j2 || monJeu !== jeu) return;
+                argosDonnees.agents = j2.agents;
                 Object.keys(j2.agents).forEach(function (cle) { if (agents[cle]) surEvenement(Object.assign({ type: 'agent', cle: cle, requetes: [], synthese: '', date: j2.date }, j2.agents[cle])); });
               }).catch(function () {});
             donnee.forEach(function (x, k) {
@@ -1274,6 +1369,10 @@
         });
       }
       ecrireArgos(texte, parN);
+      argosDonnees.texte = texte; argosDonnees.cites = (fin && Array.isArray(fin.cites) && fin.cites.length && typeof fin.cites[0] === 'number') ? fin.cites.slice() : [];
+      (texte.match(/\[(\d{1,3}(?:,\s*\d{1,3})*)\]/g) || []).join(',').replace(/\d+/g, function (num) { num = Number(num); if (argosDonnees.cites.indexOf(num) < 0) argosDonnees.cites.push(num); }); argosDonnees.fin = fin || { issue: 'interrompu' };
+      /* les trois résultats s'allument sur l'arbre */
+      [['note', 'Notes'], ['carte', 'Cartographie'], ['stats', 'Statistiques']].forEach(function (x) { if (B[x[0]]) { B[x[0]].el.setAttribute('data-etat', 'trouve'); libelle(B[x[0]], x[1], 'ouvrir'); } });
       var ISSUES = { repondu: 'réponse citée', non_documente: 'le corpus ne documente pas ce point', refus_source: 'question refusée : elle vise une source protégée', hors_champ: 'question hors du champ d\'Argos', refuse_citation: 'réponse écartée par le vérificateur de citations' };
       var cites = fin && fin.cites ? fin.cites.length : 0;
       terminer('Argos : ' + (nbH + nbS) + ' extraits retrouvés (' + nbH + ' de terrain, ' + nbS + ' sources et veille), ' + cites + ' cités. ' + (fin ? maj(ISSUES[fin.issue] || fin.issue) + '.' : 'Flux interrompu.') + (fin && fin.rejets ? ' ' + fin.rejets + ' phrase' + (fin.rejets > 1 ? 's' : '') + ' écartée' + (fin.rejets > 1 ? 's' : '') + ' par le vérificateur.' : '') + (fin && fin.quota_restant !== null && fin.quota_restant !== undefined ? ' Questions restantes aujourd\'hui : ' + fin.quota_restant + '.' : ''));
