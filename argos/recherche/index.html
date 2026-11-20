@@ -282,7 +282,7 @@
   .bs-fiche { width: min(400px, 100%) !important; }
   .bs-aide { display: none; }
   /* ---------- la barre de recherche : grande et centrée à l'accueil, elle monte en haut quand la recherche part ---------- */
-  .bs-recherche { position: absolute; z-index: 4; left: calc((100% - 400px) / 2); top: 18px; width: min(640px, calc(100% - 460px)); transform: translate(-50%, 0); transition: top .7s var(--ease), left .7s var(--ease), width .7s var(--ease), transform .7s var(--ease); cursor: auto; }
+  .bs-recherche { position: absolute; z-index: 4; left: max(calc((100% - 400px) / 2), calc(124px + min(640px, calc(100% - 560px)) / 2)); top: 18px; width: min(640px, calc(100% - 560px)); transform: translate(-50%, 0); transition: top .7s var(--ease), left .7s var(--ease), width .7s var(--ease), transform .7s var(--ease); cursor: auto; }
   .bs-toile[data-accueil] .bs-recherche { left: 50%; top: 46%; width: min(780px, 88%); transform: translate(-50%, -50%); }
   .bs-rech-titre { margin: 0 0 26px; font-weight: 400; font-size: clamp(30px, 4.2vw, 52px); line-height: 1.05; letter-spacing: -0.03em; text-align: center; color: var(--on-night); text-wrap: balance; }
   .bs-rech-barre { display: flex; align-items: center; gap: 12px; height: 52px; padding: 0 8px 0 20px; border-radius: 999px; background: var(--paper); color: var(--ink); box-shadow: 0 0 0 1px rgba(255, 255, 255, .5), 0 18px 60px -18px rgba(0, 0, 0, .9); transition: height .7s var(--ease), box-shadow .25s; }
@@ -702,6 +702,12 @@
   function svgPicto(nom) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + PICTO[nom] + '</svg>'; }
 
   /* image d'une source : la vraie image de l'article, sinon l'icône du site, sinon ses initiales */
+  /* image déjà connue (choisie à l'avance pour une fiche du socle) : posée telle quelle, sans serveur intermédiaire */
+  function imageDirecte(n, src) {
+    var img = new Image(); img.referrerPolicy = 'no-referrer'; img.alt = '';
+    img.onload = function () { if (img.naturalWidth < 8) return; n.rond.textContent = ''; n.rond.appendChild(img); n.donnees.image = src; n.donnees.vraieImage = true; };
+    img.src = src;
+  }
   function chargerImage(n) {
     if (EN_LIGNE) return;   /* sur le site, pas de serveur local pour aller chercher l'image d'une page */
     var s = n.donnees.s, d = domaine(s.url);
@@ -1022,7 +1028,7 @@
           var nc = noeud('savoir', na.x + Math.cos(a) * ray, na.y + Math.sin(a) * ray, '<b>' + ini + '</b>', c.titre, c.socle ? 'fiche du socle' : domaine(c.sources[0].url), na);
           if (c.socle) nc.el.setAttribute('data-base', '');
           nc.donnees = { c: c, s: c.sources[0], agent: na.nom };
-          if (c.sources[0]) chargerImage(nc);
+          if (c.image) imageDirecte(nc, c.image); else if (c.sources[0]) chargerImage(nc);
           c.faits.forEach(function (id) { if (faits[id]) croiser(nc, faits[id].fait); });
         }, k * 260);
       });
@@ -1374,7 +1380,7 @@
       /* les trois résultats s'allument sur l'arbre */
       [['note', 'Notes'], ['carte', 'Cartographie'], ['stats', 'Statistiques']].forEach(function (x) { if (B[x[0]]) { B[x[0]].el.setAttribute('data-etat', 'trouve'); libelle(B[x[0]], x[1], 'ouvrir'); } });
       var ISSUES = { repondu: 'réponse citée', non_documente: 'le corpus ne documente pas ce point', refus_source: 'question refusée : elle vise une source protégée', hors_champ: 'question hors du champ d\'Argos', refuse_citation: 'réponse écartée par le vérificateur de citations' };
-      var cites = fin && fin.cites ? fin.cites.length : 0;
+      var cites = argosDonnees.cites.length;
       terminer('Argos : ' + (nbH + nbS) + ' extraits retrouvés (' + nbH + ' de terrain, ' + nbS + ' sources et veille), ' + cites + ' cités. ' + (fin ? maj(ISSUES[fin.issue] || fin.issue) + '.' : 'Flux interrompu.') + (fin && fin.rejets ? ' ' + fin.rejets + ' phrase' + (fin.rejets > 1 ? 's' : '') + ' écartée' + (fin.rejets > 1 ? 's' : '') + ' par le vérificateur.' : '') + (fin && fin.quota_restant !== null && fin.quota_restant !== undefined ? ' Questions restantes aujourd\'hui : ' + fin.quota_restant + '.' : ''));
     } catch (e) { arret('Argos est injoignable depuis cette machine (' + e.message + ').'); }
   }
