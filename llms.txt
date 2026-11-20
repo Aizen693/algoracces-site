@@ -10,7 +10,6 @@ Le site est en français, avec une version anglaise disponible par le sélecteur
 - [Théâtres](https://algoracces.fr/theatres/): les zones couvertes et ce qui y est suivi
 - [Méthodologie](https://algoracces.fr/methodologie/): collecte, datation, sourçage, croisement, cotation et restitution du renseignement de sources ouvertes
 - [Argos](https://algoracces.fr/argos/): assistant de renseignement qui répond à partir du seul corpus et cite chaque fait
-- [Débunkage](https://algoracces.fr/debunkage/): cartographie des campagnes de désinformation, avec un cas de démonstration
 - [Offres](https://algoracces.fr/offres/): formules d'accès, tarif sur devis
 
 ## À propos
