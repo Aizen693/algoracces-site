@@ -420,6 +420,7 @@
   .bs-ns-ligne b { font-weight: 500; text-align: right; }
   .bs-vue-carte iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
   @media print { .bs-retour, .bs-na-imprimer { display: none !important; } .bs-na { padding-top: 0; } }
+  .bs-vue-carte .bs-legende { top: auto; bottom: 18px; }   /* en bas : en haut il cachait les filtres de la carte */
 </style>
 </head>
 <body>
@@ -1281,7 +1282,14 @@
     carte: function (c) {
       var d = argosDonnees, pts = d.extraits.filter(function (x) { return isFinite(parseFloat(x.lat)) && isFinite(parseFloat(x.lon)); });
       var cadre = $('bs-carte'), note = $('bs-carte-note');
-      if (note) note.textContent = pts.length ? pts.length + ' extrait' + (pts.length > 1 ? 's' : '') + ' localisé' + (pts.length > 1 ? 's' : '') + ' sur ' + d.extraits.length : 'Aucun extrait localisé pour cette question';
+      /* la carte s'ouvre déjà réglée sur la question, par les paramètres qu'elle accepte (/carte/?pays=…&from=…&to=…) :
+         le pays le plus présent dans les extraits de terrain (sinon dans tous), et la période qu'ils couvrent */
+      var terrain = d.extraits.filter(function (x) { return x.categorie === 'humint'; }), base = terrain.length ? terrain : d.extraits;
+      var paysQ = (compter(base, function (x) { return x.pays; })[0] || [])[0] || '';
+      var dates = base.filter(function (x) { return x.pays === paysQ && /^\d{4}-\d\d-\d\d/.test(x.date || ''); }).map(function (x) { return x.date.slice(0, 10); }).sort();
+      var adresse = '/carte/' + (paysQ ? '?pays=' + encodeURIComponent(paysQ) + (dates.length ? '&from=' + dates[0] + '&to=' + dates[dates.length - 1] : '') : '');
+      var fr = function (x) { return x.split('-').reverse().join('/'); };
+      if (note) note.textContent = paysQ ? paysQ + (dates.length ? ' · du ' + fr(dates[0]) + ' au ' + fr(dates[dates.length - 1]) : '') + ' · ' + pts.length + ' extrait' + (pts.length > 1 ? 's' : '') + ' d\'Argos repéré' + (pts.length > 1 ? 's' : '') + ' par leur numéro' : 'La question ne désigne aucun pays : carte générale';
       var poser = function () {
         var w = cadre.contentWindow, essais = 0;
         var t = setInterval(function () {
@@ -1295,10 +1303,10 @@
             m.style.cssText = 'width:26px;height:26px;border-radius:50%;background:#fff;color:#111;border:2px solid #111;font:500 12px/22px sans-serif;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.5);cursor:default';
             new w.mapboxgl.Marker({ element: m }).setLngLat([parseFloat(x.lon), parseFloat(x.lat)]).addTo(carte); bornes.extend([parseFloat(x.lon), parseFloat(x.lat)]);
           });
-          if (pts.length) { try { carte.fitBounds(bornes, { padding: 80, maxZoom: 8, duration: 800 }); } catch (err) {} }
+          if (pts.length && !paysQ) { try { carte.fitBounds(bornes, { padding: 80, maxZoom: 8, duration: 800 }); } catch (err) {} }
         }, 500);
       };
-      if (cadre.getAttribute('data-question') !== d.question) { cadre.setAttribute('data-question', d.question); cadre.onload = poser; cadre.src = '/carte/'; }
+      if (cadre.getAttribute('data-adresse') !== adresse + '|' + d.question) { cadre.setAttribute('data-adresse', adresse + '|' + d.question); cadre.onload = poser; cadre.src = adresse; }
     }
   };
   function panneauArgos(question) {
