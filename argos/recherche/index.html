@@ -421,6 +421,18 @@
   .bs-vue-carte iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
   @media print { .bs-retour, .bs-na-imprimer { display: none !important; } .bs-na { padding-top: 0; } }
   .bs-vue-carte .bs-legende { top: auto; bottom: 18px; }   /* en bas : en haut il cachait les filtres de la carte */
+  .bs-argos-logo { width: 56%; height: 56%; }
+  /* ---------- lisibilité de l'arbre (20/11) ----------
+     un seul titre par branche, porté par sa pastille (les grands titres flottants faisaient doublon) ;
+     les noms passent par-dessus les traits grâce à un liseré couleur du fond ; la pastille de branche dit ce qu'elle contient. */
+  .bs-zone { display: none !important; }
+  .bs-lib strong, .bs-lib small { text-shadow: 0 0 3px var(--night), 0 0 6px var(--night), 0 0 10px var(--night); }
+  .bs-nd[data-genre="pilier"] .bs-lib { top: 44px; width: 170px; margin-left: -85px; }
+  .bs-nd[data-genre="pilier"] .bs-lib strong { font-size: 14px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; -webkit-line-clamp: 1; }
+  .bs-nd[data-genre="pilier"] .bs-lib small { display: block !important; margin-top: 3px; font-size: 12px; color: var(--on-night-2); white-space: normal; }
+  .bs-nd[data-genre="pilier"] .bs-lib small b { display: inline-block; margin-top: 4px; padding: 1px 9px; border: 1px solid rgba(255, 255, 255, .3); border-radius: 999px; font-weight: 400; color: var(--on-night); }
+  .bs-nd[data-genre="sortie"] .bs-lib small { display: none; }
+  .bs-nd[data-genre="algor"] .bs-lib strong { font-size: 17px; }
 </style>
 </head>
 <body>
@@ -473,7 +485,11 @@
 <script>
 (function () {
   var $ = function (id) { return document.getElementById(id) || document.createElement('div'); };
-  var EN_LIGNE = true;   /* passé à true par outils/construire-argos.mjs pour la page du site */
+  var EN_LIGNE = true;
+  var LOGO_ARGOS = '<svg class="bs-argos-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    + '<path d="M3 15c2.4-3.6 5.4-5.4 9-5.4s6.6 1.8 9 5.4c-2.4 3.6-5.4 5.4-9 5.4S5.4 18.6 3 15z"/><circle cx="12" cy="15" r="2.6"/><circle cx="12" cy="15" r=".9" fill="currentColor"/>'
+    + '<g fill="currentColor" stroke="none"><circle cx="12" cy="4.6" r="1.1"/><circle cx="6.1" cy="6.6" r="1.1"/><circle cx="17.9" cy="6.6" r="1.1"/><circle cx="2.6" cy="10.8" r="1.1"/><circle cx="21.4" cy="10.8" r="1.1"/></g></svg>';
+  var centreArgos = false;   /* vrai pendant une recherche Argos : le centre de l'arbre porte le nom et le logo d'Argos */   /* passé à true par outils/construire-argos.mjs pour la page du site */
   var NS = 'http://www.w3.org/2000/svg';
   var toile = $('bs-toile'), monde = $('bs-monde'), svg = $('bs-liens');
   var noeuds = [], liens = [], faits = {};
@@ -646,7 +662,7 @@
     poser(B.veille, sS, R1); poser(B.surikat, sT, R1);
     /* les trois sorties, dans l'ouverture du haut : Notes, Théâtre, Statistiques */
     [[B.note, -.42], [B.carte, 0], [B.stats, .42]].forEach(function (x) { if (x[0]) viser(x[0], Math.cos(-Math.PI / 2 + x[1]) * R2 * .94, Math.sin(-Math.PI / 2 + x[1]) * R2 * .94); });
-    zone(3, [-Math.PI / 2 - .6, -Math.PI / 2 + .6], R2 * .94, 'Résultats', 'Ce qu\'Algor vous remet', '');
+    zone(3, [-Math.PI / 2 - .6, -Math.PI / 2 + .6], R2 * .94, 'Résultats', 'Ce qu\'Argos vous remet', '');
     var rT = F.length ? repartir(F, sT[0], sT[1], R2) : R1, rS = S.length ? repartir(S, sS[0], sS[1], R2) : R1, rA = R2;
     rmax = Math.max(rmax, rT, rS);
     /* les agents : chacun reçoit une part du secteur à la mesure de ses fiches, qui se rangent derrière lui */
@@ -657,9 +673,10 @@
       if (fiches.length) { rA = Math.max(rA, repartir(fiches, b, f, R3)); rmax = Math.max(rmax, rA); }
       b = f;
     });
-    if (B.humint) libelle(B.humint, 'Terrain', F.length ? F.length + ' fait' + (F.length > 1 ? 's' : '') : 'en attente');
-    if (B.osint) libelle(B.osint, argos ? 'Sources et veille' : 'Sources publiques', S.length ? S.length + ' source' + (S.length > 1 ? 's' : '') : 'en attente');
-    if (B.agents) libelle(B.agents, 'Agents IA', K.length ? K.length + ' fiche' + (K.length > 1 ? 's' : '') : 'cinq piliers');
+    var branche = function (n, titre, sous, compte) { if (!n) return; libelle(n, titre, ''); var sm = n.lib.lastChild; sm.textContent = sous; sm.appendChild(document.createElement('br')); var b = document.createElement('b'); b.textContent = compte; sm.appendChild(b); };
+    branche(B.humint, 'Terrain', argos ? 'HUMINT reformulé' : 'Flux HUMINT', F.length ? F.length + ' fait' + (F.length > 1 ? 's' : '') : 'en attente');
+    branche(B.osint, argos ? 'Sources' : 'Sources publiques', argos ? 'Presse et veille' : 'Publié et vérifiable', S.length ? S.length + ' source' + (S.length > 1 ? 's' : '') : 'en attente');
+    branche(B.agents, 'Agents IA', 'Socle, non validé', K.length ? K.length + ' fiche' + (K.length > 1 ? 's' : '') : 'cinq piliers');
     zone(0, sT, rT, 'Terrain', argos ? 'HUMINT du corpus, reformulé' : 'Ce que rapporte le flux HUMINT', F.length ? F.length + ' fait' + (F.length > 1 ? 's' : '') : '');
     zone(1, sS, rS, argos ? 'Sources et veille' : 'Sources publiques', argos ? 'Presse, références, notes d\'analyse' : 'Ce qui est publié et vérifiable', S.length ? S.length + ' source' + (S.length > 1 ? 's' : '') : '');
     zone(2, sA, rA, 'Agents IA', argos ? 'Socle de connaissance, non validé par un analyste' : 'Ce que sait le socle de connaissance', K.length ? K.length + ' fiche' + (K.length > 1 ? 's' : '') : 'cinq piliers');
@@ -669,7 +686,7 @@
     if (flux[0]) flux[0].setAttribute('d', 'M0,' + hautQ + ' L0,-52');
     [R1, R2, R3].forEach(function (r, i) { if (anneaux[i]) { anneaux[i].setAttribute('r', r); anneaux[i].style.display = (i < 2 || K.length) ? '' : 'none'; } });
     var bord = Math.max(rmax, R2) + 80;
-    borne = { x0: -bord - 250, y0: -(R2 + 190), x1: bord + 250, y1: bord + 90 };
+    borne = { x0: -bord, y0: -bord + 20, x1: bord, y1: bord };   /* sans les grands titres de zone, plus besoin de marges latérales */
     if (suivre) cadrer();
   }
   function enTete(c, titre, sous, compte) { var h = couloirs[c].firstChild; h.children[0].textContent = titre; h.children[1].textContent = sous; h.children[2].textContent = compte; }
@@ -810,7 +827,8 @@
         ['Source', hum ? 'Source humaine protégée. Le texte n\'est jamais affiché tel quel : Argos le reformule dans sa réponse.' : (x.fiche ? el('a', { href: x.fiche, target: '_blank', rel: 'noopener', text: 'Ouvrir la fiche Algor Acces' }) : '')],
         ['Cité dans la réponse', d.cite ? 'Oui' : 'Non, extrait retrouvé mais pas utilisé']];
     }
-    if (g === 'algor') { genre = 'Centre'; lignes = [['Rôle', 'Algor relie les trois branches : ce que dit le terrain, ce que disent les sources ouvertes, et la lecture des agents IA.'], ['État', $('bs-etat').textContent]]; }
+    if (g === 'algor' && toile.classList.contains('bs-argos')) { genre = 'Centre'; lignes = [['Rôle', 'Argos relie les trois branches qui répondent à votre question : les faits de terrain et les sources du corpus d\'Algor Acces, et le fond apporté par les agents IA. Ses trois résultats s\'ouvrent en haut de l\'arbre.']]; }
+    else if (g === 'algor') { genre = 'Centre'; lignes = [['Rôle', 'Algor relie les trois branches : ce que dit le terrain, ce que disent les sources ouvertes, et la lecture des agents IA.'], ['État', $('bs-etat').textContent]]; }
     if (g === 'pilier') { genre = 'Branche'; lignes = [['Rôle', d.role]]; if (n === B.agents && !EN_LIGNE) lignes.push(['Socle de connaissance', el('a', { href: '../socle/', text: 'Relire et valider les fiches du socle' })]); }
     if (g === 'flux') { genre = d.genre; lignes = [['Rôle', d.role], ['Contenu', d.sous]]; }
     if (g === 'fait') {
@@ -1196,7 +1214,7 @@
       }, delai);
     };
     var monJeu = jeu;
-    pose('algor', 'algor', null, '<img src="/favicon.jpg" alt="">', 'Algor', 'fusion', {}, false, 0);
+    pose('algor', 'algor', null, centreArgos ? LOGO_ARGOS : '<img src="/favicon.jpg" alt="">', centreArgos ? 'Argos' : 'Algor', centreArgos ? 'votre question' : 'fusion', {}, false, 0);
     pose('humint', 'pilier', 'algor', svgPicto('humint'), 'HUMINT', 'terrain', { role: 'Ce que rapporte le terrain. Cette branche pilote la recherche : chaque fait est confronté aux sources ouvertes.' }, false, 180);
     pose('osint', 'pilier', 'algor', svgPicto('osint'), 'OSINT', 'sources ouvertes', { role: 'Ce que disent les sources publiques. Une source n\'est reliée à un fait que si sa page a été ouverte et rapporte le même événement.' }, false, 300);
     pose('agents', 'pilier', 'algor', svgPicto('agents'), 'Agents IA', 'cinq piliers', { role: 'Les piliers de connaissance. Cinq spécialistes se documentent en sources ouvertes sur le sujet du bulletin et apportent le fond qui aide à comprendre les faits. Chaque connaissance renvoie à ses sources.' }, false, 420);
@@ -1328,7 +1346,7 @@
     });
   }
   async function lancerArgos(question) {
-    ouvrirToile('Argos'); toile.classList.add('bs-argos'); toile.classList.add('bs-sans-question');
+    centreArgos = true; ouvrirToile('Argos'); centreArgos = false; toile.classList.add('bs-argos'); toile.classList.add('bs-sans-question');
     etat('Recherche dans le corpus', true); panneauArgos(question);
     var monJeu = jeu, parN = {}, texte = '', nbH = 0, nbS = 0;
     argosDonnees = { question: question, extraits: [], texte: '', agents: {}, cites: [], fin: null };
