@@ -394,6 +394,21 @@
   .bs-argos-texte p { margin: 0 0 12px; }
   .bs-argos-texte button { margin: 0 2px; min-width: 22px; height: 20px; padding: 0 5px; border: 1px solid rgba(255, 255, 255, .4); border-radius: 999px; background: none; font: inherit; font-size: 11px; line-height: 1; color: var(--on-night); cursor: pointer; vertical-align: 2px; }
   .bs-argos-texte button:hover { background: var(--on-night); color: var(--night); }
+  .bs-risque { margin: 0 0 18px; padding: 14px 14px 12px; border: 1px solid var(--line); --niv: #8C8D93; }
+  .bs-risque[data-niveau="modéré"] { --niv: #C28A2E; }
+  .bs-risque[data-niveau="élevé"], .bs-risque[data-niveau="très élevé"] { --niv: #B4323F; }
+  .bs-risque-tete { display: flex; align-items: center; gap: 14px; }
+  .bs-risque-pc { font-size: 34px; line-height: 1; font-weight: 500; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .bs-risque-lib { display: flex; flex-direction: column; gap: 2px; }
+  .bs-risque-lib b { font-weight: 500; font-size: 15px; }
+  .bs-risque-lib b::first-letter { text-transform: uppercase; }
+  .bs-risque-lib small { font-size: 12.5px; color: var(--muted); }
+  .bs-risque-barre { height: 4px; margin: 12px 0 14px; background: var(--line); }
+  .bs-risque-barre i { display: block; height: 100%; background: var(--niv); }
+  .bs-risque-t { margin: 0 0 6px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .bs-risque ul { margin: 0; padding-left: 18px; font-size: 13.5px; line-height: 1.5; }
+  .bs-risque li + li { margin-top: 4px; }
+  .bs-risque-m { margin: 10px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
   .bs-pan-ia { margin: 22px 0 0; padding-top: 12px; border-top: 1px solid var(--line); font-size: 12px; line-height: 1.5; color: var(--muted); }
   .bs-vers-argos { position: absolute; left: 16px; top: 18px; z-index: 4; display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border: 1px solid rgba(255, 255, 255, .22); border-radius: 999px; background: rgba(18, 18, 22, .6); color: var(--on-night); font-size: 13px; text-decoration: none; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
   .bs-vers-argos:hover { border-color: var(--on-night); }
@@ -1567,8 +1582,24 @@
   function panneauArgos(question) {
     var p = $('bs-panneau'); p.textContent = '';
     p.appendChild(el('div', { class: 'bs-rep' }, [el('h3', { text: 'Réponse d\'Argos' }), el('p', { class: 'bs-rep-q', text: question }),
+      el('div', { class: 'bs-risque', id: 'bs-risque', hidden: '' }),
       el('div', { class: 'bs-argos-texte', id: 'bs-argos-texte' }), el('p', { class: 'bs-pan-etape', id: 'bs-pan-etape', text: 'Recherche dans le corpus' })]));
     p.appendChild(el('p', { class: 'bs-pan-ia', text: 'Réponse rédigée par une intelligence artificielle (Mistral AI) à partir du seul corpus d\'Algor Acces, puis vérifiée phrase par phrase. Elle peut contenir des erreurs : ouvrez les extraits cités. Les fiches des agents IA ne sont pas encore validées par un analyste.' }));
+  }
+  /* 23/11/2026 : niveau de risque en tête de la réponse. Le pourcentage et ses raisons sont calculés par le serveur
+     sur le corpus (supabase/functions/assistant-renseignement/risque.ts), jamais rédigés par l'IA. */
+  function blocRisque(r) {
+    var z = $('bs-risque'); if (!z || !r || typeof r.pourcentage !== 'number') return;
+    var pc = Math.max(0, Math.min(100, Math.round(r.pourcentage)));
+    z.textContent = ''; z.hidden = false; z.setAttribute('data-niveau', r.niveau || '');
+    var barre = el('div', { class: 'bs-risque-barre' }, [el('i')]); barre.firstChild.style.width = pc + '%';
+    z.appendChild(el('div', { class: 'bs-risque-tete' }, [
+      el('span', { class: 'bs-risque-pc', text: pc + ' %' }),
+      el('span', { class: 'bs-risque-lib' }, [el('b', { text: 'Risque ' + (r.niveau || '') }), el('small', { text: r.zone || '' })])]));
+    z.appendChild(barre);
+    z.appendChild(el('p', { class: 'bs-risque-t', text: 'Pourquoi ce niveau' }));
+    z.appendChild(el('ul', {}, (r.raisons || []).map(function (t) { return el('li', { text: t }); })));
+    if (r.methode) z.appendChild(el('p', { class: 'bs-risque-m', text: r.methode }));
   }
   function ecrireArgos(texte, parN) {
     var z = $('bs-argos-texte'); if (!z) return; z.textContent = '';
@@ -1641,6 +1672,7 @@
             texte += donnee.t; ecrireArgos(texte, parN);
             (donnee.t.match(/\d{1,3}(?=[\],])/g) || []).forEach(function (num) { if (parN[num]) { parN[num].donnees.cite = true; parN[num].el.setAttribute('data-cite', ''); } });
           } else if (ev === 'fiabilite') { argosDonnees.fiabilite = donnee; }
+          else if (ev === 'risque') { argosDonnees.risque = donnee; blocRisque(donnee); }
           else if (ev === 'fin') fin = donnee;
           else if (ev === 'erreur') texte += (texte ? '\n' : '') + 'Incident : ' + donnee.message;
         });
