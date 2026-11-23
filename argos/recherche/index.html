@@ -405,6 +405,7 @@
   .bs-risque-lib small { font-size: 12.5px; color: var(--muted); }
   .bs-risque-barre { height: 4px; margin: 12px 0 14px; background: var(--line); }
   .bs-risque-barre i { display: block; height: 100%; background: var(--niv); }
+  .bs-risque-per { margin: 0 0 12px; font-size: 12.5px; line-height: 1.45; color: var(--ink); opacity: .85; }
   .bs-risque-t { margin: 0 0 6px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
   .bs-risque ul { margin: 0; padding-left: 18px; font-size: 13.5px; line-height: 1.5; }
   .bs-risque li + li { margin-top: 4px; }
@@ -1597,6 +1598,7 @@
       el('span', { class: 'bs-risque-pc', text: pc + ' %' }),
       el('span', { class: 'bs-risque-lib' }, [el('b', { text: 'Risque ' + (r.niveau || '') }), el('small', { text: r.zone || '' })])]));
     z.appendChild(barre);
+    if (r.periode) z.appendChild(el('p', { class: 'bs-risque-per', text: r.periode }));
     z.appendChild(el('p', { class: 'bs-risque-t', text: 'Pourquoi ce niveau' }));
     z.appendChild(el('ul', {}, (r.raisons || []).map(function (t) { return el('li', { text: t }); })));
     if (r.methode) z.appendChild(el('p', { class: 'bs-risque-m', text: r.methode }));
