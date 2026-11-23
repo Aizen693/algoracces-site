@@ -877,14 +877,15 @@
     return filVeille.then(function (l) { var u = net(url); return l.find(function (it) { return it.source_url && net(it.source_url) === u; }) || null; });
   }
   function viserSurCarte(x) { $('bs-carte')._vise = x; montrerVue('carte'); centrerSurCarte(); }
+  var REPERE_ARGOS = 'width:18px;height:18px;border-radius:50%;border:2px solid #fff;background:#1C1D21;box-shadow:0 0 0 4px rgba(28,29,33,.35);cursor:pointer';
   function centrerSurCarte() {
     var cadre = $('bs-carte'), x = cadre._vise; if (!x || !cadre._posees) return;
     var w = cadre.contentWindow, carte = null; try { carte = w.HumintMap.getMap(); } catch (err) {}
     if (!carte) return;
     cadre._vise = null;
     var lon = parseFloat(x.lon), lat = parseFloat(x.lat);
-    Object.keys(cadre._marques || {}).forEach(function (k) { var m = cadre._marques[k]; m.style.background = '#fff'; m.style.color = '#111'; m.style.zIndex = ''; });
-    var m = (cadre._marques || {})[x.n]; if (m) { m.style.background = '#111'; m.style.color = '#fff'; m.style.zIndex = '5'; }
+    Object.keys(cadre._marques || {}).forEach(function (k) { var m = cadre._marques[k]; m.style.boxShadow = '0 0 0 4px rgba(28,29,33,.35)'; m.style.zIndex = ''; });
+    var m = (cadre._marques || {})[x.n]; if (m) { m.style.boxShadow = '0 0 0 7px rgba(28,29,33,.5)'; m.style.zIndex = '5'; }
     /* même geste que sur l'onglet théâtre : si le lieu porte un symbole de localité (plusieurs incidents au même
        point), on ouvre sa fiche de localité, avec la chronologie de tous ses incidents ; sinon la fiche du point. */
     carte.once('moveend', function () { setTimeout(function () {
@@ -903,20 +904,15 @@
   }
   /* résumé de l'extrait posé sur la carte quand la carte n'a pas de point correspondant (autre pays, autre période) */
   function resumeSurCarte(w, carte, x, lon, lat) {
-    var d = w.document, boite = d.createElement('div'), ligne = function (t, gras) { var p = d.createElement('div'); p.textContent = t; if (gras) p.style.fontWeight = '600'; p.style.margin = '2px 0'; boite.appendChild(p); };
-    boite.style.cssText = 'font:13px/1.4 sans-serif;color:#111;max-width:260px';
-    ligne('Extrait n° ' + x.n + ' · ' + (STATUTS_ARGOS[x.statut] || x.statut || ''), true);
-    if (x.titre) ligne(x.titre);
-    ligne([maj(x.type), [x.lieu, x.pays].filter(Boolean).join(', '), x.date || x.periode].filter(Boolean).join(' · '));
-    var b = d.createElement('button'); b.type = 'button'; b.textContent = 'Ouvrir la fiche dans Argos';
-    b.style.cssText = 'margin-top:8px;padding:6px 10px;border:1px solid #111;background:#fff;color:#111;font:inherit;cursor:pointer';
-    b.addEventListener('click', function () { ficheArgos(x.n); });
-    boite.appendChild(b);
-    new w.mapboxgl.Popup({ closeButton: true, maxWidth: '300px', offset: 16 }).setLngLat([lon, lat]).setDOMContent(boite).addTo(carte);
-  }
-  function ficheArgos(n) {
-    var r = [].find.call(document.querySelectorAll('.bs-rond'), function (r) { var k = r.parentNode.__n; return k && k.donnees && k.donnees.argos && k.donnees.argos.n === n; });
-    montrerVue('graphe'); if (r) ouvrirFiche(r.parentNode.__n);
+    /* même fiche courte que l'onglet Argos de /carte/ (shared/assistant.js, ficheRepere) */
+    var d = w.document, mk = function (tag, cls, txt) { var e = d.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+    var boite = mk('div'), tete = mk('div', 'popup-header'), barre = mk('div', 'popup-dot-bar'), corps = mk('div', 'popup-body');
+    barre.style.background = '#1C1D21'; tete.appendChild(barre); tete.appendChild(mk('div', 'popup-actor', maj(x.type) || 'Incident'));
+    var ligne = function (k, v) { if (!v) return; var r = mk('div', 'popup-row'); r.appendChild(mk('span', 'popup-key', k)); r.appendChild(mk('span', 'popup-val', v)); corps.appendChild(r); };
+    ligne('Lieu', [x.lieu, x.pays].filter(Boolean).join(', ')); ligne('Date', x.date || x.periode); ligne('Statut', STATUTS_ARGOS[x.statut] || x.statut);
+    if (x.categorie === 'humint') { var r = mk('div', 'popup-row'); r.appendChild(mk('span', 'popup-val', 'Source humaine protégée.')); corps.appendChild(r); }
+    boite.appendChild(tete); boite.appendChild(corps);
+    new w.mapboxgl.Popup({ closeButton: true, maxWidth: '320px', className: 'humint-popup', offset: 14 }).setLngLat([lon, lat]).setDOMContent(boite).addTo(carte);
   }
   function lien(u) { return el('a', { href: u, target: '_blank', rel: 'noopener noreferrer', text: u }); }
   function ouvrirFiche(n) {
@@ -1408,7 +1404,7 @@
         bloc('Quand ?', parMois.length ? 'Les extraits vont de ' + parMois[0][0] + ' à ' + parMois[parMois.length - 1][0] + '.' : '', parMois),
         bloc('Que savent les agents IA ?', parAgent.reduce(function (t, x) { return t + x[1]; }, 0) + ' fiches de fond, non validées par un analyste.', parAgent)]));
     },
-    /* la cartographie : la vraie carte du site, telle quelle. Les extraits localisés y sont posés en repères numérotés. */
+    /* la cartographie : la vraie carte du site, telle quelle. Les extraits localisés y sont posés avec le repère de l'onglet Argos de /carte/. */
     carte: function (c) {
       var d = argosDonnees, pts = d.extraits.filter(function (x) { return isFinite(parseFloat(x.lat)) && isFinite(parseFloat(x.lon)); });
       var cadre = $('bs-carte'), note = $('bs-carte-note');
@@ -1430,7 +1426,7 @@
         if (carte) ['humint-glow', 'humint-ring', 'humint-dots'].forEach(function (id) { try { var v = cadre._seuls ? 'none' : 'visible'; if (carte.getLayer(id) && (carte.getLayoutProperty(id, 'visibility') || 'visible') !== v) carte.setLayoutProperty(id, 'visibility', v); } catch (err) {} });
       };
       if (note) {
-        note.textContent = paysQ ? paysQ + ' · ' + pts.length + ' extrait' + (pts.length > 1 ? 's' : '') + ' d\'Argos, repéré' + (pts.length > 1 ? 's' : '') + ' par leur numéro dans la réponse' : (pts.length ? pts.length + ' extrait' + (pts.length > 1 ? 's' : '') + ' d\'Argos repéré' + (pts.length > 1 ? 's' : '') + ' par leur numéro' : 'La question ne désigne aucun pays : carte générale');
+        note.textContent = paysQ ? paysQ + ' · ' + pts.length + ' extrait' + (pts.length > 1 ? 's' : '') + ' d\'Argos sur la carte' : (pts.length ? pts.length + ' extrait' + (pts.length > 1 ? 's' : '') + ' d\'Argos sur la carte' : 'La question ne désigne aucun pays : carte générale');
         if (paysQ) {
           var bascule = el('button', { type: 'button', text: cadre._seuls ? 'Voir tout le théâtre' : 'Extraits d\'Argos seuls' });
           bascule.addEventListener('click', function () { cadre._seuls = !cadre._seuls; bascule.textContent = cadre._seuls ? 'Voir tout le théâtre' : 'Extraits d\'Argos seuls'; masquer(); });
@@ -1448,15 +1444,15 @@
           if (paysQ && !nb && essais < 30) return;
           clearInterval(t);
           var bornes = new w.mapboxgl.LngLatBounds();
-          /* 23/11/2026 : un repère par lieu, étiqueté « n° 3 · 5 » : ce sont les numéros des extraits dans la réponse
-             d'Argos, pas un nombre d'incidents (les pastilles chiffrées de l'onglet théâtre, elles, comptent) */
+          /* 23/11/2026 : un repère par lieu, identique à celui de l'onglet Argos de /carte/ (shared/assistant.js, .ar-repere) :
+             rond sombre bordé de blanc, sans numéro */
           var parLieu = {};
           pts.forEach(function (x) { var k = parseFloat(x.lon).toFixed(5) + ',' + parseFloat(x.lat).toFixed(5); (parLieu[k] = parLieu[k] || []).push(x); });
           Object.keys(parLieu).forEach(function (k) {
             var grp = parLieu[k].sort(function (a, b) { return a.n - b.n; }), x = grp[0];
-            var m = w.document.createElement('div'); m.textContent = 'n° ' + grp.map(function (y) { return y.n; }).join(' · ');
-            m.title = grp.length + ' extrait' + (grp.length > 1 ? 's' : '') + ' d\'Argos ici · ' + [x.lieu, x.pays].filter(Boolean).join(', ');
-            m.style.cssText = 'height:24px;padding:0 9px;border-radius:4px;background:#fff;color:#111;border:2px solid #111;font:600 12px/20px sans-serif;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.5);cursor:pointer';
+            var m = w.document.createElement('div');
+            m.title = 'Ouvrir la fiche';
+            m.style.cssText = REPERE_ARGOS;
             grp.forEach(function (y) { cadre._marques[y.n] = m; });
             /* un clic ouvre le signal : fiche de localité ou du point, comme sur l'onglet théâtre */
             m.addEventListener('click', function (ev) { ev.stopPropagation(); cadre._vise = x; centrerSurCarte(); });
