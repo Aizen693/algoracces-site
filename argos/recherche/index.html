@@ -423,7 +423,15 @@
   .bs-ns-ligne b { font-weight: 500; text-align: right; }
   .bs-vue-carte iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
   @media print { .bs-retour, .bs-na-imprimer { display: none !important; } .bs-na { padding-top: 0; } }
-  .bs-vue-carte .bs-legende { top: auto; bottom: 18px; }   /* en bas : en haut il cachait les filtres de la carte */
+  .bs-vue-carte .bs-legende { top: auto; bottom: 18px; }
+  .bs-vue-carte.avec-rep #bs-carte { width: calc(100% - min(400px, 100%)); }
+  .bs-vue-carte.avec-rep .bs-legende { left: calc((100% - min(400px, 100%)) / 2); }
+  .bs-vue-carte.avec-rep .bs-panneau { background: var(--night); }
+  @media (max-width: 720px) {
+    .bs-vue-carte.avec-rep #bs-carte { width: 100%; height: 55%; }
+    .bs-vue-carte.avec-rep .bs-panneau { top: 55%; width: 100%; border-left: 0; border-top: 1px solid rgba(255, 255, 255, .16); }
+    .bs-vue-carte.avec-rep .bs-legende { left: 50%; bottom: calc(45% + 12px); }
+  }   /* en bas : en haut il cachait les filtres de la carte */
   .bs-argos-logo { width: 56%; height: 56%; }
   /* ---------- lisibilité de l'arbre (20/11) ----------
      un seul titre par branche, porté par sa pastille (les grands titres flottants faisaient doublon) ;
@@ -1247,12 +1255,20 @@
   /* ---------- onglets : Graphe, Théâtre, Notes, Statistiques ---------- */
   var termine = false, vueCourante = 'graphe';
   function majOnglets() { [].forEach.call(document.querySelectorAll('#bs-onglets button'), function (b) { b.setAttribute('aria-selected', String(b.getAttribute('data-vue') === vueCourante)); }); }
+  /* 23/11/2026 : sur la cartographie d'Argos, la réponse reste à droite de la carte, comme sur l'arbre */
+  function rangerPanneau(surCarte) {
+    var pan = $('bs-panneau'), vc = $('bs-vue-carte');
+    vc.classList.toggle('avec-rep', !!surCarte);
+    if (surCarte) { if (pan.parentNode !== vc) vc.appendChild(pan); }
+    else if (pan.parentNode !== toile) toile.insertBefore(pan, toile.querySelector('.bs-legende-cat'));
+  }
   function montrerVue(v) {
     var enArgos = toile.classList.contains('bs-argos');
     if (v !== 'graphe' && (enArgos ? !(argosDonnees && argosDonnees.fin) : !Object.keys(faits).length)) return;
     vueCourante = v; fermerFiche();
     toile.hidden = v !== 'graphe'; $('bs-retour').hidden = v === 'graphe';
     ['carte', 'note', 'stats'].forEach(function (x) { $('bs-vue-' + x).hidden = v !== x; });
+    rangerPanneau(enArgos && v === 'carte');
     majOnglets();
     if (v === 'graphe') { if (suivre) cadrer(); return; }
     if (enArgos) { vuesArgos[v]($('bs-vue-' + v)); return; }
@@ -1290,7 +1306,7 @@
     monde.querySelectorAll('.bs-nd, .bs-rep, .bs-couloir, .bs-carte-q, .bs-zone').forEach(function (n) { n.remove(); }); svg.textContent = '';
     $('bs-retour').hidden = true;
     $('bs-fiche').hidden = true; $('bs-saisie').hidden = true; toile.hidden = false; $('bs-nouveau').hidden = true; $('bs-onglets').hidden = true;
-    ['carte', 'note', 'stats'].forEach(function (x) { $('bs-vue-' + x).hidden = true; });
+    ['carte', 'note', 'stats'].forEach(function (x) { $('bs-vue-' + x).hidden = true; }); rangerPanneau(false); vueCourante = 'graphe';
     toile.removeAttribute('data-cours'); toile.setAttribute('data-accueil', ''); etat('', false);
     $('bs-rech-champ').value = ''; $('bs-rech-cadre').textContent = '';
     setTimeout(function () { $('bs-rech-champ').focus(); }, 60);
@@ -1306,7 +1322,7 @@
     panneauAttente('Bilan du flux');
     $('bs-fiche').hidden = true; $('bs-q').hidden = true;
     $('bs-saisie').hidden = true; toile.hidden = false; $('bs-nouveau').hidden = false; $('bs-onglets').hidden = false;
-    termine = false; vueCourante = 'graphe'; ['carte', 'note', 'stats'].forEach(function (x) { $('bs-vue-' + x).hidden = true; }); majOnglets();
+    termine = false; vueCourante = 'graphe'; ['carte', 'note', 'stats'].forEach(function (x) { $('bs-vue-' + x).hidden = true; }); rangerPanneau(false); majOnglets();
     vue = { x: toile.clientWidth / 2, y: toile.clientHeight / 2, k: 1 }; aLaMain(true); appliquer();
     /* le squelette du croquis : Algor au centre, trois branches, une sortie */
     var pose = function (cle, genre, parent, contenu, titre, sousTitre, donnees, attente, delai) {
@@ -1560,7 +1576,13 @@
       var p = el('p'), reste = par, m;
       while ((m = reste.match(/\[(\d{1,3}(?:,\s*\d{1,3})*)\]/))) {
         p.appendChild(document.createTextNode(reste.slice(0, m.index)));
-        m[1].split(/,\s*/).forEach(function (num) { var b = el('button', { type: 'button', text: num, title: 'Voir l\'extrait ' + num + ' sur l\'arbre' }); b.addEventListener('click', function () { if (parN[num]) ouvrirFiche(parN[num]); }); p.appendChild(b); });
+        m[1].split(/,\s*/).forEach(function (num) { var b = el('button', { type: 'button', text: num, title: 'Voir l\'extrait ' + num }); b.addEventListener('click', function () {
+          var k = parN[num]; if (!k) return;
+          var x = k.donnees && k.donnees.argos;
+          if (vueCourante === 'carte' && x && isFinite(parseFloat(x.lat)) && isFinite(parseFloat(x.lon))) { viserSurCarte(x); return; }
+          if (vueCourante !== 'graphe') montrerVue('graphe');
+          ouvrirFiche(k);
+        }); p.appendChild(b); });
         reste = reste.slice(m.index + m[0].length);
       }
       p.appendChild(document.createTextNode(reste)); z.appendChild(p);
