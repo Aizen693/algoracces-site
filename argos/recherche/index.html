@@ -883,12 +883,22 @@
     if (!carte) return;
     cadre._vise = null;
     var lon = parseFloat(x.lon), lat = parseFloat(x.lat);
-    Object.keys(cadre._marques || {}).forEach(function (k) { var m = cadre._marques[k]; m.style.transform = ''; m.style.background = '#fff'; m.style.color = '#111'; m.style.zIndex = ''; });
+    Object.keys(cadre._marques || {}).forEach(function (k) { var m = cadre._marques[k]; m.style.background = '#fff'; m.style.color = '#111'; m.style.zIndex = ''; });
     var m = (cadre._marques || {})[x.n]; if (m) { m.style.background = '#111'; m.style.color = '#fff'; m.style.zIndex = '5'; }
-    carte.once('moveend', function () {
+    /* même geste que sur l'onglet théâtre : si le lieu porte un symbole de localité (plusieurs incidents au même
+       point), on ouvre sa fiche de localité, avec la chronologie de tous ses incidents ; sinon la fiche du point. */
+    carte.once('moveend', function () { setTimeout(function () {
+      [].forEach.call(w.document.querySelectorAll('.mapboxgl-popup'), function (p) { p.remove(); });
+      var ici = carte.project([lon, lat]), cible = null, meilleur = 30;
+      [].forEach.call(w.document.querySelectorAll('.loc-mark'), function (b) {
+        var r = b.getBoundingClientRect(); if (!r.width) return;
+        var dist = Math.hypot(r.left + r.width / 2 - ici.x, r.top + r.height / 2 - ici.y);
+        if (dist < meilleur) { meilleur = dist; cible = b; }
+      });
+      if (cible) { cible.click(); return; }
       var ok = false; try { ok = w.HumintMap.popupNear(lon, lat, String(x.date || '').slice(0, 10)); } catch (err) {}
       if (!ok) resumeSurCarte(w, carte, x, lon, lat);
-    });
+    }, 150); });
     carte.flyTo({ center: [lon, lat], zoom: Math.max(carte.getZoom(), 10), duration: 900 });
   }
   /* résumé de l'extrait posé sur la carte quand la carte n'a pas de point correspondant (autre pays, autre période) */
@@ -1415,7 +1425,7 @@
       var masquer = function () {
         var w = cadre.contentWindow, doc, carte = null; try { doc = w.document; carte = w.HumintMap && w.HumintMap.getMap && w.HumintMap.getMap(); } catch (err) { return; }
         if (!doc || !doc.documentElement) return;
-        if (!doc.getElementById('argos-seuls-css')) { var st = doc.createElement('style'); st.id = 'argos-seuls-css'; st.textContent = 'html.argos-seuls .loc-mark, html.argos-seuls #analysis, html.argos-seuls #news, html.argos-seuls #timeline { display: none !important; }'; (doc.head || doc.documentElement).appendChild(st); }
+        if (!doc.getElementById('argos-seuls-css')) { var st = doc.createElement('style'); st.id = 'argos-seuls-css'; st.textContent = 'html.argos-seuls .loc-mark { visibility: hidden !important; pointer-events: none !important; } html.argos-seuls #analysis, html.argos-seuls #news, html.argos-seuls #timeline { display: none !important; }'; (doc.head || doc.documentElement).appendChild(st); }
         doc.documentElement.classList.toggle('argos-seuls', cadre._seuls);
         if (carte) ['humint-glow', 'humint-ring', 'humint-dots'].forEach(function (id) { try { var v = cadre._seuls ? 'none' : 'visible'; if (carte.getLayer(id) && (carte.getLayoutProperty(id, 'visibility') || 'visible') !== v) carte.setLayoutProperty(id, 'visibility', v); } catch (err) {} });
       };
