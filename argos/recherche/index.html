@@ -194,6 +194,8 @@
   .bs-vue-carte #bs-carte { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--paper); }
   .bs-legende { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 5; margin: 0; padding: 6px 12px; background: var(--night); color: var(--on-night); font-size: 13px; pointer-events: none; }
   .bs-legende:empty { display: none; }
+  .bs-signal { display: flex; flex-wrap: wrap; gap: 8px; }
+  .bs-signal .bs-btn { text-decoration: none; }
   .bs-legende button { pointer-events: auto; margin-left: 10px; padding: 2px 9px; border: 1px solid var(--on-night); border-radius: 999px; background: transparent; color: var(--on-night); font: inherit; font-size: 12px; cursor: pointer; }
   .bs-legende i { display: inline-block; width: 10px; height: 10px; margin-right: 8px; border: 2px solid var(--on-night); border-radius: 50%; vertical-align: -1px; }
   .bs-legende i[data-plein] { background: var(--on-night); }
@@ -839,6 +841,53 @@
   }
   var aLancer = null;
 
+  /* 23/11/2026 : chaque extrait OSINT ou HUMINT mène à son signal, dans la veille (note, rapport cyber, journal radio)
+     ou sur la cartographie d'Argos (repère centré, fiche du point ouverte quand la carte le connaît). */
+  function boutonsSignal(x) {
+    var b = [], lon = parseFloat(x.lon), lat = parseFloat(x.lat);
+    if (x.fiche && /^\/[a-z]/.test(x.fiche.url || '')) b.push(el('a', { class: 'bs-btn', href: x.fiche.url, target: '_blank', rel: 'noopener', text: 'Voir le signal sur la veille' }));
+    if (isFinite(lon) && isFinite(lat)) { var c = el('button', { class: 'bs-btn', type: 'button', text: 'Voir le signal sur la carto' }); c.addEventListener('click', function () { viserSurCarte(x); }); b.push(c); }
+    var boite = el('div', { class: 'bs-signal' }, b), attente = null;
+    /* article de presse sans fiche : la veille l'a peut-être repris dans une note (même adresse de source) */
+    if (!x.fiche && x.source && x.source.url) {
+      attente = el('small', { text: 'Recherche du signal dans la veille…' }); boite.appendChild(attente);
+      noteVeilleDe(x.source.url).then(function (note) {
+        attente.remove();
+        if (note) { boite.insertBefore(el('a', { class: 'bs-btn', href: '/veille/?note=' + encodeURIComponent(note.id), target: '_blank', rel: 'noopener', text: 'Voir le signal sur la veille' }), boite.firstChild); return; }
+        if (!boite.children.length) {
+          boite.appendChild(el('a', { class: 'bs-btn', href: x.source.url, target: '_blank', rel: 'noopener noreferrer', text: 'Lire l\'article source' }));
+          boite.appendChild(el('small', { text: 'Article de presse ni repris dans une note de veille ni localisé sur la carte.' }));
+        }
+      });
+    }
+    if (!b.length && !attente) boite.appendChild(el('small', { text: 'Ni note de veille ni position sur la carte pour cet extrait.' }));
+    return boite;
+  }
+  /* le fil de la veille (notes des abonnés premium), chargé une fois par page */
+  var filVeille = null;
+  function noteVeilleDe(url) {
+    var net = function (u) { return String(u || '').replace(/^https?:\/\/(www\.)?/, '').replace(/[?#].*$/, '').replace(/\/+$/, ''); };
+    if (!filVeille) filVeille = (async function () {
+      var sb = baseSb(); if (!sb) return [];
+      var jwt = (((await sb.auth.getSession()).data || {}).session || {}).access_token; if (!jwt) return [];
+      var r = await fetch('https://lwgrjdpuagnvvzmdbyzb.supabase.co/functions/v1/veille-feed/notifications-complet.json', { headers: { Authorization: 'Bearer ' + jwt } });
+      if (!r.ok) return [];
+      var d = await r.json(); return Array.isArray(d) ? d : (d.items || []);
+    })().catch(function () { return []; });
+    return filVeille.then(function (l) { var u = net(url); return l.find(function (it) { return it.source_url && net(it.source_url) === u; }) || null; });
+  }
+  function viserSurCarte(x) { $('bs-carte')._vise = x; montrerVue('carte'); viser(); }
+  function viser() {
+    var cadre = $('bs-carte'), x = cadre._vise; if (!x || !cadre._posees) return;
+    var w = cadre.contentWindow, carte = null; try { carte = w.HumintMap.getMap(); } catch (err) {}
+    if (!carte) return;
+    cadre._vise = null;
+    var lon = parseFloat(x.lon), lat = parseFloat(x.lat);
+    Object.keys(cadre._marques || {}).forEach(function (k) { var m = cadre._marques[k]; m.style.transform = ''; m.style.background = '#fff'; m.style.color = '#111'; m.style.zIndex = ''; });
+    var m = (cadre._marques || {})[x.n]; if (m) { m.style.background = '#111'; m.style.color = '#fff'; m.style.zIndex = '5'; }
+    carte.once('moveend', function () { try { w.HumintMap.popupNear(lon, lat, String(x.date || '').slice(0, 10)); } catch (err) {} });
+    carte.flyTo({ center: [lon, lat], zoom: Math.max(carte.getZoom(), 10), duration: 900 });
+  }
   function lien(u) { return el('a', { href: u, target: '_blank', rel: 'noopener noreferrer', text: u }); }
   function ouvrirFiche(n) {
     if (n.genre === 'sortie') { montrerVue(n.donnees.vue); return; }
@@ -852,7 +901,7 @@
         ['Statut', STATUTS_ARGOS[x.statut] || x.statut], ['Titre', x.titre || ''],
         ['Source', hum ? 'Source humaine protégée. Le texte n\'est jamais affiché tel quel : Argos le reformule dans sa réponse.' : (x.source ? (x.source.url ? el('a', { href: x.source.url, target: '_blank', rel: 'noopener noreferrer', text: x.source.nom || x.source.domaine }) : (x.source.nom || '')) : 'Aucune source publique indiquée pour cet extrait.')],
         ['Fiabilité de la source', hum ? (x.statut === 'corrobore' ? 'Fait de terrain recoupé par au moins une source publique.' : 'Fait de terrain non recoupé : à confirmer.') : (x.source ? 'Cote ' + coteTexte(x.source.cote) + ' (grille OTAN).' : '')],
-        ['Fiche Algor Acces', x.fiche ? el('a', { href: x.fiche, target: '_blank', rel: 'noopener', text: 'Ouvrir la fiche' }) : ''],
+        ['Voir le signal', boutonsSignal(x)],
         ['Version à recouper', (argosDonnees && (argosDonnees.fiabilite || {}).divergences || []).filter(function (g2) { return g2.indexOf(x.n) >= 0; }).map(function (g2) { return 'Même lieu et mêmes dates que l\'extrait ' + g2.filter(function (k) { return k !== x.n; }).join(', ') + ', mais un auteur différent.'; }).join(' ')],
         ['Cité dans la réponse', d.cite ? 'Oui' : 'Non, extrait retrouvé mais pas utilisé']];
     }
@@ -1342,7 +1391,7 @@
       var fr = function (x) { return x.split('-').reverse().join('/'); };
       /* 20/11/2026 : par défaut, la carte ne montre QUE les extraits d'Argos. Les incidents du théâtre sur toute la période
          (des centaines de points, souvent hors sujet) restent accessibles par un bouton, pour le contexte. */
-      if (cadre.getAttribute('data-adresse') !== adresse + '|' + d.question) cadre._seuls = true;
+      if (cadre.getAttribute('data-adresse') !== adresse + '|' + d.question) { cadre._seuls = true; cadre._posees = false; cadre._marques = {}; }
       var masquer = function () {
         var w = cadre.contentWindow, doc, carte = null; try { doc = w.document; carte = w.HumintMap && w.HumintMap.getMap && w.HumintMap.getMap(); } catch (err) { return; }
         if (!doc || !doc.documentElement) return;
@@ -1372,15 +1421,21 @@
           pts.forEach(function (x) {
             var m = w.document.createElement('div'); m.textContent = String(x.n); m.title = (STATUTS_ARGOS[x.statut] || '') + ' · ' + [x.lieu, x.pays].filter(Boolean).join(', ');
             m.style.cssText = 'width:26px;height:26px;border-radius:50%;background:#fff;color:#111;border:2px solid #111;font:500 12px/22px sans-serif;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.5);cursor:default';
+            cadre._marques[x.n] = m;
             new w.mapboxgl.Marker({ element: m }).setLngLat([parseFloat(x.lon), parseFloat(x.lat)]).addTo(carte); bornes.extend([parseFloat(x.lon), parseFloat(x.lat)]);
           });
           masquer();
           /* les couches d'incidents sont recréées au changement de fond (satellite) : on les remasque */
           carte.on('styledata', function () { if (cadre._seuls) masquer(); });
-          if (pts.length) setTimeout(function () { try { carte.fitBounds(bornes, { padding: 80, maxZoom: 9, duration: 800 }); } catch (err) {} }, 900);
+          setTimeout(function () {
+            cadre._posees = true;
+            if (cadre._vise) viser();
+            else if (pts.length) { try { carte.fitBounds(bornes, { padding: 80, maxZoom: 9, duration: 800 }); } catch (err) {} }
+          }, 900);
         }, 500);
       };
       if (cadre.getAttribute('data-adresse') !== adresse + '|' + d.question) { cadre.setAttribute('data-adresse', adresse + '|' + d.question); cadre.onload = poser; cadre.src = adresse; }
+      else viser();
     }
   };
   /* Ce qu'un analyste doit savoir pour juger la réponse : la valeur des sources, le terrain recoupé ou non,
