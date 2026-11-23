@@ -876,8 +876,8 @@
     })().catch(function () { return []; });
     return filVeille.then(function (l) { var u = net(url); return l.find(function (it) { return it.source_url && net(it.source_url) === u; }) || null; });
   }
-  function viserSurCarte(x) { $('bs-carte')._vise = x; montrerVue('carte'); viser(); }
-  function viser() {
+  function viserSurCarte(x) { $('bs-carte')._vise = x; montrerVue('carte'); centrerSurCarte(); }
+  function centrerSurCarte() {
     var cadre = $('bs-carte'), x = cadre._vise; if (!x || !cadre._posees) return;
     var w = cadre.contentWindow, carte = null; try { carte = w.HumintMap.getMap(); } catch (err) {}
     if (!carte) return;
@@ -1443,7 +1443,7 @@
             m.style.cssText = 'width:26px;height:26px;border-radius:50%;background:#fff;color:#111;border:2px solid #111;font:500 12px/22px sans-serif;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.5);cursor:pointer';
             cadre._marques[x.n] = m;
             /* 23/11/2026 : un clic sur le repère ouvre le signal (fiche du point de la carte, sinon résumé de l'extrait) */
-            (function (x) { m.addEventListener('click', function (ev) { ev.stopPropagation(); cadre._vise = x; viser(); }); })(x);
+            (function (x) { m.addEventListener('click', function (ev) { ev.stopPropagation(); cadre._vise = x; centrerSurCarte(); }); })(x);
             new w.mapboxgl.Marker({ element: m }).setLngLat([parseFloat(x.lon), parseFloat(x.lat)]).addTo(carte); bornes.extend([parseFloat(x.lon), parseFloat(x.lat)]);
           });
           masquer();
@@ -1451,13 +1451,13 @@
           carte.on('styledata', function () { if (cadre._seuls) masquer(); });
           setTimeout(function () {
             cadre._posees = true;
-            if (cadre._vise) viser();
+            if (cadre._vise) centrerSurCarte();
             else if (pts.length) { try { carte.fitBounds(bornes, { padding: 80, maxZoom: 9, duration: 800 }); } catch (err) {} }
           }, 900);
         }, 500);
       };
       if (cadre.getAttribute('data-adresse') !== adresse + '|' + d.question) { cadre.setAttribute('data-adresse', adresse + '|' + d.question); cadre.onload = poser; cadre.src = adresse; }
-      else viser();
+      else centrerSurCarte();
     }
   };
   /* Ce qu'un analyste doit savoir pour juger la réponse : la valeur des sources, le terrain recoupé ou non,
