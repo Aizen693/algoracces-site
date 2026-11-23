@@ -128,7 +128,9 @@
   .bs-liens path[data-croise][data-montre] { opacity: .85; }
   .bs-nd { transition: opacity .3s; }
   .bs-toile[data-focus] .bs-nd:not([data-lie]) { opacity: .16; }
-  .bs-toile[data-focus] .bs-liens line { opacity: .25; }
+  .bs-toile[data-focus] .bs-liens line { opacity: .12; transition: opacity .3s; }
+  .bs-toile[data-focus] .bs-liens line[data-lie] { opacity: 1; stroke: rgba(255, 255, 255, .8); }
+  .bs-toile[data-focus] .bs-nd:not([data-lie]) { filter: grayscale(1); }
   .bs-nd[data-genre="savoir"] .bs-rond { width: 50px; height: 50px; border-color: rgba(255, 255, 255, .6); }
   .bs-nd[data-genre="savoir"] .bs-lib { top: 31px; width: 104px; margin-left: -52px; }
   .bs-nd[data-genre="savoir"] .bs-lib strong { font-weight: 400; }
@@ -394,6 +396,9 @@
   .bs-argos-texte p { margin: 0 0 12px; }
   .bs-argos-texte button { margin: 0 2px; min-width: 22px; height: 20px; padding: 0 5px; border: 1px solid rgba(255, 255, 255, .4); border-radius: 999px; background: none; font: inherit; font-size: 11px; line-height: 1; color: var(--on-night); cursor: pointer; vertical-align: 2px; }
   .bs-argos-texte button:hover { background: var(--on-night); color: var(--night); }
+  .bs-rep-centre p { margin: 0 0 8px; line-height: 1.5; }
+  .bs-rep-centre .bs-ph-autre { opacity: .3; }
+  .bs-rep-centre .bs-ph-cite { color: #fff; background: rgba(255, 255, 255, .1); box-shadow: 0 0 0 2px rgba(255, 255, 255, .1); }
   .bs-risque { margin: 0 0 18px; padding: 14px 14px 12px; border: 1px solid var(--line); --niv: #8C8D93; }
   .bs-risque[data-niveau="modéré"] { --niv: #C28A2E; }
   .bs-risque[data-niveau="élevé"], .bs-risque[data-niveau="très élevé"] { --niv: #B4323F; }
@@ -938,6 +943,21 @@
     boite.appendChild(tete); boite.appendChild(corps);
     new w.mapboxgl.Popup({ closeButton: true, maxWidth: '320px', className: 'humint-popup', offset: 14 }).setLngLat([lon, lat]).setDOMContent(boite).addTo(carte);
   }
+  /* 23/11/2026 : la réponse d'Argos, grisée sauf les phrases qui citent cet extrait */
+  function reponseCentreeSur(num) {
+    var t = argosDonnees && argosDonnees.texte; if (!t) return '';
+    var boite = el('div', { class: 'bs-rep-centre' }), trouve = false;
+    t.trim().split(/\n+/).forEach(function (par) {
+      var p = el('p');
+      (par.match(/[^.!?…]+[.!?…]+(?:\s*\[[\d,\s]+\])*\s*|[^.!?…]+$/g) || [par]).forEach(function (ph) {
+        var nums = ((ph.match(/\[[\d,\s]+\]/g) || []).join(',').match(/\d+/g) || []).map(Number);
+        var cite = nums.indexOf(num) >= 0; if (cite) trouve = true;
+        p.appendChild(el('span', { class: cite ? 'bs-ph-cite' : 'bs-ph-autre', text: ph.replace(/\s*\[[\d,\s]+\]/g, function (m) { return ' (' + m.replace(/[\[\]\s]/g, '').replace(/,/g, ', ') + ')'; }) }));
+      });
+      boite.appendChild(p);
+    });
+    return trouve ? boite : 'Cet extrait n\'est cité dans aucune phrase de la réponse.';
+  }
   function lien(u) { return el('a', { href: u, target: '_blank', rel: 'noopener noreferrer', text: u }); }
   function ouvrirFiche(n) {
     if (n.genre === 'sortie') { montrerVue(n.donnees.vue); return; }
@@ -954,6 +974,7 @@
         ['Voir le signal', boutonsSignal(x)],
         ['Version à recouper', (argosDonnees && (argosDonnees.fiabilite || {}).divergences || []).filter(function (g2) { return g2.indexOf(x.n) >= 0; }).map(function (g2) { return 'Même lieu et mêmes dates que l\'extrait ' + g2.filter(function (k) { return k !== x.n; }).join(', ') + ', mais un auteur différent.'; }).join(' ')],
         ['Cité dans la réponse', d.cite ? 'Oui' : 'Non, extrait retrouvé mais pas utilisé']];
+      lignes.unshift(['Dans la réponse d\'Argos', reponseCentreeSur(x.n)]);
     }
     if (g === 'algor' && toile.classList.contains('bs-argos')) { genre = 'Centre'; lignes = [['Rôle', 'Argos relie les trois branches qui répondent à votre question : les faits de terrain et les sources du corpus d\'Algor Acces, et le fond apporté par les agents IA. Ses trois résultats s\'ouvrent en haut de l\'arbre.']]; }
     else if (g === 'algor') { genre = 'Centre'; lignes = [['Rôle', 'Algor relie les trois branches : ce que dit le terrain, ce que disent les sources ouvertes, et la lecture des agents IA.'], ['État', $('bs-etat').textContent]]; }
@@ -1069,9 +1090,13 @@
   function voisins(n) { var v = [n]; liens.forEach(function (l) { if (l.croise && l.de === n) v.push(l.vers); if (l.croise && l.vers === n) v.push(l.de); }); return v; }
   function eclairer() {
     var n = survol || focusSur, v = n ? voisins(n) : [];
+    /* 23/11/2026 : au clic, tout se grise sauf la pastille choisie et son chemin jusqu'au centre */
+    var choisi = !!n && n === focusSur;
+    if (choisi) for (var p = n.parent; p; p = p.parent) if (v.indexOf(p) < 0) v.push(p);
+    liens.forEach(function (l) { if (!l.croise) { if (choisi && v.indexOf(l.de) >= 0 && v.indexOf(l.vers) >= 0) l.trait.setAttribute('data-lie', ''); else l.trait.removeAttribute('data-lie'); } });
     liens.forEach(function (l) { if (l.croise) { if (n && (l.de === n || l.vers === n)) l.trait.setAttribute('data-montre', ''); else l.trait.removeAttribute('data-montre'); } });
     noeuds.forEach(function (x) { if (v.indexOf(x) >= 0) x.el.setAttribute('data-lie', ''); else x.el.removeAttribute('data-lie'); });
-    if (n && v.length > 1) toile.setAttribute('data-focus', ''); else toile.removeAttribute('data-focus');
+    if (n && (v.length > 1 || choisi)) toile.setAttribute('data-focus', ''); else toile.removeAttribute('data-focus');
   }
   function marque(n, texte, titre) {
     var m = n.el.querySelector('.bs-marque');
