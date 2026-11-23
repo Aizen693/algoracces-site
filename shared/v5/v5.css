@@ -553,3 +553,8 @@ html { scrollbar-color: #B9BABE transparent; scrollbar-width: thin; caret-color:
 .nav__links a { white-space: nowrap; }
 #ouvrir-menu svg { display: none; }
 #ouvrir-menu::after { content: ""; width: 19px; height: 5px; background: radial-gradient(circle, currentColor 2px, transparent 2.3px) 0 50% / 7px 5px repeat-x; }
+/* LinkedIn d'Algor Innov (posé par chrome.js) */
+.nav__linkedin { display: grid; place-items: center; width: 36px; height: 40px; margin-right: 4px; opacity: .78; transition: opacity .2s ease; }
+.nav__linkedin:hover { opacity: 1; }
+.nav__linkedin svg { width: 19px; height: 19px; }
+@media (max-width: 820px) { .nav__linkedin { display: none; } }
