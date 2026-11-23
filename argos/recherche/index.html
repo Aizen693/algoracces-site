@@ -885,8 +885,28 @@
     var lon = parseFloat(x.lon), lat = parseFloat(x.lat);
     Object.keys(cadre._marques || {}).forEach(function (k) { var m = cadre._marques[k]; m.style.transform = ''; m.style.background = '#fff'; m.style.color = '#111'; m.style.zIndex = ''; });
     var m = (cadre._marques || {})[x.n]; if (m) { m.style.background = '#111'; m.style.color = '#fff'; m.style.zIndex = '5'; }
-    carte.once('moveend', function () { try { w.HumintMap.popupNear(lon, lat, String(x.date || '').slice(0, 10)); } catch (err) {} });
+    carte.once('moveend', function () {
+      var ok = false; try { ok = w.HumintMap.popupNear(lon, lat, String(x.date || '').slice(0, 10)); } catch (err) {}
+      if (!ok) resumeSurCarte(w, carte, x, lon, lat);
+    });
     carte.flyTo({ center: [lon, lat], zoom: Math.max(carte.getZoom(), 10), duration: 900 });
+  }
+  /* résumé de l'extrait posé sur la carte quand la carte n'a pas de point correspondant (autre pays, autre période) */
+  function resumeSurCarte(w, carte, x, lon, lat) {
+    var d = w.document, boite = d.createElement('div'), ligne = function (t, gras) { var p = d.createElement('div'); p.textContent = t; if (gras) p.style.fontWeight = '600'; p.style.margin = '2px 0'; boite.appendChild(p); };
+    boite.style.cssText = 'font:13px/1.4 sans-serif;color:#111;max-width:260px';
+    ligne('Extrait n° ' + x.n + ' · ' + (STATUTS_ARGOS[x.statut] || x.statut || ''), true);
+    if (x.titre) ligne(x.titre);
+    ligne([maj(x.type), [x.lieu, x.pays].filter(Boolean).join(', '), x.date || x.periode].filter(Boolean).join(' · '));
+    var b = d.createElement('button'); b.type = 'button'; b.textContent = 'Ouvrir la fiche dans Argos';
+    b.style.cssText = 'margin-top:8px;padding:6px 10px;border:1px solid #111;background:#fff;color:#111;font:inherit;cursor:pointer';
+    b.addEventListener('click', function () { ficheArgos(x.n); });
+    boite.appendChild(b);
+    new w.mapboxgl.Popup({ closeButton: true, maxWidth: '300px', offset: 16 }).setLngLat([lon, lat]).setDOMContent(boite).addTo(carte);
+  }
+  function ficheArgos(n) {
+    var r = [].find.call(document.querySelectorAll('.bs-rond'), function (r) { var k = r.parentNode.__n; return k && k.donnees && k.donnees.argos && k.donnees.argos.n === n; });
+    montrerVue('graphe'); if (r) ouvrirFiche(r.parentNode.__n);
   }
   function lien(u) { return el('a', { href: u, target: '_blank', rel: 'noopener noreferrer', text: u }); }
   function ouvrirFiche(n) {
@@ -1420,8 +1440,10 @@
           var bornes = new w.mapboxgl.LngLatBounds();
           pts.forEach(function (x) {
             var m = w.document.createElement('div'); m.textContent = String(x.n); m.title = (STATUTS_ARGOS[x.statut] || '') + ' · ' + [x.lieu, x.pays].filter(Boolean).join(', ');
-            m.style.cssText = 'width:26px;height:26px;border-radius:50%;background:#fff;color:#111;border:2px solid #111;font:500 12px/22px sans-serif;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.5);cursor:default';
+            m.style.cssText = 'width:26px;height:26px;border-radius:50%;background:#fff;color:#111;border:2px solid #111;font:500 12px/22px sans-serif;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.5);cursor:pointer';
             cadre._marques[x.n] = m;
+            /* 23/11/2026 : un clic sur le repère ouvre le signal (fiche du point de la carte, sinon résumé de l'extrait) */
+            (function (x) { m.addEventListener('click', function (ev) { ev.stopPropagation(); cadre._vise = x; viser(); }); })(x);
             new w.mapboxgl.Marker({ element: m }).setLngLat([parseFloat(x.lon), parseFloat(x.lat)]).addTo(carte); bornes.extend([parseFloat(x.lon), parseFloat(x.lat)]);
           });
           masquer();
