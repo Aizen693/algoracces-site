@@ -1430,7 +1430,7 @@
         if (carte) ['humint-glow', 'humint-ring', 'humint-dots'].forEach(function (id) { try { var v = cadre._seuls ? 'none' : 'visible'; if (carte.getLayer(id) && (carte.getLayoutProperty(id, 'visibility') || 'visible') !== v) carte.setLayoutProperty(id, 'visibility', v); } catch (err) {} });
       };
       if (note) {
-        note.textContent = paysQ ? paysQ + ' · ' + pts.length + ' extrait' + (pts.length > 1 ? 's' : '') + ' d\'Argos repéré' + (pts.length > 1 ? 's' : '') + ' par leur numéro' : (pts.length ? pts.length + ' extrait' + (pts.length > 1 ? 's' : '') + ' d\'Argos repéré' + (pts.length > 1 ? 's' : '') + ' par leur numéro' : 'La question ne désigne aucun pays : carte générale');
+        note.textContent = paysQ ? paysQ + ' · ' + pts.length + ' extrait' + (pts.length > 1 ? 's' : '') + ' d\'Argos, repéré' + (pts.length > 1 ? 's' : '') + ' par leur numéro dans la réponse' : (pts.length ? pts.length + ' extrait' + (pts.length > 1 ? 's' : '') + ' d\'Argos repéré' + (pts.length > 1 ? 's' : '') + ' par leur numéro' : 'La question ne désigne aucun pays : carte générale');
         if (paysQ) {
           var bascule = el('button', { type: 'button', text: cadre._seuls ? 'Voir tout le théâtre' : 'Extraits d\'Argos seuls' });
           bascule.addEventListener('click', function () { cadre._seuls = !cadre._seuls; bascule.textContent = cadre._seuls ? 'Voir tout le théâtre' : 'Extraits d\'Argos seuls'; masquer(); });
@@ -1448,12 +1448,18 @@
           if (paysQ && !nb && essais < 30) return;
           clearInterval(t);
           var bornes = new w.mapboxgl.LngLatBounds();
-          pts.forEach(function (x) {
-            var m = w.document.createElement('div'); m.textContent = String(x.n); m.title = (STATUTS_ARGOS[x.statut] || '') + ' · ' + [x.lieu, x.pays].filter(Boolean).join(', ');
-            m.style.cssText = 'width:26px;height:26px;border-radius:50%;background:#fff;color:#111;border:2px solid #111;font:500 12px/22px sans-serif;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.5);cursor:pointer';
-            cadre._marques[x.n] = m;
-            /* 23/11/2026 : un clic sur le repère ouvre le signal (fiche du point de la carte, sinon résumé de l'extrait) */
-            (function (x) { m.addEventListener('click', function (ev) { ev.stopPropagation(); cadre._vise = x; centrerSurCarte(); }); })(x);
+          /* 23/11/2026 : un repère par lieu, étiqueté « n° 3 · 5 » : ce sont les numéros des extraits dans la réponse
+             d'Argos, pas un nombre d'incidents (les pastilles chiffrées de l'onglet théâtre, elles, comptent) */
+          var parLieu = {};
+          pts.forEach(function (x) { var k = parseFloat(x.lon).toFixed(5) + ',' + parseFloat(x.lat).toFixed(5); (parLieu[k] = parLieu[k] || []).push(x); });
+          Object.keys(parLieu).forEach(function (k) {
+            var grp = parLieu[k].sort(function (a, b) { return a.n - b.n; }), x = grp[0];
+            var m = w.document.createElement('div'); m.textContent = 'n° ' + grp.map(function (y) { return y.n; }).join(' · ');
+            m.title = grp.length + ' extrait' + (grp.length > 1 ? 's' : '') + ' d\'Argos ici · ' + [x.lieu, x.pays].filter(Boolean).join(', ');
+            m.style.cssText = 'height:24px;padding:0 9px;border-radius:4px;background:#fff;color:#111;border:2px solid #111;font:600 12px/20px sans-serif;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.5);cursor:pointer';
+            grp.forEach(function (y) { cadre._marques[y.n] = m; });
+            /* un clic ouvre le signal : fiche de localité ou du point, comme sur l'onglet théâtre */
+            m.addEventListener('click', function (ev) { ev.stopPropagation(); cadre._vise = x; centrerSurCarte(); });
             new w.mapboxgl.Marker({ element: m }).setLngLat([parseFloat(x.lon), parseFloat(x.lat)]).addTo(carte); bornes.extend([parseFloat(x.lon), parseFloat(x.lat)]);
           });
           masquer();
