@@ -547,3 +547,9 @@ html { scrollbar-color: #B9BABE transparent; scrollbar-width: thin; caret-color:
   .v5-carte-fond { top: auto; bottom: 0; height: calc(min(100vw, 520px) * .78 + 48px); -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 22%, #000 80%, transparent 100%); mask-image: linear-gradient(to bottom, transparent 0, #000 22%, #000 80%, transparent 100%); }
   .v5-lecture { top: auto; bottom: 22px; right: var(--gutter); }
 }
+/* 23/11/2026 (Gaspar : « trop de choses » dans le bandeau) : Méthodologie, Offres et À propos quittent la barre
+   et passent dans le menu de droite, dont l'icône devient trois points. */
+.nav__links a[href="/methodologie/"], .nav__links a[href="/offres/"], .nav__links a[href="/a-propos/"] { display: none; }
+.nav__links a { white-space: nowrap; }
+#ouvrir-menu svg { display: none; }
+#ouvrir-menu::after { content: ""; width: 19px; height: 5px; background: radial-gradient(circle, currentColor 2px, transparent 2.3px) 0 50% / 7px 5px repeat-x; }
