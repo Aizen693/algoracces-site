@@ -437,20 +437,31 @@
   /* ---------- statistiques en dossier imprimé (23/11/2026) ---------- */
   #bs-vue-stats { background: var(--paper); position: relative; }
   .ns { position: relative; max-width: 1080px; margin: 0 auto; padding: 96px clamp(16px, 4vw, 48px) 120px; color: var(--ink); }
-  .ns-tete { padding-bottom: 28px; border-bottom: 2px solid var(--ink); }
+  .ns-tete { padding-bottom: 0; }
+  .ns-coup { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); margin: 30px 0 0; border-top: 2px solid var(--ink); border-bottom: 1px solid var(--ink); }
+  .ns-coup button { display: flex; flex-direction: column; gap: 6px; padding: 18px 18px 18px 0; border: 0; background: none; text-align: left; font: inherit; color: var(--ink); cursor: pointer; }
+  .ns-coup button + button { padding-left: 18px; border-left: 1px solid var(--line); }
+  .ns-coup b { font-weight: 400; font-size: clamp(34px, 4.4vw, 52px); line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+  .ns-coup span { font-size: 14px; line-height: 1.35; color: #4A4B50; }
+  .ns-coup button:hover b, .ns-coup button:focus-visible b { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px; }
+  .ns-nav { position: sticky; top: 0; z-index: 4; display: flex; gap: 4px; overflow-x: auto; margin: 0 calc(-1 * clamp(16px, 4vw, 48px)); padding: 12px clamp(16px, 4vw, 48px); padding-left: max(clamp(16px, 4vw, 48px), 190px); background: rgba(255, 255, 255, .94); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  .ns-nav button { flex: none; display: inline-flex; align-items: baseline; gap: 8px; padding: 8px 14px; border: 1px solid var(--line); background: var(--paper); font: inherit; font-size: 14px; color: var(--ink); cursor: pointer; }
+  .ns-nav button span { font-size: 12px; color: #4A4B50; font-variant-numeric: tabular-nums; }
+  .ns-nav button[data-ici] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .ns-nav button[data-ici] span { color: var(--paper); opacity: .7; }
   .ns-k0 { margin: 0 0 10px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
   .ns-tete h1 { margin: 0; max-width: 24ch; font-weight: 400; font-size: clamp(26px, 3.4vw, 40px); line-height: 1.12; letter-spacing: -.015em; }
   .ns-sec { display: grid; grid-template-columns: 190px 1fr; gap: 28px; padding: 40px 0 44px; border-bottom: 1px solid var(--line); opacity: 0; transform: translateY(18px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
   .ns-sec.ns-vu { opacity: 1; transform: none; }
   .ns-corps { min-width: 0; }
-  .ns-k { display: flex; flex-direction: column; gap: 6px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .ns-k { display: flex; flex-direction: column; gap: 8px; font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink); }
   .ns-num { font-size: 44px; line-height: 1; letter-spacing: -.03em; color: var(--ink); font-variant-numeric: tabular-nums; }
   .ns-phrase { margin: 0 0 22px; max-width: 30ch; font-size: clamp(22px, 2.5vw, 30px); line-height: 1.18; letter-spacing: -.01em; }
-  .ns-note { margin: 16px 0 0; max-width: 72ch; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+  .ns-note { margin: 16px 0 0; max-width: 72ch; font-size: 14px; line-height: 1.5; color: #4A4B50; }
   .ns svg { display: block; width: 100%; height: auto; color: var(--ink); overflow: visible; font-family: var(--sans); }
-  .ns-mini { font-size: 12px; fill: var(--muted); }
+  .ns-mini { font-size: 16px; fill: var(--ink); fill-opacity: .72; }
   .ns-faint { fill: var(--faint); }
-  .ns-val { font-size: 22px; fill: var(--ink); }
+  .ns-val { font-size: 28px; fill: var(--ink); }
   .ns-grand { display: flex; align-items: flex-end; gap: 6px 22px; flex-wrap: wrap; margin-bottom: 18px; }
   .ns-pc { font-size: clamp(96px, 15vw, 184px); line-height: .82; letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
   .ns-pc-u { font-size: clamp(36px, 5vw, 64px); line-height: 1; margin-left: -14px; }
@@ -459,21 +470,21 @@
   .ns-grand-l b::first-letter { text-transform: uppercase; }
   .ns-grand-l span { font-size: 15px; }
   .ns-grand-l small { font-size: 12.5px; line-height: 1.45; color: var(--muted); }
-  .ns-zone { font-size: 13px; fill: var(--faint); letter-spacing: .04em; }
+  .ns-zone { font-size: 17px; fill: var(--ink); fill-opacity: .45; letter-spacing: .04em; }
   .ns-zone-on { fill: var(--ink); font-weight: 500; }
   .ns-recent { opacity: .9; }
   .ns-raisons { margin: 22px 0 0; padding: 0; list-style: none; counter-reset: r; columns: 2 300px; column-gap: 36px; }
   .ns-raisons li { counter-increment: r; break-inside: avoid; position: relative; padding: 0 0 12px 30px; font-size: 14.5px; line-height: 1.45; }
   .ns-raisons li::before { content: counter(r, decimal-leading-zero); position: absolute; left: 0; top: 1px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .ns-grat { stroke: var(--line); stroke-width: 1; }
+  .ns-grat { stroke: rgba(28, 29, 33, .16); stroke-width: 1; }
   .ns-bande { opacity: .55; }
-  .ns-lieu { font-size: 12.5px; letter-spacing: .14em; fill: var(--ink); paint-order: stroke; stroke: var(--paper); stroke-width: 4px; }
-  .ns-pt-n { font-size: 10.5px; font-weight: 600; fill: var(--ink); pointer-events: none; }
+  .ns-lieu { font-size: 17px; font-weight: 500; letter-spacing: .14em; fill: var(--ink); paint-order: stroke; stroke: var(--paper); stroke-width: 4px; }
+  .ns-pt-n { font-size: 13px; font-weight: 600; fill: var(--ink); pointer-events: none; }
   .ns-pt-n.ns-inv { fill: var(--paper); }
   .ns-pt circle { transition: r .2s; }
   .ns-pt:hover circle, .ns-pt:focus circle { stroke-width: 3; }
   .ns-pt:focus { outline: none; }
-  .ns-leg { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 14px; font-size: 12.5px; color: var(--muted); }
+  .ns-leg { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 14px; font-size: 14px; color: #4A4B50; }
   .ns-leg span { display: inline-flex; align-items: center; gap: 8px; }
   .ns-leg i { display: inline-block; width: 12px; height: 12px; border: 1.5px solid var(--ink); border-radius: 50%; }
   .ns-l-hum { background: var(--ink); }
@@ -487,6 +498,11 @@
   .ns-bulle b { font-weight: 500; }
   .ns-bulle small { opacity: .7; }
   @media (max-width: 720px) {
+    .ns-coup { grid-template-columns: 1fr 1fr; }
+    .ns-coup button, .ns-coup button + button { padding: 14px 12px 14px 0; border-left: 0; }
+    .ns-coup button:nth-child(even) { padding-left: 14px; border-left: 1px solid var(--line); }
+    .ns-coup button:nth-child(n+3) { border-top: 1px solid var(--line); }
+    .ns-nav { top: 66px; padding-left: clamp(16px, 4vw, 48px); }
     .ns-carte, .ns-frise, .ns-barre { min-width: 640px; }
     .ns-defile { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 6px; }
     .ns-regle .ns-zone { font-size: 30px; }
@@ -1539,7 +1555,7 @@
         noeudSvg.addEventListener('click', function () { var rd = [].find.call(document.querySelectorAll('.bs-rond'), function (q) { var k = q.parentNode.__n; return k && k.donnees && k.donnees.argos && k.donnees.argos.n === x.n; }); montrerVue('graphe'); if (rd) ouvrirFiche(rd.parentNode.__n); });
       };
       var section = function (num, kicker, phrase, visuel, note) {
-        return el('section', { class: 'ns-sec' }, [
+        return el('section', { class: 'ns-sec', id: 'ns-s' + num, 'data-titre': kicker.replace(/ \?$/, '') }, [
           el('div', { class: 'ns-k' }, [el('span', { class: 'ns-num', text: num }), el('span', { text: kicker.replace(/ ([?:;!])/g, '\u00a0$1') })]),
           el('div', { class: 'ns-corps' }, [el('p', { class: 'ns-phrase', text: phrase.replace(/ ([?:;!])/g, '\u00a0$1') }), visuel, note ? el('p', { class: 'ns-note', text: note }) : null])]);
       };
@@ -1607,11 +1623,11 @@
         Object.keys(parPos).forEach(function (cle) {
           var grp = parPos[cle];
           grp.forEach(function (gq, i3) {
-            var x = gq[0], q = gq[1], ang = grp.length > 1 ? (i3 / grp.length) * Math.PI * 2 - Math.PI / 2 : 0, rr = grp.length > 1 ? 15 : 0;
+            var x = gq[0], q = gq[1], ang = grp.length > 1 ? (i3 / grp.length) * Math.PI * 2 - Math.PI / 2 : 0, rr = grp.length > 1 ? 22 : 0;
             var X = q[0] + Math.cos(ang) * rr, Y = q[1] + Math.sin(ang) * rr, cite = d.cites.indexOf(x.n) >= 0, hum = x.categorie === 'humint';
             if (rr) carte.appendChild(sv('line', { x1: q[0], y1: q[1], x2: X, y2: Y, stroke: 'currentColor', 'stroke-width': .7 }));
             var gp = sv('g', { class: 'ns-pt' }, [
-              sv('circle', { cx: X, cy: Y, r: cite ? 11 : 8, fill: hum ? 'currentColor' : 'var(--paper)', stroke: 'currentColor', 'stroke-width': 1.6 }),
+              sv('circle', { cx: X, cy: Y, r: cite ? 15 : 12, fill: hum ? 'currentColor' : 'var(--paper)', stroke: 'currentColor', 'stroke-width': 2 }),
               txt(String(x.n), { x: X, y: Y + 4, 'text-anchor': 'middle', class: 'ns-pt-n' + (hum ? ' ns-inv' : '') })]);
             relier(gp, x); carte.appendChild(gp);
           });
@@ -1640,24 +1656,24 @@
       if (dates.length) {
         var auj = new Date().toISOString().slice(0, 10), ds = dates.map(function (x) { return x.date.slice(0, 10); }).sort();
         var debut = ds[0] < (r && r.du ? r.du : ds[0]) ? ds[0] : (r && r.du ? r.du : ds[0]);
-        var a0 = Date.parse(debut.slice(0, 8) + '01'), a1 = Date.parse(auj) + 5 * 864e5, FW = 900, FH = 150, gx = 20;
+        var a0 = Date.parse(debut.slice(0, 8) + '01'), a1 = Date.parse(auj) + 5 * 864e5, FW = 900, FH = 190, gx = 20;
         var X2 = function (iso) { return gx + (Date.parse(iso) - a0) / (a1 - a0) * (FW - 2 * gx); };
         var frise = sv('svg', { viewBox: '0 0 ' + FW + ' ' + FH, class: 'ns-frise', role: 'img', 'aria-label': 'Frise des extraits' }, [motifs()]);
         if (r && r.du) { var fx0 = X2(r.du), fx1 = X2(r.au || auj);
-          frise.appendChild(sv('rect', { x: fx0, y: 10, width: Math.max(2, fx1 - fx0), height: 96, fill: 'url(#ns-hach-l)', class: 'ns-fen' }));
+          frise.appendChild(sv('rect', { x: fx0, y: 10, width: Math.max(2, fx1 - fx0), height: 126, fill: 'url(#ns-hach-l)', class: 'ns-fen' }));
           frise.appendChild(txt('période du risque', { x: fx0 + 4, y: 22, class: 'ns-mini' })); }
-        frise.appendChild(sv('line', { x1: gx, x2: FW - gx, y1: 106, y2: 106, stroke: 'currentColor', 'stroke-width': 1.2 }));
+        frise.appendChild(sv('line', { x1: gx, x2: FW - gx, y1: 136, y2: 136, stroke: 'currentColor', 'stroke-width': 1.2 }));
         for (var m = new Date(a0); m.getTime() <= a1; m.setMonth(m.getMonth() + 1)) {
           var iso = m.toISOString().slice(0, 10), mx = X2(iso);
-          frise.appendChild(sv('line', { x1: mx, x2: mx, y1: 106, y2: 113, stroke: 'currentColor', 'stroke-width': .8 }));
-          frise.appendChild(txt(MOIS[m.getMonth()] + (m.getMonth() === 0 ? ' ' + m.getFullYear() : ''), { x: mx + 3, y: 128, class: 'ns-mini' }));
+          frise.appendChild(sv('line', { x1: mx, x2: mx, y1: 136, y2: 143, stroke: 'currentColor', 'stroke-width': .8 }));
+          frise.appendChild(txt(MOIS[m.getMonth()] + (m.getMonth() === 0 ? ' ' + m.getFullYear() : ''), { x: mx + 3, y: 164, class: 'ns-mini' }));
         }
         var pile = {};
         dates.slice().sort(function (p1, p2) { return p1.date < p2.date ? -1 : 1; }).forEach(function (x) {
-          var xx = X2(x.date.slice(0, 10)), cle = Math.round(xx / 14), hpos = pile[cle] = (pile[cle] || 0) + 1, cite = d.cites.indexOf(x.n) >= 0, hum = x.categorie === 'humint';
-          var y = 106 - hpos * 24;
-          var gp = sv('g', { class: 'ns-pt' }, [sv('line', { x1: xx, x2: xx, y1: y + 9, y2: 106, stroke: 'currentColor', 'stroke-width': .7 }),
-            sv('circle', { cx: xx, cy: y, r: cite ? 10 : 7.5, fill: hum ? 'currentColor' : 'var(--paper)', stroke: 'currentColor', 'stroke-width': 1.5 }),
+          var xx = X2(x.date.slice(0, 10)), cle = Math.round(xx / 22), hpos = pile[cle] = (pile[cle] || 0) + 1, cite = d.cites.indexOf(x.n) >= 0, hum = x.categorie === 'humint';
+          var y = 136 - hpos * 32;
+          var gp = sv('g', { class: 'ns-pt' }, [sv('line', { x1: xx, x2: xx, y1: y + 9, y2: 136, stroke: 'currentColor', 'stroke-width': .7 }),
+            sv('circle', { cx: xx, cy: y, r: cite ? 13 : 10.5, fill: hum ? 'currentColor' : 'var(--paper)', stroke: 'currentColor', 'stroke-width': 2 }),
             txt(String(x.n), { x: xx, y: y + 4, 'text-anchor': 'middle', class: 'ns-pt-n' + (hum ? ' ns-inv' : '') })]);
           relier(gp, x); frise.appendChild(gp);
         });
@@ -1693,7 +1709,30 @@
       }
 
       c.textContent = '';
-      var dossier = el('div', { class: 'ns' }, [el('header', { class: 'ns-tete' }, [el('p', { class: 'ns-k0', text: 'Statistiques de l\'enquête' }), el('h1', { text: d.question || '' })])].concat(secs));
+      /* 23/11/2026 (« pas assez d'ergonomie et de visibilité ») : l'essentiel d'un coup d'œil en tête, chaque chiffre
+         mène à sa section, et un sommaire reste en haut pendant la lecture */
+      var aller = function (id) { var cible = document.getElementById(id); if (cible) c.scrollTo({ top: cible.offsetTop - 120, behavior: 'smooth' }); };
+      var idDe = function (titre) { var sx = secs.filter(function (q) { return q.getAttribute('data-titre') === titre; })[0]; return sx ? sx.id : null; };
+      var conf2 = e.filter(function (x) { return x.categorie === 'humint' && x.statut !== 'corrobore'; }).length;
+      var dd = e.map(function (x) { return String(x.date || '').slice(0, 10); }).filter(function (x) { return /^\d{4}-\d\d-\d\d$/.test(x); }).sort();
+      var chiffres = [];
+      if (r && typeof r.pourcentage === 'number') chiffres.push([Math.round(r.pourcentage) + ' %', 'risque ' + r.niveau, 'Quel risque']);
+      if (r && typeof r.incidents === 'number') chiffres.push([String(r.incidents), (r.incidents > 1 ? 'incidents' : 'incident') + ' dans la zone sur la période du risque', 'Où']);
+      if (dd.length) { var dr = dd[dd.length - 1].split('-').map(Number); chiffres.push([dr[2] + ' ' + MOIS[dr[1] - 1], 'fait le plus récent (' + dr[0] + ')', 'Quand']); }
+      if (e.length) chiffres.push([conf2 + ' / ' + e.length, 'faits encore à confirmer', 'Que valent les sources']);
+      var coup = el('div', { class: 'ns-coup' }, chiffres.map(function (ch) {
+        var b = el('button', { type: 'button' }, [el('b', { text: ch[0] }), el('span', { text: ch[1] })]);
+        b.addEventListener('click', function () { aller(idDe(ch[2])); }); return b; }));
+      var nav = el('nav', { class: 'ns-nav', 'aria-label': 'Sections' }, secs.map(function (sx) {
+        var b = el('button', { type: 'button', 'data-vers': sx.id }, [el('span', { text: sx.id.slice(4) }), document.createTextNode(sx.getAttribute('data-titre'))]);
+        b.addEventListener('click', function () { aller(sx.id); }); return b; }));
+      var dossier = el('div', { class: 'ns' }, [el('header', { class: 'ns-tete' }, [el('p', { class: 'ns-k0', text: 'Statistiques de l\'enquête' }), el('h1', { text: d.question || '' }), chiffres.length ? coup : null]), nav].concat(secs));
+      /* le sommaire suit la lecture */
+      c.addEventListener('scroll', function () {
+        var y = c.scrollTop + 160, cour = secs[0] && secs[0].id;
+        secs.forEach(function (sx) { if (sx.offsetTop <= y) cour = sx.id; });
+        [].forEach.call(nav.children, function (b) { b.toggleAttribute('data-ici', b.getAttribute('data-vers') === cour); });
+      }, { passive: true });
       dossier.appendChild(bulle); c.appendChild(dossier);
       /* apparition au défilement, et le chiffre qui monte quand la règle entre à l'écran */
       var vu = function (sec) { sec.classList.add('ns-vu'); var v = sec.querySelector('.ns-corps > div'); if (v && v._anime) { v._anime(); v._anime = null; } };
