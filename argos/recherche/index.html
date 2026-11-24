@@ -1966,11 +1966,24 @@
       var t = r.tendance, ec = Math.round(t.ecart);
       out.push([t.sens === 'stable' ? '→ Stable vs période précédente' : (t.sens === 'hausse' ? '↑ En hausse, ' : '↓ En baisse, ') + (ec > 0 ? '+' : '') + ec + ' points', '', 'Faits récents : ' + r.noteRecente + ' % contre ' + t.precedente + ' % sur la période de même durée juste avant']);
     }
+    if (r.recalcule) out.push(['Calculé à l\'ouverture, sur le corpus du ' + r.recalcule.split('-').reverse().join('/'), '', 'Cette enquête a été enregistrée avant le niveau de risque : il est calculé aujourd\'hui, pas à la date de l\'enquête.']);
     if (typeof r.ageJours === 'number') {
       var a = r.ageJours;
       out.push(['Dernier fait dans la zone : ' + (a === 0 ? 'aujourd\'hui' : a === 1 ? 'hier' : 'il y a ' + a + ' jours'), a > 90 ? 'rq-tres-vieux' : a > 30 ? 'rq-vieux' : '', a > 30 ? 'Le corpus ne contient rien de récent sur cette zone : la note peut sous-estimer la situation actuelle.' : '']);
     } else if (r.ageJours === null) out.push(['Aucun fait dans la zone sur 12 mois', 'rq-tres-vieux', 'Absence de données, pas absence de risque.']);
     return out;
+  }
+  /* 24/11/2026 : une enquête enregistrée avant le bloc risque le reçoit à l'ouverture, calculé sur le corpus du jour
+     (aucun appel au modèle, aucune question décomptée). */
+  async function risqueDuJour(question, monJeu) {
+    try {
+      var j = await jetonArgos(); if (!j || monJeu !== jeu) return;
+      var rep = await fetch(URL_ARGOS, { method: 'POST', headers: { Authorization: 'Bearer ' + j, 'Content-Type': 'application/json' }, body: JSON.stringify({ question: question, risque_seul: true }) });
+      if (!rep.ok) return;
+      var r = (await rep.json()).risque; if (!r || monJeu !== jeu) return;
+      r.recalcule = new Date().toISOString().slice(0, 10);
+      argosDonnees.risque = r; blocRisque(r);
+    } catch (e) {}
   }
   function blocRisque(r) {
     var z = $('bs-risque'); if (!z || !r || typeof r.pourcentage !== 'number') return;
@@ -2071,6 +2084,7 @@
       [['note', 'Notes'], ['carte', 'Cartographie'], ['stats', 'Statistiques']].forEach(function (x) { if (B[x[0]]) { B[x[0]].el.setAttribute('data-etat', 'trouve'); libelle(B[x[0]], x[1], 'ouvrir'); } });
       var ISSUES = { repondu: 'réponse citée', non_documente: 'le corpus ne documente pas ce point', refus_source: 'question refusée : elle vise une source protégée', hors_champ: 'question hors du champ d\'Argos', refuse_citation: 'réponse écartée par le vérificateur de citations' };
       var cites = argosDonnees.cites.length;
+      if (rejeu && !argosDonnees.risque && fin && fin.issue === 'repondu') risqueDuJour(question, monJeu);
       if (rejeu) bandeauEnquete(rejeu); else if (fin && fin.issue === 'repondu') enregistrerEnquete(question, brut, promesseAgents);
       terminer((rejeu ? 'Enquête du ' + new Date(rejeu.cree_le).toLocaleDateString('fr-FR') + ', rouverte telle qu\'enregistrée. ' : '') + 'Argos : ' + (nbH + nbS) + ' extraits retrouvés (' + nbH + ' de terrain, ' + nbS + ' sources et veille), ' + cites + ' cités. ' + (fin ? maj(ISSUES[fin.issue] || fin.issue) + '.' : 'Flux interrompu.') + (fin && fin.rejets ? ' ' + fin.rejets + ' phrase' + (fin.rejets > 1 ? 's' : '') + ' écartée' + (fin.rejets > 1 ? 's' : '') + ' par le vérificateur.' : '') + (fin && fin.quota_restant !== null && fin.quota_restant !== undefined ? ' Questions restantes aujourd\'hui : ' + fin.quota_restant + '.' : ''));
     } catch (e) { arret('Argos est injoignable depuis cette machine (' + e.message + ').'); }
