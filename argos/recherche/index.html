@@ -345,6 +345,7 @@
   .bs-nd[data-genre="sortie"][data-etat="trouve"] .bs-rond { background: var(--on-night); color: var(--night); }
   .bs-toile .bs-carte-q, .bs-toile path[data-flux] { display: none; }
   .bs-retour { position: fixed; left: 18px; top: 18px; z-index: 20; padding: 10px 16px 10px 12px; border: 1px solid rgba(255, 255, 255, .3); border-radius: 999px; background: rgba(18, 18, 22, .82); color: #fff; font: inherit; font-size: 14px; cursor: pointer; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+  body.vue-carte .bs-retour { top: auto; bottom: 44px; }
   .bs-retour:hover { background: rgba(40, 40, 46, .9); }
   .bs-pan-bilan { margin: 18px 0 0; padding-top: 12px; border-top: 1px solid var(--line); font-size: 12.5px; line-height: 1.5; color: var(--muted); }
   @media print { .bs-retour { display: none; } }
@@ -983,6 +984,21 @@
   }
   function viserSurCarte(x) { $('bs-carte')._vise = x; montrerVue('carte'); centrerSurCarte(); }
   var REPERE_ARGOS = 'width:18px;height:18px;border-radius:50%;border:2px solid #fff;background:#1C1D21;box-shadow:0 0 0 4px rgba(28,29,33,.35);cursor:pointer';
+  /* 24/11/2026 : dans la carte d'Argos, seuls pays, période et imagerie restent ; acteur, typologie et l'assistant
+     (déjà ouvert ici) sont retirés. La barre est redessinée à chaque filtre : on la surveille. */
+  function filtresCarte(w) {
+    var doc; try { doc = w.document; } catch (err) { return; }
+    var barre = doc && doc.getElementById('chipbar'); if (!barre) return;
+    var trier = function () {
+      [].forEach.call(barre.querySelectorAll('.chip'), function (ch) {
+        var cle = ((ch.querySelector('.chip-key') || {}).textContent || '').trim();
+        var garder = ch.id !== 'chip-assistant' && !/^(Acteur|Actor|Typologie|Event type)/i.test(cle);
+        if (!garder) ch.style.display = 'none';
+      });
+    };
+    trier();
+    if (!barre._argos) { barre._argos = true; new w.MutationObserver(trier).observe(barre, { childList: true, subtree: true }); }
+  }
   function centrerSurCarte() {
     var cadre = $('bs-carte'), x = cadre._vise; if (!x || !cadre._posees) return;
     var w = cadre.contentWindow, carte = null; try { carte = w.HumintMap.getMap(); } catch (err) {}
@@ -1386,6 +1402,7 @@
     toile.hidden = v !== 'graphe'; $('bs-retour').hidden = v === 'graphe';
     ['carte', 'note', 'stats'].forEach(function (x) { $('bs-vue-' + x).hidden = v !== x; });
     rangerPanneau(enArgos && v === 'carte');
+    document.body.classList.toggle('vue-carte', v === 'carte');
     majOnglets();
     if (v === 'graphe') { if (suivre) cadrer(); return; }
     if (enArgos) { vuesArgos[v]($('bs-vue-' + v)); return; }
@@ -1423,7 +1440,7 @@
     monde.querySelectorAll('.bs-nd, .bs-rep, .bs-couloir, .bs-carte-q, .bs-zone').forEach(function (n) { n.remove(); }); svg.textContent = '';
     $('bs-retour').hidden = true;
     $('bs-fiche').hidden = true; $('bs-saisie').hidden = true; toile.hidden = false; $('bs-nouveau').hidden = true; $('bs-onglets').hidden = true;
-    ['carte', 'note', 'stats'].forEach(function (x) { $('bs-vue-' + x).hidden = true; }); rangerPanneau(false); vueCourante = 'graphe';
+    ['carte', 'note', 'stats'].forEach(function (x) { $('bs-vue-' + x).hidden = true; }); rangerPanneau(false); vueCourante = 'graphe'; document.body.classList.remove('vue-carte');
     toile.removeAttribute('data-cours'); toile.setAttribute('data-accueil', ''); etat('', false);
     $('bs-rech-champ').value = ''; $('bs-rech-cadre').textContent = '';
     setTimeout(function () { $('bs-rech-champ').focus(); }, 60);
@@ -1439,7 +1456,7 @@
     panneauAttente('Bilan du flux');
     $('bs-fiche').hidden = true; $('bs-q').hidden = true;
     $('bs-saisie').hidden = true; toile.hidden = false; $('bs-nouveau').hidden = false; $('bs-onglets').hidden = false;
-    termine = false; vueCourante = 'graphe'; ['carte', 'note', 'stats'].forEach(function (x) { $('bs-vue-' + x).hidden = true; }); rangerPanneau(false); majOnglets();
+    termine = false; vueCourante = 'graphe'; ['carte', 'note', 'stats'].forEach(function (x) { $('bs-vue-' + x).hidden = true; }); rangerPanneau(false); document.body.classList.remove('vue-carte'); majOnglets();
     vue = { x: toile.clientWidth / 2, y: toile.clientHeight / 2, k: 1 }; aLaMain(true); appliquer();
     /* le squelette du croquis : Algor au centre, trois branches, une sortie */
     var pose = function (cle, genre, parent, contenu, titre, sousTitre, donnees, attente, delai) {
@@ -1795,7 +1812,7 @@
             m.addEventListener('click', function (ev) { ev.stopPropagation(); cadre._vise = x; centrerSurCarte(); });
             new w.mapboxgl.Marker({ element: m }).setLngLat([parseFloat(x.lon), parseFloat(x.lat)]).addTo(carte); bornes.extend([parseFloat(x.lon), parseFloat(x.lat)]);
           });
-          masquer();
+          masquer(); filtresCarte(w);
           /* les couches d'incidents sont recréées au changement de fond (satellite) : on les remasque */
           carte.on('styledata', function () { if (cadre._seuls) masquer(); });
           setTimeout(function () {
