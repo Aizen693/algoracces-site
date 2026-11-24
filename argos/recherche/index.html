@@ -703,7 +703,8 @@
   /* un seul gestionnaire pour glisser le fond et déplacer une pastille */
   var geste = null;
   toile.addEventListener('pointerdown', function (e) {
-    if (e.button !== 0 || e.target.closest('.bs-fiche, .bs-outils, .bs-recherche, .bs-panneau')) return;
+    /* 24/11/2026 : les commandes posées sur la toile (← Argos, Connexion, Mes enquêtes) ne doivent pas être capturées par le glisser */
+    if (e.button !== 0 || e.target.closest('.bs-fiche, .bs-outils, .bs-recherche, .bs-panneau, .bs-vers-argos, .bs-mes-enq, .bs-hist, a')) return;
     var rond = e.target.closest('.bs-rond');
     geste = { x: e.clientX, y: e.clientY, bouge: false, n: rond ? rond.parentNode.__n : null, vx: vue.x, vy: vue.y };
     if (geste.n) { geste.nx = geste.n.x; geste.ny = geste.n.y; }
