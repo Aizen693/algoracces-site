@@ -415,6 +415,10 @@
   .bs-risque-t { margin: 0 0 6px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
   .bs-risque ul { margin: 0; padding-left: 18px; font-size: 13.5px; line-height: 1.5; }
   .bs-risque li + li { margin-top: 4px; }
+  .bs-risque-info { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+  .bs-risque-info span { padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px; font-size: 12px; line-height: 1.4; font-variant-numeric: tabular-nums; }
+  .bs-risque-info .rq-vieux { border-color: #C28A2E; color: #8A5E14; }
+  .bs-risque-info .rq-tres-vieux { border-color: #B4323F; color: #B4323F; }
   .bs-risque-m { margin: 10px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
   .bs-pan-ia { margin: 22px 0 0; padding-top: 12px; border-top: 1px solid var(--line); font-size: 12px; line-height: 1.5; color: var(--muted); }
   .bs-vers-argos { position: absolute; left: 16px; top: 18px; z-index: 4; display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border: 1px solid rgba(255, 255, 255, .22); border-radius: 999px; background: rgba(18, 18, 22, .6); color: var(--on-night); font-size: 13px; text-decoration: none; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
@@ -435,6 +439,12 @@
   .bs-na small { color: var(--muted); }
   .bs-na .bs-na-avis { margin-top: 30px; padding: 12px 14px; border: 1px solid var(--line); font-size: 13px; color: var(--muted); }
   .bs-na-imprimer { position: fixed; right: 18px; top: 18px; z-index: 20; }
+  .bs-na .bs-na-marque { margin: 0 0 18px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .bs-na .bs-na-risque { margin: 4px 0 0; }
+  .bs-na .bs-na-risque li { font-size: 14px; }
+  .bs-na-visuels .ns-sec { grid-template-columns: 110px 1fr; gap: 18px; padding: 18px 0 22px; }
+  .bs-na-visuels .ns-sec:last-child { border-bottom: 0; }
+  .bs-na-visuels .ns-phrase { font-size: 17px; }
   /* ---------- statistiques en dossier imprimé (23/11/2026) ---------- */
   #bs-vue-stats { background: var(--paper); position: relative; }
   .ns { position: relative; max-width: 1080px; margin: 0 auto; padding: 96px clamp(16px, 4vw, 48px) 120px; color: var(--ink); }
@@ -520,7 +530,16 @@
   .bs-ns-ligne i { display: block; height: 10px; background: var(--ink); min-width: 2px; }
   .bs-ns-ligne b { font-weight: 500; text-align: right; }
   .bs-vue-carte iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-  @media print { .bs-retour, .bs-na-imprimer { display: none !important; } .bs-na { padding-top: 0; } }
+  @media print {
+    .bs-retour, .bs-na-imprimer { display: none !important; } .bs-na { padding-top: 0; max-width: none; }
+    @page { margin: 16mm 14mm; }
+    html, body { background: #fff !important; } .bs-na { color: #111; }
+    .bs-na h2, .bs-na-risque, .bs-na-visuels .ns-sec, .bs-na table tr { break-inside: avoid; }
+    .bs-na h2 { break-after: avoid; }
+    .bs-na-visuels .ns-sec { opacity: 1 !important; transform: none !important; }
+    .bs-na-visuels .ns-bulle { display: none !important; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
   .bs-vue-carte .bs-legende { top: auto; bottom: 18px; }
   .bs-vue-carte.avec-rep #bs-carte { width: calc(100% - min(400px, 100%)); }
   .bs-vue-carte.avec-rep .bs-legende { left: calc((100% - min(400px, 100%)) / 2); }
@@ -1524,14 +1543,31 @@
     note: function (c) {
       var d = argosDonnees, cites = d.extraits.filter(function (x) { return d.cites.indexOf(x.n) >= 0; });
       c.textContent = '';
-      var imp = el('button', { class: 'bs-btn bs-na-imprimer', type: 'button', text: 'Imprimer ou enregistrer en PDF' }); imp.addEventListener('click', function () { window.print(); });
+      var imp = el('button', { class: 'bs-btn bs-na-imprimer', type: 'button', text: 'Exporter en PDF' }); imp.addEventListener('click', exporterPdf);
+      /* 24/11/2026 : la note devient le document remis au client : risque, réponse, carte et chronologie, sources citées */
+      var r = d.risque, blocR = null;
+      if (r && typeof r.pourcentage === 'number') {
+        var pcN = Math.max(0, Math.min(100, Math.round(r.pourcentage))), barreN = el('div', { class: 'bs-risque-barre' }, [el('i')]); barreN.firstChild.style.width = pcN + '%';
+        var infN = infosRisque(r);
+        blocR = el('div', { class: 'bs-risque bs-na-risque', 'data-niveau': r.niveau || '' }, [
+          el('div', { class: 'bs-risque-tete' }, [el('span', { class: 'bs-risque-pc', text: pcN + ' %' }), el('span', { class: 'bs-risque-lib' }, [el('b', { text: 'Risque ' + (r.niveau || '') }), el('small', { text: r.zone || '' })])]),
+          barreN, infN.length ? el('div', { class: 'bs-risque-info' }, infN.map(function (x) { return el('span', { class: x[1] || '', text: x[0] }); })) : null,
+          r.periode ? el('p', { class: 'bs-risque-per', text: r.periode }) : null,
+          el('ul', {}, (r.raisons || []).map(function (t) { return el('li', { text: t }); })),
+          r.methode ? el('p', { class: 'bs-risque-m', text: r.methode }) : null]);
+      }
+      /* carte à l'encre et chronologie : les sections « Où » et « Quand » des statistiques, reprises telles quelles */
+      var visuels = [];
+      try { var tmp = el('div'); vuesArgos.stats(tmp); [].forEach.call(tmp.querySelectorAll('.ns-sec'), function (sx) { var ti = sx.getAttribute('data-titre'); if (ti === 'Où' || ti === 'Quand') { sx.classList.add('ns-vu'); sx.removeAttribute('id'); visuels.push(sx); } }); } catch (e) {}
       var fond = [];
       Object.keys(NOMS_AGENTS).forEach(function (a) { ((d.agents[a] || {}).connaissances || []).forEach(function (k) { fond.push(el('h3', { text: NOMS_AGENTS[a] + ' : ' + k.titre })); fond.push(el('ul', {}, (k.pioche || []).map(function (p) { return el('li', { text: p.texte }); }))); }); });
       c.appendChild(el('article', { class: 'bs-na' }, [imp,
-        el('h1', { text: 'Note Argos' }), el('p', { class: 'bs-na-meta', text: 'Établie le ' + new Date().toLocaleDateString('fr-FR') + ' · ' + d.extraits.length + ' extraits retrouvés, ' + cites.length + ' cités' }),
+        el('p', { class: 'bs-na-marque', text: 'Algor Acces · Argos' }), el('h1', { text: 'Note Argos' }), el('p', { class: 'bs-na-meta', text: 'Établie le ' + new Date().toLocaleDateString('fr-FR') + ' · ' + d.extraits.length + ' extraits retrouvés, ' + cites.length + ' cités' }),
         el('h2', { text: 'Question' }), el('p', { class: 'bs-na-q', text: d.question }),
+        blocR ? el('h2', { text: 'Niveau de risque' }) : null, blocR,
         el('h2', { text: 'Réponse' })].concat(d.texte.trim().split(/\n+/).map(function (t) { return el('p', { text: t }); })).concat([
         blocFiabilite(d, null),
+        visuels.length ? el('h2', { text: 'Où et quand' }) : null, visuels.length ? el('div', { class: 'bs-na-visuels' }, visuels) : null,
         el('h2', { text: 'Extraits cités' }),
         cites.length ? el('table', {}, [el('tr', {}, ['N°', 'Statut', 'Source', 'Lieu', 'Date'].map(function (t) { return el('th', { text: t }); }))].concat(cites.map(function (x) { return el('tr', {}, [String(x.n), STATUTS_ARGOS[x.statut] || x.statut, x.categorie === 'humint' ? 'Source protégée · ' + maj(x.type) : ((x.source ? x.source.nom + ' (cote ' + (x.source.cote || 'non cotée') + ')' : 'Sans source indiquée') + ' · ' + (x.titre || maj(x.type))), [x.lieu, x.pays].filter(Boolean).join(', '), x.date || x.periode || ''].map(function (t) { return el('td', { text: t || '' }); })); }))) : el('p', { text: 'Aucun extrait cité.' }),
         fond.length ? el('h2', { text: 'Connaissances de fond des agents IA' }) : null,
@@ -1666,7 +1702,7 @@
           el('span', {}, [el('i', { class: 'ns-l-src' }), document.createTextNode('source ouverte')]),
           lieux.length ? el('span', {}, [el('i', { class: 'ns-l-bande' }), document.createTextNode('bande de ' + (r.rayon || 25) + ' km prise en compte pour le risque')]) : null,
           el('span', { text: 'Grand cercle : extrait cité dans la réponse. Survolez ou cliquez un point.' })]);
-        secs.push(section(nn(), 'Où ?', surAxe !== null ? (surAxe + ' des ' + pl(loc.length, 'extrait localisé', 'extraits localisés') + ' ' + (surAxe > 1 ? 'tombent' : 'tombe') + ' sur l\'itinéraire, à moins de ' + (r.rayon || 25) + ' km.') : pl(loc.length, 'extrait localisé', 'extraits localisés') + ' sur la carte.', el('div', {}, [el('div', { class: 'ns-defile' }, [carte]), legende]), sans ? pl(sans, 'extrait', 'extraits') + ' sans position (articles de presse, notes) ne figurent pas sur la carte.' : ''));
+        secs.push(section(nn(), 'Où ?', !loc.length ? 'Aucun extrait n\'a de position : la carte montre seulement l\'itinéraire et la bande de ' + ((r && r.rayon) || 25) + ' km prise en compte pour le risque.' : surAxe !== null ? (surAxe + ' des ' + pl(loc.length, 'extrait localisé', 'extraits localisés') + ' ' + (surAxe > 1 ? 'tombent' : 'tombe') + ' sur l\'itinéraire, à moins de ' + (r.rayon || 25) + ' km.') : pl(loc.length, 'extrait localisé', 'extraits localisés') + ' sur la carte.', el('div', {}, [el('div', { class: 'ns-defile' }, [carte]), legende]), sans ? pl(sans, 'extrait', 'extraits') + ' sans position (articles de presse, notes) ne figurent pas sur la carte.' : ''));
       }
 
       /* 03 · quand : une frise, la fenêtre du risque en hachures, chaque extrait à sa date */
@@ -1860,9 +1896,18 @@
     if (r.error || !r.data) { blocEnquete(null, 'Enquête non enregistrée (' + ((r.error && r.error.message) || 'erreur') + ').'); return; }
     blocEnquete(r.data, 'Enquête enregistrée.');
   }
+  /* 24/11/2026 : export PDF de l'enquête, par l'impression du navigateur (rendu identique au site, aucun service tiers) */
+  function exporterPdf() {
+    if (!argosDonnees || !argosDonnees.fin) return;
+    if (vueCourante !== 'note') montrerVue('note');
+    var titre = document.title, q = String(argosDonnees.question || '').replace(/[\\/:*?"<>|]+/g, ' ').slice(0, 80).trim();
+    document.title = 'Argos, ' + q + ', ' + new Date().toLocaleDateString('fr-FR').replace(/\//g, '.');
+    setTimeout(function () { window.print(); setTimeout(function () { document.title = titre; }, 500); }, 400);
+  }
   function blocEnquete(ligne, message) {
     var pan = $('bs-panneau'), ancien = pan.querySelector('.bs-enq'); if (ancien) ancien.remove();
     var b = el('div', { class: 'bs-enq' }, [el('p', { text: message })]);
+    if (!ligne && argosDonnees && argosDonnees.fin) { var exp0 = el('button', { class: 'bs-btn', type: 'button', text: 'Exporter en PDF' }); exp0.addEventListener('click', exporterPdf); b.appendChild(el('div', { class: 'bs-enq-actions' }, [exp0])); }
     if (ligne) {
       var part = el('button', { class: 'bs-btn', type: 'button', text: 'Partager le lien' });
       part.addEventListener('click', async function () {
@@ -1870,7 +1915,8 @@
         if (r.error) { part.textContent = 'Partage impossible'; return; }
         try { await navigator.clipboard.writeText(lienEnquete(ligne.id)); part.textContent = 'Lien copié'; } catch (e) { part.textContent = 'Lien : ' + lienEnquete(ligne.id); }
       });
-      b.appendChild(el('div', { class: 'bs-enq-actions' }, [part]));
+      var exp = el('button', { class: 'bs-btn', type: 'button', text: 'Exporter en PDF' }); exp.addEventListener('click', exporterPdf);
+      b.appendChild(el('div', { class: 'bs-enq-actions' }, [part, exp]));
       b.appendChild(el('p', { class: 'bs-enq-note', text: 'Le lien ouvre cette enquête pour tout abonné premium connecté. Sans partage, vous seul la voyez.' }));
     }
     var res = pan.querySelector('.bs-pan-sorties-titre') || pan.querySelector('.bs-pan-bilan');
@@ -1912,6 +1958,20 @@
   }
   /* 23/11/2026 : niveau de risque en tête de la réponse. Le pourcentage et ses raisons sont calculés par le serveur
      sur le corpus (supabase/functions/assistant-renseignement/risque.ts), jamais rédigés par l'IA. */
+  /* 24/11/2026 : tendance face à la période précédente et âge du dernier fait, en pastilles lisibles d'un coup d'oeil.
+     Un corpus qui vieillit doit se voir : au delà de 30 jours sans fait dans la zone, la pastille passe en alerte. */
+  function infosRisque(r) {
+    var out = [];
+    if (r.tendance) {
+      var t = r.tendance, ec = Math.round(t.ecart);
+      out.push([t.sens === 'stable' ? '→ Stable vs période précédente' : (t.sens === 'hausse' ? '↑ En hausse, ' : '↓ En baisse, ') + (ec > 0 ? '+' : '') + ec + ' points', '', 'Faits récents : ' + r.noteRecente + ' % contre ' + t.precedente + ' % sur la période de même durée juste avant']);
+    }
+    if (typeof r.ageJours === 'number') {
+      var a = r.ageJours;
+      out.push(['Dernier fait dans la zone : ' + (a === 0 ? 'aujourd\'hui' : a === 1 ? 'hier' : 'il y a ' + a + ' jours'), a > 90 ? 'rq-tres-vieux' : a > 30 ? 'rq-vieux' : '', a > 30 ? 'Le corpus ne contient rien de récent sur cette zone : la note peut sous-estimer la situation actuelle.' : '']);
+    } else if (r.ageJours === null) out.push(['Aucun fait dans la zone sur 12 mois', 'rq-tres-vieux', 'Absence de données, pas absence de risque.']);
+    return out;
+  }
   function blocRisque(r) {
     var z = $('bs-risque'); if (!z || !r || typeof r.pourcentage !== 'number') return;
     var pc = Math.max(0, Math.min(100, Math.round(r.pourcentage)));
@@ -1921,6 +1981,7 @@
       el('span', { class: 'bs-risque-pc', text: pc + ' %' }),
       el('span', { class: 'bs-risque-lib' }, [el('b', { text: 'Risque ' + (r.niveau || '') }), el('small', { text: r.zone || '' })])]));
     z.appendChild(barre);
+    var info = infosRisque(r); if (info.length) z.appendChild(el('div', { class: 'bs-risque-info' }, info.map(function (x) { return el('span', { class: x[1] || '', text: x[0], title: x[2] || '' }); })));
     if (r.periode) z.appendChild(el('p', { class: 'bs-risque-per', text: r.periode }));
     z.appendChild(el('p', { class: 'bs-risque-t', text: 'Pourquoi ce niveau' }));
     z.appendChild(el('ul', {}, (r.raisons || []).map(function (t) { return el('li', { text: t }); })));
