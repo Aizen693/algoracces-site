@@ -451,6 +451,40 @@
   .is-nuit .vcard__more { color: var(--on-night); text-decoration-color: rgba(255,255,255,.3); }
   .is-nuit .vcard:hover .vcard__more { text-decoration-color: currentColor; }
 
+
+  /* ── Afrique en direct : fil des 7 pays HUMINT (Inoreader + registre de sources) ── */
+  .af-pays { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0; margin: 0 0 26px; border: 1px solid var(--ink); border-radius: 2px; }
+  .af-p { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 12px 14px; text-align: left; background: var(--paper); color: var(--ink); transition: background .2s ease, color .2s ease; min-width: 0; }
+  .af-p + .af-p { border-left: 1px solid var(--line); }
+  .af-p:hover { background: var(--band); }
+  .af-p.is-on { background: var(--ink); color: var(--paper); }
+  .af-p__nom { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .af-p__n { font-size: 26px; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .af-p__sub { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .af-p.is-on .af-p__sub { color: var(--faint); }
+  .af-etat { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--muted); margin: -10px 0 22px; }
+  .af-etat.is-ko { color: var(--alert); }
+  .af-list { display: flex; flex-direction: column; border-top: 1px solid var(--ink); }
+  .af-it { display: grid; grid-template-columns: 86px 1fr; gap: 4px 18px; padding: 14px 0; border-bottom: 1px solid var(--ln-soft); }
+  .af-it__h { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; padding-top: 3px; }
+  .af-it__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 13px; color: var(--muted); }
+  .af-it__pays { color: var(--ink); }
+  .af-it__sec { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--alert); }
+  .af-it__t { grid-column: 2; font-size: 17px; line-height: 1.35; color: var(--ink); text-decoration: none; }
+  .af-it__t:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .af-it__x { grid-column: 2; font-size: 14px; line-height: 1.45; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .af-note { margin-top: 26px; font-size: 13.5px; line-height: 1.55; color: var(--muted); max-width: 90ch; }
+  @media (max-width: 900px) {
+    .af-pays { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .af-p + .af-p { border-left: 0; }
+    .af-p { border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); }
+  }
+  @media (max-width: 560px) {
+    .af-pays { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .af-it { grid-template-columns: 1fr; }
+    .af-it__t, .af-it__x { grid-column: 1; }
+  }
+
   /* ── Corps en nuit quand l'onglet géopolitique est ouvert ── */
   .vbody:not(.is-nuit) > .v5-trame { display: none; }
   .vbody.is-nuit { background: var(--night); color: var(--on-night); --line: var(--line-night); }
@@ -576,7 +610,7 @@
   <section class="v5-phero vhero" data-nav="dark" data-v5-trame data-trame-veille data-hachures="6,0;7,1">
     <p class="eyebrow"><span class="dot" id="dot"></span> Veilles · accès abonné</p>
     <h1>Nos <span>veilles</span></h1>
-    <p class="v5-phero__lede" id="lede">Géopolitique : notes d'analyse sourcées sur nos six théâtres. Cyber : menaces tirées des flux publics AlienVault OTX, abuse.ch, NVD et MITRE, mises à jour toutes les heures. Radio Sahel : les journaux des radios d'information du Mali, du Niger et du Burkina Faso, synthétisés chaque jour.</p>
+    <p class="v5-phero__lede" id="lede">Géopolitique : notes d'analyse sourcées sur nos six théâtres. Cyber : menaces tirées des flux publics AlienVault OTX, abuse.ch, NVD et MITRE, mises à jour toutes les heures. Radio Sahel : les journaux des radios d'information du Mali, du Niger et du Burkina Faso, synthétisés chaque jour. Afrique en direct : la presse locale des sept pays suivis par notre réseau HUMINT, toutes les 15 minutes.</p>
     <div class="v5-phero__meta vhero__meta">
       <div class="maj" id="maj"></div>
       <a class="alertes-lien" id="lien-alertes" href="/compte/alertes/" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Mes alertes</a>
@@ -599,13 +633,18 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49M7.76 16.24a6 6 0 0 1 0-8.49M19.07 4.93a10 10 0 0 1 0 14.14M4.93 19.07a10 10 0 0 1 0-14.14"/></svg>
         Radio Sahel <b id="n-radio">…</b>
       </button>
+      <button class="tab" role="tab" data-tab="afrique" id="tab-afrique">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/><circle cx="19" cy="18" r="2"/></svg>
+        Afrique en direct <b id="n-afrique">…</b>
+      </button>
     </div>
 
     <section class="pane" id="pane-geo" role="tabpanel" hidden><div class="empty">Chargement du fil géopolitique…</div></section>
     <section class="pane" id="pane-cyber" role="tabpanel" hidden><div class="empty">Chargement de l'instantané cyber…</div></section>
     <section class="pane" id="pane-radio" role="tabpanel" hidden><div class="empty">Chargement de la veille radio…</div></section>
+    <section class="pane" id="pane-afrique" role="tabpanel" hidden><div class="empty">Chargement du fil Afrique…</div></section>
 
-    <p class="vfoot" id="foot" hidden>Veille géopolitique : flux OSINT sélectionné, sourcé et daté par nos analystes. Veille cyber : flux publics (AlienVault OTX, ThreatFox d'abuse.ch, NVD et catalogue KEV de la CISA, MITRE ATT&amp;CK) agrégés automatiquement toutes les heures, sans vérification par Algor Int ; les indicateurs bruts restent dans la plateforme. Radio Sahel : journaux publiés par les studios, transcrits et synthétisés automatiquement, chaque fait adossé à un extrait vérifié.
+    <p class="vfoot" id="foot" hidden>Veille géopolitique : flux OSINT sélectionné, sourcé et daté par nos analystes. Veille cyber : flux publics (AlienVault OTX, ThreatFox d'abuse.ch, NVD et catalogue KEV de la CISA, MITRE ATT&amp;CK) agrégés automatiquement toutes les heures, sans vérification par Algor Int ; les indicateurs bruts restent dans la plateforme. Radio Sahel : journaux publiés par les studios, transcrits et synthétisés automatiquement, chaque fait adossé à un extrait vérifié. Afrique en direct : articles de presse, communiqués officiels et rapports humanitaires relevés automatiquement, non vérifiés, cote de la source indiquée.
   </section>
 </main>
 
@@ -645,6 +684,7 @@
     document.getElementById('pane-geo').hidden = name !== 'geo';
     document.getElementById('pane-cyber').hidden = name !== 'cyber';
     document.getElementById('pane-radio').hidden = name !== 'radio';
+    document.getElementById('pane-afrique').hidden = name !== 'afrique';
     // Le fil géopolitique se lit en liste sur fond nuit, comme sur l'accueil ; le tableau cyber reste clair
     const vb = document.getElementById('vbody'); vb.classList.toggle('is-nuit', name === 'geo'); vb.dataset.nav = name === 'geo' ? 'dark' : 'light';
     if (window.V5 && window.V5.teinte) window.V5.teinte();
@@ -652,7 +692,7 @@
     if (name === 'cyber' && cyberData) setVue(cyberVue);
   }
   for (const t of document.querySelectorAll('.tab')) t.addEventListener('click', () => showTab(t.dataset.tab));
-  const ONGLET_DEMANDE = () => (['cyber', 'radio'].includes(params.get('onglet')) ? params.get('onglet') : 'geo');
+  const ONGLET_DEMANDE = () => (['cyber', 'radio', 'afrique'].includes(params.get('onglet')) ? params.get('onglet') : 'geo');
 
   /* ══════════ Géopolitique ══════════ */
   const VEILLE_REMOTE = 'https://lwgrjdpuagnvvzmdbyzb.supabase.co/functions/v1/veille-feed/notifications.json';
@@ -1524,6 +1564,83 @@
   }
   for (const t of document.querySelectorAll('.tab')) t.addEventListener('click', () => { if (t.dataset.tab === 'radio') { rmapInit(); rmap?.resize(); } });
 
+
+  /* ══════════ Afrique en direct ══════════
+     Fil brut des 7 pays suivis en HUMINT : dossiers Inoreader « Afrique · <pays> »
+     + registre de sources locales, relevés toutes les 15 min sur le VPS
+     (/opt/veille-afrique) et déposés dans zones/afrique-direct/direct.json (premium).
+     Aucun texte réécrit : titre, lien et heure d'origine ; cote = fiabilité de la source. */
+  const AF_DRAPEAU = { ML: 'Mali', BF: 'Burkina Faso', NE: 'Niger', NG: 'Nigeria', BJ: 'Bénin', TG: 'Togo', CD: 'RDC' };
+  const AF_FAM = { presse: 'Presse', officiel: 'Officiel', humanitaire: 'Humanitaire', analyse: 'Analyse' };
+  let afData = null, afState = { pays: 'all', secu: true, q: '', limit: 60, src: 'all' };
+  const afHeure = (it) => {
+    const d = it.heure ? new Date(it.heure) : it.date ? new Date(it.date + 'T00:00:00Z') : null;
+    if (!d || isNaN(d)) return '';
+    const jour = d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+    return it.heure ? jour + '<br>' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : jour;
+  };
+  function renderAfrique() {
+    const p = document.getElementById('pane-afrique'); if (!afData) return;
+    const items = afData.items || [];
+    const gen = afData.genere_le ? new Date(afData.genere_le) : null;
+    const retardMin = gen ? Math.round((Date.now() - gen) / 6e4) : null;
+    const ino = (afData.canaux && afData.canaux.inoreader) || {};
+    const q = afState.q.toLowerCase();
+    const base = items.filter((it) => (!afState.secu || it.securite) && (afState.src === 'all' || it.famille === afState.src)
+      && (!q || `${it.titre} ${it.extrait} ${it.source}`.toLowerCase().includes(q)));
+    const list = base.filter((it) => afState.pays === 'all' || it.pays === afState.pays);
+    const j1 = Date.now() - 864e5;
+    const tuiles = Object.entries(AF_DRAPEAU).map(([c, nom]) => {
+      const du = items.filter((it) => it.pays === c);
+      const sec = du.filter((it) => it.securite);
+      const sec24 = sec.filter((it) => Date.parse(it.heure || it.date) >= j1).length;
+      return `<button class="af-p ${afState.pays === c ? 'is-on' : ''}" data-afp="${c}" aria-pressed="${afState.pays === c}">
+        <span class="af-p__nom">${esc(nom)}</span><span class="af-p__n">${fmtN(afState.secu ? sec.length : du.length)}</span>
+        <span class="af-p__sub">${afState.secu ? fmtN(sec24) + ' sur 24 h' : fmtN(sec.length) + ' sécurité'}</span></button>`;
+    }).join('');
+    const etat = retardMin == null ? '' : retardMin > 60
+      ? `<div class="af-etat is-ko"><span class="dot is-off"></span>Flux interrompu : dernier relevé il y a ${fmtN(Math.round(retardMin / 60))} h.</div>`
+      : `<div class="af-etat"><span class="dot"></span>Relevé il y a ${fmtN(retardMin)} min · ${fmtN(items.length)} articles sur ${fmtN(afData.fenetre_jours || 3)} jours · ${ino.ok ? 'Inoreader et registre de sources' : 'registre de sources (Inoreader en pause)'}</div>`;
+    p.innerHTML = `
+      <div class="af-pays" role="group" aria-label="Pays">${tuiles}</div>
+      ${etat}
+      <div class="filters">
+        <button class="fchip ${afState.pays === 'all' ? 'is-on' : ''}" data-afp="all">Les 7 pays</button>
+        <span class="sep"></span>
+        <button class="fchip ${afState.secu ? 'is-on' : ''}" data-afsecu="1">Sécurité seulement</button>
+        <button class="fchip ${!afState.secu ? 'is-on' : ''}" data-afsecu="0">Tout le fil</button>
+        <span class="sep"></span>
+        <button class="fchip ${afState.src === 'all' ? 'is-on' : ''}" data-afsrc="all">Toutes sources</button>
+        ${Object.entries(AF_FAM).map(([k, v]) => `<button class="fchip ${afState.src === k ? 'is-on' : ''}" data-afsrc="${k}">${v}</button>`).join('')}
+        <input class="search" id="af-q" type="search" placeholder="Filtrer : lieu, groupe, média…" value="${esc(afState.q)}" autocomplete="off">
+      </div>
+      <div class="af-list">${list.slice(0, afState.limit).map((it) => {
+        const u = safeUrl(it.url);
+        return `<article class="af-it">
+          <div class="af-it__h">${afHeure(it)}</div>
+          <div class="af-it__meta">${it.securite ? '<span class="af-it__sec" title="Sécurité"></span>' : ''}<span class="af-it__pays">${esc(AF_DRAPEAU[it.pays] || it.pays)}</span><span data-i18n-skip>${esc(it.source || '')}</span><span class="vcote" title="Fiabilité de la source (cote OTAN, A à F)">${esc(it.cote || 'F')}</span><span>${esc(AF_FAM[it.famille] || '')}</span></div>
+          ${u ? `<a class="af-it__t" href="${esc(u)}" target="_blank" rel="noopener noreferrer" data-i18n-skip>${esc(it.titre)}</a>` : `<span class="af-it__t" data-i18n-skip>${esc(it.titre)}</span>`}
+          ${it.extrait && it.extrait.length > 40 ? `<p class="af-it__x" data-i18n-skip>${esc(it.extrait)}</p>` : ''}
+        </article>`;
+      }).join('') || '<div class="empty">Aucun article ne correspond à ces filtres.</div>'}</div>
+      ${list.length > afState.limit ? `<div class="geo-foot"><button class="more-btn" id="af-more">Afficher plus (${fmtN(list.length - afState.limit)} restants)</button></div>` : ''}
+      <p class="af-note">Fil brut, non vérifié par nos analystes : ${fmtN((afData.canaux?.registre?.lues) || 0)} sources lues pour le Mali, le Burkina Faso, le Niger, le Nigeria, le Bénin, le Togo et la RDC, les sept pays suivis par notre réseau HUMINT. Chaque article garde son titre, son lien et son heure d'origine. La cote A à F est notre appréciation de la fiabilité habituelle du média, pas de l'article. « Sécurité » repère les titres qui parlent d'attaques, de groupes armés, de forces ou de victimes.</p>`;
+    p.querySelectorAll('[data-afp]').forEach((b) => b.addEventListener('click', () => { afState.pays = afState.pays === b.dataset.afp ? 'all' : b.dataset.afp; afState.limit = 60; renderAfrique(); }));
+    p.querySelectorAll('[data-afsecu]').forEach((b) => b.addEventListener('click', () => { afState.secu = b.dataset.afsecu === '1'; afState.limit = 60; renderAfrique(); }));
+    p.querySelectorAll('[data-afsrc]').forEach((b) => b.addEventListener('click', () => { afState.src = b.dataset.afsrc; afState.limit = 60; renderAfrique(); }));
+    const qi = p.querySelector('#af-q');
+    qi.addEventListener('input', () => { afState.q = qi.value.trim(); const pos = qi.selectionStart; renderAfrique(); const n = p.querySelector('#af-q'); n.focus(); n.setSelectionRange(pos, pos); });
+    p.querySelector('#af-more')?.addEventListener('click', () => { afState.limit += 60; renderAfrique(); });
+    document.getElementById('n-afrique').textContent = fmtN(items.filter((it) => it.securite).length);
+  }
+  async function loadAfrique() {
+    try { afData = await window.algorAuth.loadZoneFile('afrique-direct/direct.json'); renderAfrique(); }
+    catch (e) {
+      console.warn('[veille] afrique', e);
+      if (!afData) { document.getElementById('pane-afrique').innerHTML = '<div class="err">Le fil Afrique n’est pas disponible pour le moment. Réessayez dans quelques minutes.</div>'; document.getElementById('n-afrique').textContent = '0'; }
+    }
+  }
+
   async function loadRadio() {
     try { renderRadio(await window.algorAuth.loadZoneFile('sahel/radio.json')); rmapInit(); }
     catch (e) {
@@ -1639,6 +1756,11 @@
       "Chaque jour, les journaux des radios d'information du Mali, du Niger et du Burkina Faso, transcrits et synthétisés : l'essentiel sans le bruit, chaque fait adossé à un extrait vérifié.",
       ['Synthèse du jour', 'Studio Tamani, Kalangou, Yafa', 'Extraits vérifiés', 'Mise à jour toutes les 30 min']);
     document.getElementById('n-radio').textContent = '·';
+    // Afrique en direct : réservé aux abonnés, aucune donnée en aperçu
+    document.getElementById('pane-afrique').innerHTML = bloc('Afrique en direct',
+      "La presse locale, les officiels et l'humanitaire des sept pays suivis par notre réseau HUMINT, relevés toutes les 15 minutes, avec la cote de chaque source.",
+      ['Mali, Burkina Faso, Niger', 'Nigeria, Bénin, Togo, RDC', 'Plus de 250 sources', 'Filtre sécurité']);
+    document.getElementById('n-afrique').textContent = '·';
     ouvrirNoteDemandee();
   }
 
@@ -1655,6 +1777,8 @@
     loadGeo();
     loadCyber();
     loadRadio();
+    loadAfrique();
+    setInterval(loadAfrique, 5 * 60e3);
   });
 </script>
 <script src="/shared/v5/chrome.js?v=20261120a"></script>
