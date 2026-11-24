@@ -648,7 +648,7 @@
 <section class="bs-vue" id="bs-vue-stats" hidden></section>
 
 <script>window.addEventListener('algorAuthReady', function () { window.__algorAuthGranted = true; });</script>
-<script type="module" src="/shared/site-auth.js?v=20261020a"></script>
+<script type="module" src="/shared/site-auth.js?v=20261124a"></script>
 <script>
 (function () {
   var $ = function (id) { return document.getElementById(id) || document.createElement('div'); };
@@ -2035,8 +2035,13 @@
         style('terrain', 'ff3f32b4', 1.1) + style('ouvert', 'ff211d1c', 1) + style('lieu', 'ffffffff', 1.3) + '<Style id="itineraire"><LineStyle><color>ff211d1c</color><width>3</width></LineStyle></Style>' + pm.join('') + '</Document></kml>';
       type = 'application/vnd.google-earth.kml+xml';
     }
+    auditer(fmt === 'geojson' ? 'export_geojson' : 'export_kml', { faits: pts.length });
     var a = el('a', { href: URL.createObjectURL(new Blob([contenu], { type: type })), download: nomF + (fmt === 'geojson' ? '.geojson' : '.kml') });
     document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+  /* 24/11/2026 : journal d'audit (table argos_audit, en ajout seul) : exports, ouvertures et partages d'enquêtes */
+  function auditer(action, detail) {
+    try { var sb = baseSb(); if (!sb) return; sb.from('argos_audit').insert({ action: action, detail: Object.assign({ question: String((argosDonnees && argosDonnees.question) || '').slice(0, 300) }, detail || {}) }).then(function () {}, function () {}); } catch (e) {}
   }
   /* 24/11/2026 : export PDF de l'enquête, par l'impression du navigateur (rendu identique au site, aucun service tiers) */
   function exporterPdf() {
@@ -2044,6 +2049,8 @@
     if (vueCourante !== 'note') montrerVue('note');
     var titre = document.title, q = String(argosDonnees.question || '').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').slice(0, 80).trim();
     document.title = 'Argos, ' + q + ', ' + new Date().toLocaleDateString('fr-FR').replace(/\//g, '.');
+    var mention = ''; try { mention = localStorage.getItem('argos-marquage') || 'NON PROTÉGÉ'; } catch (e) {}
+    auditer('export_pdf', { mention: mention, cites: (argosDonnees.cites || []).length });
     setTimeout(function () { window.print(); setTimeout(function () { document.title = titre; }, 500); }, 400);
   }
   function blocEnquete(ligne, message) {
@@ -2055,6 +2062,7 @@
       part.addEventListener('click', async function () {
         var r = await baseSb().from('argos_enquetes').update({ partagee: true }).eq('id', ligne.id);
         if (r.error) { part.textContent = 'Partage impossible'; return; }
+        auditer('partage_enquete', { enquete: ligne.id });
         try { await navigator.clipboard.writeText(lienEnquete(ligne.id)); part.textContent = 'Lien copié'; } catch (e) { part.textContent = 'Lien : ' + lienEnquete(ligne.id); }
       });
       var exp = el('button', { class: 'bs-btn', type: 'button', text: 'Exporter en PDF' }); exp.addEventListener('click', exporterPdf);
@@ -2073,6 +2081,7 @@
     if (r.error || !r.data) { $('bs-rech-cadre').textContent = 'Enquête introuvable : elle a été supprimée, n\'a pas été partagée, ou votre compte n\'y a pas accès.'; return; }
     var c = r.data.contenu || {};
     $('bs-rech-champ').value = r.data.question;
+    try { sb.from('argos_audit').insert({ action: 'ouverture_enquete', detail: { enquete: id, question: String(r.data.question || '').slice(0, 300), auteur: moi && moi.id === r.data.auteur ? 'moi' : 'collègue' } }).then(function () {}, function () {}); } catch (e) {}
     lancerArgos(r.data.question, { flux: c.flux || '', agents: c.agents || {}, date: c.date, cree_le: r.data.cree_le, mienne: !!(moi && moi.id === r.data.auteur) });
   }
   async function historique() {
@@ -2084,6 +2093,7 @@
     if (!moi) { boite.appendChild(el('p', { text: 'Connectez-vous pour voir vos enquêtes.' })); return; }
     var r = await sb.from('argos_enquetes').select('id, cree_le, question, partagee').eq('auteur', moi.id).order('cree_le', { ascending: false }).limit(30);
     boite.appendChild(el('h3', { text: 'Mes enquêtes' }));
+    boite.appendChild(el('p', {}, [el('a', { href: '/compte/securite/', text: 'Sécurité du compte et journal d\'audit' })]));
     if (r.error) { boite.appendChild(el('p', { text: 'Historique indisponible.' })); return; }
     if (!r.data.length) { boite.appendChild(el('p', { text: 'Aucune enquête pour l\'instant. Chaque recherche réussie est enregistrée ici, 180 jours.' })); return; }
     boite.appendChild(el('ul', {}, r.data.map(function (x) {
@@ -2176,7 +2186,11 @@
       var brut = '', promesseAgents = null;
       var rep = rejeu ? new Response(rejeu.flux, { status: 200, headers: { 'Content-Type': 'text/event-stream' } }) : await fetch(URL_ARGOS, { method: 'POST', headers: { Authorization: 'Bearer ' + j, 'Content-Type': 'application/json' }, body: JSON.stringify({ question: question }) });
       if (rep.status === 401) { arret('Session expirée : reconnectez-vous sur la carte, puis revenez.'); return; }
-      if (rep.status === 403) { arret('Ce compte n\'a pas l\'accès premium : Argos est réservé aux abonnés.'); return; }
+      if (rep.status === 403) {
+        var r403 = null; try { r403 = await rep.json(); } catch (e) {}
+        if (r403 && r403.code === 'mfa') { arret('Votre organisation exige la double authentification. Saisissez votre code, ou configurez-la sur la page Sécurité du compte (/compte/securite/).'); if (window.algorAuth && window.algorAuth.openLogin) window.algorAuth.openLogin('login'); return; }
+        arret('Ce compte n\'a pas l\'accès premium : Argos est réservé aux abonnés.'); return;
+      }
       if (rep.status === 429) { arret('Plafond de questions atteint pour aujourd\'hui, ou trop de questions d\'affilée.'); return; }
       if (!rep.ok || !rep.body) { arret('Argos ne répond pas (code ' + rep.status + ').'); return; }
       var lecteur = rep.body.getReader(), dec = new TextDecoder(), reste = '', fin = null;

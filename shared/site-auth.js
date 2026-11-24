@@ -265,7 +265,31 @@ const OVERLAY_HTML = `
                 <span class="sa-btn-arrow">${ICON_ARROW}</span>
               </span>
             </button>
+            <a href="/compte/securite/" class="sa-link sa-upgrade-logout">Sécurité du compte</a>
             <a href="#" id="sa-account-logout" class="sa-link sa-upgrade-logout">Se déconnecter</a>
+          </div>
+        </div>
+
+        <!-- ── Vue : code de double authentification (24/11/2026) ── -->
+        <div class="sa-view" id="sa-view-mfa">
+          <form id="sa-mfa-form" autocomplete="off">
+            ${FIELD(ICON_USER, `<input id="sa-mfa-code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="Code à 6 chiffres" required spellcheck="false">`)}
+            <div class="sa-error" id="sa-mfa-error" role="alert" aria-live="polite"></div>
+            ${SUBMIT('Valider')}
+          </form>
+          <p class="sa-note">Application d’authentification : Google Authenticator, Microsoft Authenticator, FreeOTP, ou celle de votre organisation.</p>
+          <p class="sa-signup"><a href="#" id="sa-mfa-logout" class="sa-link sa-link-strong">Se déconnecter</a></p>
+        </div>
+
+        <!-- ── Vue : double authentification exigée mais pas encore configurée ── -->
+        <div class="sa-view" id="sa-view-mfarequise">
+          <div class="sa-upgrade">
+            <div class="sa-upgrade-badge">${ICON_USER}</div>
+            <p class="sa-upgrade-lead">Votre organisation demande un code à usage unique en plus du mot de passe. La configuration prend une minute avec une application d’authentification sur votre téléphone.</p>
+            <button type="button" id="sa-mfareq-go" class="sa-submit">
+              <span class="sa-submit-content"><span class="sa-btn-text">Configurer la double authentification</span><span class="sa-btn-arrow">${ICON_ARROW}</span></span>
+            </button>
+            <a href="#" id="sa-mfareq-logout" class="sa-link sa-upgrade-logout">Se déconnecter</a>
           </div>
         </div>
 
@@ -476,6 +500,17 @@ const VIEWS = {
     sub: 'Vous êtes déjà connecté à Algor Acces.',
     focus: null,
   },
+  // 24/11/2026 : double authentification (TOTP)
+  mfa: {
+    title: 'Double authentification',
+    sub: 'Saisissez le code à 6 chiffres affiché par votre application.',
+    focus: '#sa-mfa-code',
+  },
+  mfarequise: {
+    title: 'Double authentification requise',
+    sub: 'Votre organisation l’exige pour accéder aux données.',
+    focus: null,
+  },
 };
 
 // Pages gatées (overlay bloquant au chargement). Sur les autres pages
@@ -557,7 +592,35 @@ function hasZoneAccess(profile) {
 
 // Après une authentification réussie : accès accordé → on ouvre la zone,
 // sinon → on bascule sur la vue upgrade.
+// 24/11/2026 : état de la double authentification de la session.
+//  'defi'     : le compte a un facteur TOTP vérifié et la session n'est qu'au niveau aal1 → demander le code ;
+//  'inscrire' : l'organisation l'exige et le compte n'a pas encore de facteur → page /compte/securite/ ;
+//  'ok'       : rien à faire.
+// La base fait foi (is_premium() refuse une session aal1 quand l'organisation l'exige) : ceci n'est que l'interface.
+async function etatMfa() {
+  try {
+    const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (data && data.currentLevel === 'aal2') return 'ok';
+    if (data && data.nextLevel === 'aal2') return 'defi';
+    const { data: exigee } = await supabase.rpc('mfa_exigee');
+    return exigee === true ? 'inscrire' : 'ok';
+  } catch (_) { return 'ok'; }
+}
+const SUR_PAGE_SECURITE = location.pathname.startsWith('/compte/securite');
+// Montre la vue de double authentification si besoin. Renvoie true quand elle a pris la main.
+async function etapeMfa() {
+  const m = await etatMfa();
+  if (m === 'defi' || (m === 'inscrire' && !SUR_PAGE_SECURITE)) {
+    if (!overlayEl) buildOverlay({ dismissible: !IS_GATED_PAGE });
+    switchView(m === 'defi' ? 'mfa' : 'mfarequise');
+    return true;
+  }
+  return false;
+}
+window.algorAuth.etatMfa = etatMfa;
+
 async function proceedAfterAuth(userId) {
+  if (await etapeMfa()) return;
   // Visiteur de l'aperçu qui vient de se connecter : la carte a chargé l'échantillon public,
   // on recharge pour qu'elle lise la donnée de son compte.
   if (window.algorPlan === 'visiteur') { location.reload(); return; }
@@ -779,6 +842,38 @@ function buildOverlay(opts) {
     }
   });
 
+  // ── Double authentification : code TOTP (24/11/2026) ──
+  const mfaForm = overlayEl.querySelector('#sa-mfa-form');
+  const mfaErr = overlayEl.querySelector('#sa-mfa-error');
+  mfaForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearError(mfaErr);
+    const champ = overlayEl.querySelector('#sa-mfa-code');
+    const code = champ.value.replace(/\D/g, '');
+    if (code.length !== 6) { setError(mfaErr, 'Le code compte 6 chiffres.', null); return; }
+    const btn = mfaForm.querySelector('.sa-submit');
+    btn.disabled = true; btn.classList.add('is-loading');
+    try {
+      const { data: f, error: ef } = await supabase.auth.mfa.listFactors();
+      if (ef) throw ef;
+      const totp = ((f && f.totp) || []).find((x) => x.status === 'verified');
+      if (!totp) throw new Error('aucun facteur');
+      const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId: totp.id, code });
+      if (error) throw error;
+      const { data: s2 } = await supabase.auth.getSession();
+      await proceedAfterAuth(s2.session.user.id);
+    } catch (err) {
+      setError(mfaErr, 'Code refusé. Vérifiez l’heure de votre téléphone et saisissez le code affiché maintenant.', null);
+      champ.value = ''; champ.focus();
+    } finally {
+      btn.disabled = false; btn.classList.remove('is-loading');
+    }
+  });
+  overlayEl.querySelector('#sa-mfareq-go').addEventListener('click', () => { location.href = '/compte/securite/'; });
+  ['#sa-mfa-logout', '#sa-mfareq-logout'].forEach((id) => overlayEl.querySelector(id).addEventListener('click', async (e) => {
+    e.preventDefault(); await supabase.auth.signOut(); location.reload();
+  }));
+
   // ── Inscription ──
   signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -882,6 +977,8 @@ async function openLogin(vue) {
     const { data } = await supabase.auth.getSession();
     if (data?.session?.user) {
       const user = data.session.user;
+      const m = await etatMfa();
+      if (m === 'defi' || (m === 'inscrire' && !SUR_PAGE_SECURITE)) { switchView(m === 'defi' ? 'mfa' : 'mfarequise'); return; }
       const profile = await fetchProfile(user.id);
       if (hasZoneAccess(profile)) {
         // Connecté avec accès → vue récap compte.
@@ -969,6 +1066,7 @@ async function gateSite() {
   try {
     const { data } = await supabase.auth.getSession();
     if (data?.session?.user) {
+      if (await etapeMfa()) return;
       const profile = await fetchProfile(data.session.user.id);
       if (hasZoneAccess(profile)) {
         window.algorPlan = 'premium';
