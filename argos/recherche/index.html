@@ -419,6 +419,15 @@
   .bs-risque-info span { padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px; font-size: 12px; line-height: 1.4; font-variant-numeric: tabular-nums; }
   .bs-risque-info .rq-vieux { border-color: #C28A2E; color: #8A5E14; }
   .bs-risque-info .rq-tres-vieux { border-color: #B4323F; color: #B4323F; }
+  .bs-scen { margin: 0 0 18px; padding: 14px 14px 12px; border: 1px solid var(--line); }
+  .bs-scen-barre { display: flex; height: 10px; margin: 6px 0 12px; border-radius: 2px; overflow: hidden; gap: 2px; }
+  .bs-scen-barre i { display: block; height: 100%; }
+  .bs-scen-l { margin: 0; padding: 0; list-style: none; }
+  .bs-scen-l li { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); font-size: 13.5px; line-height: 1.45; }
+  .bs-scen-l b { font-weight: 500; font-size: 20px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .bs-scen-l strong { font-weight: 600; }
+  .bs-scen-s { margin: 0; padding-left: 0; list-style: none; font-size: 13.5px; line-height: 1.5; }
+  .bs-scen-s li + li { margin-top: 4px; }
   .bs-risque-m { margin: 10px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
   .bs-pan-ia { margin: 22px 0 0; padding-top: 12px; border-top: 1px solid var(--line); font-size: 12px; line-height: 1.5; color: var(--muted); }
   .bs-vers-argos { position: absolute; left: 16px; top: 18px; z-index: 4; display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border: 1px solid rgba(255, 255, 255, .22); border-radius: 999px; background: rgba(18, 18, 22, .6); color: var(--on-night); font-size: 13px; text-decoration: none; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
@@ -1653,6 +1662,7 @@
           r.periode ? el('p', { class: 'bs-risque-per', text: r.periode }) : null,
           el('ul', {}, (r.raisons || []).map(function (t) { return el('li', { text: t }); }))]));
       }
+      if (r && r.scenarios && r.scenarios.liste) corps.push(sec(nn(), 'Scénarios'), el('div', { class: 'bs-scen bs-na-scen' }, [noeudScenarios(r.scenarios)]));
       /* 5. localisation et chronologie : lieux de la question en MGRS, carte à l'encre et chronologie des statistiques */
       var visuels = [];
       try { var tmp = el('div'); vuesArgos.stats(tmp); [].forEach.call(tmp.querySelectorAll('.ns-sec'), function (sx) { var ti = sx.getAttribute('data-titre'); if (ti === 'Où' || ti === 'Quand') { sx.classList.add('ns-vu'); sx.removeAttribute('id'); visuels.push(sx); } }); } catch (e) {}
@@ -2106,6 +2116,7 @@
     var p = $('bs-panneau'); p.textContent = '';
     p.appendChild(el('div', { class: 'bs-rep' }, [el('h3', { text: 'Réponse d\'Argos' }), el('p', { class: 'bs-rep-q', text: question }),
       el('div', { class: 'bs-risque', id: 'bs-risque', hidden: '' }),
+      el('div', { class: 'bs-scen', id: 'bs-scen', hidden: '' }),
       el('div', { class: 'bs-argos-texte', id: 'bs-argos-texte' }), el('p', { class: 'bs-pan-etape', id: 'bs-pan-etape', text: 'Recherche dans le corpus' })]));
     p.appendChild(el('p', { class: 'bs-pan-ia', text: 'Réponse rédigée par une intelligence artificielle (Mistral AI) à partir du seul corpus d\'Algor Acces, puis vérifiée phrase par phrase. Elle peut contenir des erreurs : ouvrez les extraits cités. Les fiches des agents IA ne sont pas encore validées par un analyste.' }));
   }
@@ -2152,6 +2163,28 @@
     z.appendChild(el('p', { class: 'bs-risque-t', text: 'Pourquoi ce niveau' }));
     z.appendChild(el('ul', {}, (r.raisons || []).map(function (t) { return el('li', { text: t }); })));
     if (r.methode) z.appendChild(el('p', { class: 'bs-risque-m', text: r.methode }));
+    blocScenarios(r.scenarios);
+  }
+  /* 25/11/2026 : scénarios propres à la question, sur l'horizon demandé. Calculés sur le corpus (risque.ts), jamais par l'IA. */
+  var SCEN_C = { aggravation: '#B4323F', tension: '#C28A2E', accalmie: '#5E7D6A' };
+  function dateCourte(iso) { var p = String(iso).split('-'); return p[2] + '/' + p[1]; }
+  function noeudScenarios(sc) {
+    var barre = el('div', { class: 'bs-scen-barre' }, sc.liste.map(function (x) { var i = el('i', { title: x.nom + ' ' + x.p + ' %' }); i.style.width = x.p + '%'; i.style.background = SCEN_C[x.id]; return i; }));
+    return el('div', {}, [
+      el('p', { class: 'bs-risque-t', text: 'Les ' + sc.horizon + ' prochains jours · du ' + dateCourte(sc.du) + ' au ' + dateCourte(sc.au) }),
+      barre,
+      el('ul', { class: 'bs-scen-l' }, sc.liste.map(function (x) {
+        return el('li', {}, [el('b', { text: x.p + ' %' }), el('span', {}, [el('strong', { text: x.nom, style: 'color:' + SCEN_C[x.id] }), document.createTextNode(' : ' + x.definition)])]);
+      })),
+      sc.signaux && sc.signaux.length ? el('p', { class: 'bs-risque-t', text: 'Ce qui ferait basculer' }) : null,
+      sc.signaux && sc.signaux.length ? el('ul', { class: 'bs-scen-s' }, sc.signaux.map(function (x) { return el('li', { text: (x.vers === 'aggravation' ? '↑ ' : '↓ ') + x.texte }); })) : null,
+      el('p', { class: 'bs-risque-m', text: sc.methode + ' Ce sont des fréquences mesurées sur le corpus d\'Algor Acces, pas une certitude.' })]);
+  }
+  function blocScenarios(sc) {
+    var z = $('bs-scen'); if (!z) return;
+    z.textContent = '';
+    if (!sc || !sc.liste) { z.hidden = true; return; }
+    z.hidden = false; z.appendChild(noeudScenarios(sc));
   }
   function ecrireArgos(texte, parN) {
     var z = $('bs-argos-texte'); if (!z) return; z.textContent = '';
