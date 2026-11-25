@@ -426,6 +426,7 @@
   .bs-scen-l li { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); font-size: 13.5px; line-height: 1.45; }
   .bs-scen-l b { font-weight: 500; font-size: 20px; line-height: 1.1; font-variant-numeric: tabular-nums; }
   .bs-scen-l strong { font-weight: 600; }
+  .bs-scen-c { margin: 0 0 12px; font-size: 14.5px; line-height: 1.5; color: var(--ink); }
   .bs-scen-s { margin: 0; padding-left: 0; list-style: none; font-size: 13.5px; line-height: 1.5; }
   .bs-scen-s li + li { margin-top: 4px; }
   .bs-risque-m { margin: 10px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
@@ -1662,7 +1663,7 @@
           r.periode ? el('p', { class: 'bs-risque-per', text: r.periode }) : null,
           el('ul', {}, (r.raisons || []).map(function (t) { return el('li', { text: t }); }))]));
       }
-      if (r && r.scenarios && r.scenarios.liste) corps.push(sec(nn(), 'Scénarios'), el('div', { class: 'bs-scen bs-na-scen' }, [noeudScenarios(r.scenarios)]));
+      if (r && r.scenarios) corps.push(sec(nn(), 'Ce que dit le passé'), el('div', { class: 'bs-scen bs-na-scen' }, [noeudScenarios(r.scenarios)]));
       /* 5. localisation et chronologie : lieux de la question en MGRS, carte à l'encre et chronologie des statistiques */
       var visuels = [];
       try { var tmp = el('div'); vuesArgos.stats(tmp); [].forEach.call(tmp.querySelectorAll('.ns-sec'), function (sx) { var ti = sx.getAttribute('data-titre'); if (ti === 'Où' || ti === 'Quand') { sx.classList.add('ns-vu'); sx.removeAttribute('id'); visuels.push(sx); } }); } catch (e) {}
@@ -2168,22 +2169,24 @@
   /* 25/11/2026 : scénarios propres à la question, sur l'horizon demandé. Calculés sur le corpus (risque.ts), jamais par l'IA. */
   var SCEN_C = { aggravation: '#B4323F', tension: '#C28A2E', accalmie: '#5E7D6A' };
   function dateCourte(iso) { var p = String(iso).split('-'); return p[2] + '/' + p[1]; }
+  /* 25/11/2026 : plus de pourcentage de scénario (test sur 100 cas passés : ils ne battaient pas la moyenne).
+     On montre ce qui s'est passé, vérifiable, et les signaux datés qui changeraient la situation. */
   function noeudScenarios(sc) {
-    var barre = el('div', { class: 'bs-scen-barre' }, sc.liste.map(function (x) { var i = el('i', { title: x.nom + ' ' + x.p + ' %' }); i.style.width = x.p + '%'; i.style.background = SCEN_C[x.id]; return i; }));
+    var b = sc.base || {};
+    var constat = sc.constat || (b.historique
+      ? 'Sur les 12 derniers mois, ' + b.avecGrave + ' période' + (b.avecGrave > 1 ? 's' : '') + ' de ' + sc.horizon + ' jours sur ' + b.fenetres + ' ont connu au moins un fait grave dans la zone. Ces 60 derniers jours : ' + b.graves60 + ' fait' + (b.graves60 > 1 ? 's graves' : ' grave') + '.'
+      : 'Moins de 4 mois de corpus sur cette zone : pas de recul suffisant.');
     return el('div', {}, [
-      el('p', { class: 'bs-risque-t', text: 'Les ' + sc.horizon + ' prochains jours · du ' + dateCourte(sc.du) + ' au ' + dateCourte(sc.au) }),
-      barre,
-      el('ul', { class: 'bs-scen-l' }, sc.liste.map(function (x) {
-        return el('li', {}, [el('b', { text: x.p + ' %' }), el('span', {}, [el('strong', { text: x.nom, style: 'color:' + SCEN_C[x.id] }), document.createTextNode(' : ' + x.definition)])]);
-      })),
-      sc.signaux && sc.signaux.length ? el('p', { class: 'bs-risque-t', text: 'Ce qui ferait basculer' }) : null,
+      el('p', { class: 'bs-risque-t', text: 'Ce que dit le passé sur cette zone' }),
+      el('p', { class: 'bs-scen-c', text: constat }),
+      sc.signaux && sc.signaux.length ? el('p', { class: 'bs-risque-t', text: 'Ce qui changerait la situation' }) : null,
       sc.signaux && sc.signaux.length ? el('ul', { class: 'bs-scen-s' }, sc.signaux.map(function (x) { return el('li', { text: (x.vers === 'aggravation' ? '↑ ' : '↓ ') + x.texte }); })) : null,
-      el('p', { class: 'bs-risque-m', text: sc.methode + ' Ce sont des fréquences mesurées sur le corpus d\'Algor Acces, pas une certitude.' })]);
+      el('p', { class: 'bs-risque-m', text: 'Faits observés dans le corpus d\'Algor Acces, pas une prévision chiffrée.' })]);
   }
   function blocScenarios(sc) {
     var z = $('bs-scen'); if (!z) return;
     z.textContent = '';
-    if (!sc || !sc.liste) { z.hidden = true; return; }
+    if (!sc) { z.hidden = true; return; }
     z.hidden = false; z.appendChild(noeudScenarios(sc));
   }
   function ecrireArgos(texte, parN) {
